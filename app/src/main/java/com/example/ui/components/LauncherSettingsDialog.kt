@@ -214,16 +214,36 @@ fun LauncherSettingsDialog(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Column {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Text(
+              text = "NOTHING OS 5.0",
+              fontFamily = FontFamily.Monospace,
+              fontSize = 20.sp,
+              fontWeight = FontWeight.Bold,
+              color = theme.textPrimary,
+              letterSpacing = 2.sp
+            )
+            Box(
+              modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(accentColor.copy(alpha = 0.15f))
+                .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+              Text(
+                text = "v1.1.0",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = accentColor
+              )
+            }
+          }
           Text(
-            text = "NOTHING OS 5.0",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = theme.textPrimary,
-            letterSpacing = 2.sp
-          )
-          Text(
-            text = "LAUNCHER & LOCK SCREEN PREFERENCES",
+            text = "LAUNCHER & LOCK SCREEN PREFERENCES • BUILD 2",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary
@@ -1293,6 +1313,65 @@ fun LauncherSettingsDialog(
             settings = settings,
             onUpdateSettings = onUpdateSettings,
             accentColor = accentColor
+          )
+        }
+      }
+
+      // Dedicated Build & Version Information Section
+      Spacer(modifier = Modifier.height(16.dp))
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(16.dp))
+          .background(theme.surface)
+          .border(1.dp, theme.border, RoundedCornerShape(16.dp))
+          .padding(16.dp)
+      ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              Box(
+                modifier = Modifier
+                  .size(8.dp)
+                  .clip(CircleShape)
+                  .background(accentColor)
+              )
+              Text(
+                text = "VERSION & BUILD INFO",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = theme.textPrimary,
+                letterSpacing = 1.sp
+              )
+            }
+            Text(
+              text = "v1.1.0",
+              fontFamily = FontFamily.Monospace,
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = accentColor
+            )
+          }
+
+          Text(
+            text = "NOTHING OS 5.0 LAUNCHER • BUILD 2 (STABLE)",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            color = theme.textSecondary
+          )
+          Text(
+            text = "• Version: 1.1.0 (Build 2)\n• UI: Clean Top Bar, Settings integration, auto-hide on scroll\n• Engine: Jetpack Compose 120Hz Minimalist Launcher",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            color = theme.textSecondary
           )
         }
       }

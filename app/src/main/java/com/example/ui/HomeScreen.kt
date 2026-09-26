@@ -53,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -172,6 +173,13 @@ fun HomeScreen(
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(true) }
 
+  // Automatically reveal bars when user is at the top of the home screen
+  LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset) {
+    if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset <= 10) {
+      isBarsVisible = true
+    }
+  }
+
   val nestedScrollConnection = remember {
     object : NestedScrollConnection {
       override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -254,54 +262,16 @@ fun HomeScreen(
             )
           }
 
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+          // Internal Settings Access Icon
+          IconButton(
+            onClick = onOpenSettings,
+            modifier = Modifier.testTag("home_settings_button")
           ) {
-            // Quick Day / Night Theme Toggle (Direct 1-tap switch between Image 3 Theme Jour and Image 2 Theme Nuit)
-            IconButton(
-              onClick = onToggleThemeMode,
-              modifier = Modifier.testTag("home_theme_toggle_button")
-            ) {
-              Icon(
-                imageVector = when (settings.themeMode) {
-                  LauncherThemeMode.DARK -> Icons.Default.DarkMode
-                  LauncherThemeMode.LIGHT -> Icons.Default.LightMode
-                  LauncherThemeMode.RETRO_PASTEL -> Icons.Default.Palette
-                  LauncherThemeMode.SYSTEM -> if (theme.isDark) Icons.Default.DarkMode else Icons.Default.LightMode
-                },
-                contentDescription = "Toggle Theme Jour / Nuit / Retro",
-                tint = if (settings.themeMode != LauncherThemeMode.DARK) accentColor else theme.textSecondary,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-
-            IconButton(
-              onClick = onOpenSettings,
-              modifier = Modifier.testTag("home_settings_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Launcher Settings",
-                tint = theme.textSecondary
-              )
-            }
-
-            // Quick Collapse button for Top Bar
-            IconButton(
-              onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isBarsVisible = false
-              },
-              modifier = Modifier.testTag("home_hide_top_bar_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.KeyboardArrowUp,
-                contentDescription = "Hide Top Bar",
-                tint = theme.textSecondary,
-                modifier = Modifier.size(20.dp)
-              )
-            }
+            Icon(
+              imageVector = Icons.Default.Settings,
+              contentDescription = "Launcher Settings",
+              tint = theme.textSecondary
+            )
           }
         }
       }
@@ -872,44 +842,17 @@ fun HomeScreen(
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
-        Column(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          // Minimal collapse handle
-          Box(
-            modifier = Modifier
-              .padding(bottom = 2.dp)
-              .clip(RoundedCornerShape(10.dp))
-              .background(theme.surface.copy(alpha = 0.5f))
-              .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isBarsVisible = false
-              }
-              .padding(horizontal = 16.dp, vertical = 3.dp)
-              .testTag("collapse_dock_handle"),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(
-              imageVector = Icons.Default.KeyboardArrowDown,
-              contentDescription = "Hide Dock",
-              tint = theme.textSecondary,
-              modifier = Modifier.size(16.dp)
-            )
-          }
-
-          NothingDock(
-            dockApps = dockApps,
-            onAppClick = onAppClick,
-            onOpenDrawer = onOpenDrawer,
-            onOpenSearch = onOpenDrawer,
-            iconPack = settings.iconPack,
-            accentColor = accentColor,
-            showSearchBar = settings.showSearchBarOnDock,
-            onToggleDockApp = onToggleDockApp,
-            onOpenAppInfo = onOpenAppInfo
-          )
-        }
+        NothingDock(
+          dockApps = dockApps,
+          onAppClick = onAppClick,
+          onOpenDrawer = onOpenDrawer,
+          onOpenSearch = onOpenDrawer,
+          iconPack = settings.iconPack,
+          accentColor = accentColor,
+          showSearchBar = settings.showSearchBarOnDock,
+          onToggleDockApp = onToggleDockApp,
+          onOpenAppInfo = onOpenAppInfo
+        )
       }
 
       // Minimal Show-on-demand Pill for Bottom Dock ("ظهورها عند الطلب")
