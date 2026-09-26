@@ -1,0 +1,6 @@
+{
+  "name": "Nothing OS 5",
+  "description": "Nothing OS 5 inspired launcher with dot-matrix typography, modular monochrome widgets, enlarged folders, app drawer, and automated CI/CD workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

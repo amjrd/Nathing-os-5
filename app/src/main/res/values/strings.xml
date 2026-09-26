@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Nothing OS 5</string>
+    <string name="search_apps_hint">SEARCH APPS...</string>
+    <string name="default_launcher_title">Set Default Launcher</string>
+    <string name="settings_title">Launcher Settings</string>
+    <string name="accessibility_service_desc">Enables Nothing OS gestures such as double-tap on home screen to lock screen, swipe down to expand notification shade, and quick settings integration.</string>
+    <string name="notification_listener_desc">Enables Nothing OS notification dots and badges on app icons.</string>
+</resources>
