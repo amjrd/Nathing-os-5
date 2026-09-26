@@ -40,6 +40,7 @@ import com.example.ui.components.AppDrawerSheet
 import com.example.ui.components.EditNoteDialog
 import com.example.ui.components.ExpandedFolderSheet
 import com.example.ui.components.LauncherSettingsDialog
+import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.LauncherViewModel
@@ -293,6 +294,20 @@ fun NothingLauncherApp(
         onToggleTorch = { viewModel.toggleTorch() },
         onLaunchShortcut = { shortcut: LockShortcutType -> viewModel.launchShortcut(shortcut) },
         onDismissNotification = { id: String -> viewModel.dismissNotification(id) }
+      )
+    }
+
+    // 7. Signature Nothing OS 5 App Info Sheet (Guaranteed App Info display)
+    val appForInfo by viewModel.selectedAppForInfo.collectAsStateWithLifecycle()
+    if (appForInfo != null) {
+      NothingAppInfoSheet(
+        app = appForInfo!!,
+        onDismiss = { viewModel.setAppInfo(null) },
+        onLaunchApp = {
+          viewModel.launchApp(appForInfo!!)
+          viewModel.setAppInfo(null)
+        },
+        accentColor = accentColor
       )
     }
   }

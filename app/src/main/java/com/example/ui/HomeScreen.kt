@@ -106,6 +106,7 @@ import com.example.ui.components.NosQuickListWidget
 import com.example.ui.components.NosStickerFocusClusterWidget
 import com.example.ui.components.NosWidgetPortSheet
 import com.example.ui.components.NothingAnalogClockWidget
+import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.components.NothingCassetteWidget
 import com.example.ui.components.NothingClockWidget
 import com.example.ui.components.NothingDock
@@ -170,6 +171,7 @@ fun HomeScreen(
 
   var isReorderingFavorites by remember { mutableStateOf(false) }
   var showWidgetSheet by remember { mutableStateOf(false) }
+  var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(true) }
 
@@ -240,11 +242,7 @@ fun HomeScreen(
         ) {
           Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.clickable {
-              haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-              isBarsVisible = false
-            }
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             Box(
               modifier = Modifier
@@ -260,6 +258,23 @@ fun HomeScreen(
               color = theme.textPrimary,
               letterSpacing = 2.sp
             )
+            // Explicit Version Badge (v1.2.0)
+            Box(
+              modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(accentColor.copy(alpha = 0.18f))
+                .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+              Text(
+                text = "v1.2.0",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = accentColor,
+                letterSpacing = 0.5.sp
+              )
+            }
           }
 
           // Internal Settings Access Icon
@@ -272,59 +287,6 @@ fun HomeScreen(
               contentDescription = "Launcher Settings",
               tint = theme.textSecondary
             )
-          }
-        }
-      }
-
-      // Minimal Show-on-demand Pill for Top Bar ("ظهورها عند الطلب")
-      AnimatedVisibility(
-        visible = !isBarsVisible,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 4.dp),
-          contentAlignment = Alignment.Center
-        ) {
-          Box(
-            modifier = Modifier
-              .clip(RoundedCornerShape(16.dp))
-              .background(theme.surface.copy(alpha = 0.85f))
-              .border(1.dp, theme.border.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-              .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isBarsVisible = true
-              }
-              .padding(horizontal = 14.dp, vertical = 6.dp)
-              .testTag("show_top_bar_pill")
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(6.dp)
-                  .clip(CircleShape)
-                  .background(accentColor)
-              )
-              Text(
-                text = "NOTHING",
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                letterSpacing = 1.5.sp,
-                color = theme.textPrimary
-              )
-              Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Show Top Bar",
-                tint = theme.textSecondary,
-                modifier = Modifier.size(16.dp)
-              )
-            }
           }
         }
       }
@@ -712,7 +674,10 @@ fun HomeScreen(
                               onAppClick(app)
                             }
                           },
-                          onOpenAppInfo = onOpenAppInfo,
+                          onOpenAppInfo = { appTarget ->
+                            selectedAppForInfo = appTarget
+                            onOpenAppInfo(appTarget)
+                          },
                           onTogglePin = { onRemovePinnedApp(app) },
                           onToggleDock = onToggleDockApp,
                           iconSize = 52.dp,
@@ -851,70 +816,26 @@ fun HomeScreen(
           accentColor = accentColor,
           showSearchBar = settings.showSearchBarOnDock,
           onToggleDockApp = onToggleDockApp,
-          onOpenAppInfo = onOpenAppInfo
+          onOpenAppInfo = { appTarget ->
+            selectedAppForInfo = appTarget
+            onOpenAppInfo(appTarget)
+          }
         )
       }
 
-      // Minimal Show-on-demand Pill for Bottom Dock ("ظهورها عند الطلب")
-      AnimatedVisibility(
-        visible = !isBarsVisible,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 6.dp),
-          contentAlignment = Alignment.Center
-        ) {
-          Box(
-            modifier = Modifier
-              .clip(RoundedCornerShape(22.dp))
-              .background(theme.dockBg.copy(alpha = 0.90f))
-              .border(1.dp, theme.border, RoundedCornerShape(22.dp))
-              .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isBarsVisible = true
-              }
-              .padding(horizontal = 18.dp, vertical = 8.dp)
-              .testTag("show_dock_pill")
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.KeyboardArrowUp,
-                contentDescription = "Show Dock",
-                tint = accentColor,
-                modifier = Modifier.size(18.dp)
-              )
-              Text(
-                text = "DOCK & APPS",
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                letterSpacing = 1.sp,
-                color = theme.textPrimary
-              )
-              Box(
-                modifier = Modifier
-                  .size(24.dp)
-                  .clip(CircleShape)
-                  .background(theme.dockButtonBg),
-                contentAlignment = Alignment.Center
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Apps,
-                  contentDescription = null,
-                  tint = if (theme.isDark) accentColor else NothingBlack,
-                  modifier = Modifier.size(14.dp)
-                )
-              }
-            }
-          }
-        }
-      }
+    }
+
+    // Nothing OS 5 App Info & Diagnostics Sheet (Ensures App Info always displays)
+    if (selectedAppForInfo != null) {
+      NothingAppInfoSheet(
+        app = selectedAppForInfo!!,
+        onDismiss = { selectedAppForInfo = null },
+        onLaunchApp = {
+          onAppClick(selectedAppForInfo!!)
+          selectedAppForInfo = null
+        },
+        accentColor = accentColor
+      )
     }
 
     // NOS 3.5 Widgets Port Bottom Sheet Picker

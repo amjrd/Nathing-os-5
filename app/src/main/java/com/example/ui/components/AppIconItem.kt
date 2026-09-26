@@ -191,37 +191,23 @@ fun AppIconItem(
     }
   }
 
-  fun triggerVibration(durationMs: Long, isHeavy: Boolean = false) {
-    // 1. Android View level haptic (Guaranteed on touch and physical devices)
+  fun triggerVibration(durationMs: Long = 30L, isHeavy: Boolean = false) {
+    // 1. Hardware Vibrator API for direct vibration motor (Primary for physical devices)
     try {
-      if (isHeavy) {
-        view.performHapticFeedback(
-          HapticFeedbackConstants.LONG_PRESS,
-          HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-        )
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator?.vibrate(VibrationEffect.createOneShot(if (isHeavy) 60L else 30L, VibrationEffect.DEFAULT_AMPLITUDE))
       } else {
-        view.performHapticFeedback(
-          HapticFeedbackConstants.KEYBOARD_TAP,
-          HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-        )
+        @Suppress("DEPRECATION")
+        vibrator?.vibrate(if (isHeavy) 60L else 30L)
       }
     } catch (_: Exception) {}
 
-    // 2. Hardware Vibrator API for direct vibration motors
+    // 2. Android View level haptic (Guaranteed on touch and physical devices)
     try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        val effect = if (isHeavy) {
-          VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
-        } else {
-          VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
-        }
-        vibrator?.vibrate(effect)
-      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator?.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
-      } else {
-        @Suppress("DEPRECATION")
-        vibrator?.vibrate(durationMs)
-      }
+      view.performHapticFeedback(
+        if (isHeavy) HapticFeedbackConstants.LONG_PRESS else HapticFeedbackConstants.VIRTUAL_KEY,
+        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING or HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
+      )
     } catch (_: Exception) {}
 
     // 3. Compose fallback
@@ -232,7 +218,7 @@ fun AppIconItem(
 
   LaunchedEffect(isPressed) {
     if (isPressed) {
-      triggerVibration(25L, false)
+      triggerVibration(30L, false)
       scale.animateTo(
         targetValue = 0.88f,
         animationSpec = spring(
@@ -262,9 +248,12 @@ fun AppIconItem(
       .combinedClickable(
         interactionSource = interactionSource,
         indication = null,
-        onClick = onClick,
+        onClick = {
+          triggerVibration(30L, false)
+          onClick()
+        },
         onLongClick = {
-          triggerVibration(55L, true)
+          triggerVibration(60L, true)
           showContextMenu = true
           onLongClick?.invoke()
         }

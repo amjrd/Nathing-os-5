@@ -211,7 +211,7 @@ fun NothingLockScreen(
               .background(accentColor)
           )
           Text(
-            text = "NOTHING OS 5 • LOCKED",
+            text = "NOTHING OS 5 • v1.2.0 • LOCKED",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,

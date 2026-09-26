@@ -234,7 +234,7 @@ fun LauncherSettingsDialog(
                 .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
               Text(
-                text = "v1.1.0",
+                text = "v1.2.0",
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -243,7 +243,7 @@ fun LauncherSettingsDialog(
             }
           }
           Text(
-            text = "LAUNCHER & LOCK SCREEN PREFERENCES • BUILD 2",
+            text = "LAUNCHER & LOCK SCREEN PREFERENCES • BUILD 3",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary
@@ -1353,7 +1353,7 @@ fun LauncherSettingsDialog(
               )
             }
             Text(
-              text = "v1.1.0",
+              text = "v1.2.0",
               fontFamily = FontFamily.Monospace,
               fontWeight = FontWeight.Bold,
               fontSize = 12.sp,
@@ -1362,13 +1362,13 @@ fun LauncherSettingsDialog(
           }
 
           Text(
-            text = "NOTHING OS 5.0 LAUNCHER • BUILD 2 (STABLE)",
+            text = "NOTHING OS 5.0 LAUNCHER • BUILD 3 (STABLE)",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary
           )
           Text(
-            text = "• Version: 1.1.0 (Build 2)\n• UI: Clean Top Bar, Settings integration, auto-hide on scroll\n• Engine: Jetpack Compose 120Hz Minimalist Launcher",
+            text = "• Version: 1.2.0 (Build 3)\n• UI: Visible version badge, clean uncropped full immersive mode\n• Haptics: Guaranteed physical vibration on every touch and tap\n• Diagnostics: Integrated Nothing OS App Info sheet",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary

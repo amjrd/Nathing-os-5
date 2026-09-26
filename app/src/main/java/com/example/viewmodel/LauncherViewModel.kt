@@ -142,6 +142,14 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private val _activeOpenFolder = MutableStateFlow<FolderItem?>(null)
   val activeOpenFolder: StateFlow<FolderItem?> = _activeOpenFolder.asStateFlow()
 
+  // Selected app for Nothing App Info Sheet
+  private val _selectedAppForInfo = MutableStateFlow<AppItem?>(null)
+  val selectedAppForInfo: StateFlow<AppItem?> = _selectedAppForInfo.asStateFlow()
+
+  fun setAppInfo(app: AppItem?) {
+    _selectedAppForInfo.value = app
+  }
+
   // Battery receiver
   private val batteryReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -578,6 +586,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   }
 
   fun openAppInfo(app: AppItem) {
+    _selectedAppForInfo.value = app
     val cleanPkg = app.packageName.trim()
     var launched = false
     if (cleanPkg.isNotEmpty()) {
