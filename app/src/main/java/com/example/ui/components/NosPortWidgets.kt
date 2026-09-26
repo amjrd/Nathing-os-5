@@ -907,7 +907,7 @@ fun NosWidgetPortSheet(
               modifier = Modifier.size(18.dp)
             )
             Text(
-              text = "NOS 3.5 WIDGETS PORT",
+              text = "NOTHING OS WIDGETS",
               fontFamily = FontFamily.Monospace,
               fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
@@ -916,7 +916,7 @@ fun NosWidgetPortSheet(
             )
           }
           Text(
-            text = "PIXEL 8 • ANDROID 17 LAUNCHER INTEGRATION",
+            text = "NOTHING OS 5.0 WIDGET SUITE",
             fontFamily = FontFamily.Monospace,
             fontSize = 9.sp,
             color = theme.textSecondary
@@ -932,66 +932,6 @@ fun NosWidgetPortSheet(
           shape = RoundedCornerShape(10.dp)
         ) {
           Text("DONE", fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        }
-      }
-
-      // External KWGT launcher port action if present
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(14.dp))
-          .background(theme.surface)
-          .border(1.dp, theme.border, RoundedCornerShape(14.dp))
-          .clickable {
-            // Attempt to launch KWGT port app or settings
-            val intent = context.packageManager.getLaunchIntentForPackage("org.kustom.widget")
-            if (intent != null) {
-              context.startActivity(intent)
-            } else {
-              // fallback to web or system widget manager
-              SystemPortHelper.launchPixelWeather(context)
-            }
-          }
-          .padding(12.dp)
-      ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Default.Extension,
-              contentDescription = null,
-              tint = accentColor,
-              modifier = Modifier.size(20.dp)
-            )
-            Column {
-              Text(
-                text = "KWGT NOTHING WIDGETS LINK",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = theme.textPrimary
-              )
-              Text(
-                text = "Launch Kustom KWGT or third-party Nothing Port APKs",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 9.sp,
-                color = theme.textSecondary
-              )
-            }
-          }
-          Text(
-            text = "OPEN",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = accentColor
-          )
         }
       }
 

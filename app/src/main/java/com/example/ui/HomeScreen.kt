@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,6 +66,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -164,8 +169,24 @@ fun HomeScreen(
 
   var isReorderingFavorites by remember { mutableStateOf(false) }
   var showWidgetSheet by remember { mutableStateOf(false) }
-  var isTopBarVisible by remember { mutableStateOf(true) }
-  var isDockVisible by remember { mutableStateOf(true) }
+  val lazyListState = rememberLazyListState()
+  var isBarsVisible by remember { mutableStateOf(true) }
+
+  val nestedScrollConnection = remember {
+    object : NestedScrollConnection {
+      override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+        // Auto-hide when scrolling down (Full Immersive Widgets Mode)
+        if (available.y < -12f && isBarsVisible) {
+          isBarsVisible = false
+        }
+        // Auto-show when scrolling up
+        else if (available.y > 12f && !isBarsVisible) {
+          isBarsVisible = true
+        }
+        return Offset.Zero
+      }
+    }
+  }
 
   Box(
     modifier = modifier
@@ -187,9 +208,9 @@ fun HomeScreen(
         .statusBarsPadding()
         .navigationBarsPadding()
     ) {
-      // Top Navigation / Glance Bar (With Animated Visibility & Show-on-demand)
+      // Top Navigation / Glance Bar (With Animated Visibility & Auto-hide)
       AnimatedVisibility(
-        visible = isTopBarVisible,
+        visible = isBarsVisible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
@@ -214,7 +235,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.clickable {
               haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-              isTopBarVisible = false
+              isBarsVisible = false
             }
           ) {
             Box(
@@ -256,30 +277,6 @@ fun HomeScreen(
             }
 
             IconButton(
-              onClick = onDoubleTap,
-              modifier = Modifier.testTag("home_lock_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.Lock,
-                contentDescription = "Lock Screen",
-                tint = theme.textSecondary,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-
-            IconButton(
-              onClick = { showWidgetSheet = true },
-              modifier = Modifier.testTag("home_widgets_port_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.Widgets,
-                contentDescription = "NOS 3.5 Widgets Port",
-                tint = accentColor,
-                modifier = Modifier.size(20.dp)
-              )
-            }
-
-            IconButton(
               onClick = onOpenSettings,
               modifier = Modifier.testTag("home_settings_button")
             ) {
@@ -294,7 +291,7 @@ fun HomeScreen(
             IconButton(
               onClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isTopBarVisible = false
+                isBarsVisible = false
               },
               modifier = Modifier.testTag("home_hide_top_bar_button")
             ) {
@@ -311,7 +308,7 @@ fun HomeScreen(
 
       // Minimal Show-on-demand Pill for Top Bar ("ظهورها عند الطلب")
       AnimatedVisibility(
-        visible = !isTopBarVisible,
+        visible = !isBarsVisible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
@@ -328,7 +325,7 @@ fun HomeScreen(
               .border(1.dp, theme.border.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
               .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isTopBarVisible = true
+                isBarsVisible = true
               }
               .padding(horizontal = 14.dp, vertical = 6.dp)
               .testTag("show_top_bar_pill")
@@ -364,10 +361,16 @@ fun HomeScreen(
 
       // Scrollable Home Screen Body (Widgets, Folders, Pinned Apps)
       LazyColumn(
+        state = lazyListState,
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
+          .nestedScroll(nestedScrollConnection)
           .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(
+          top = if (isBarsVisible) 6.dp else 2.dp,
+          bottom = if (isBarsVisible) 14.dp else 8.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
       ) {
         // 1. Calendar & Digital Time Widget (Screenshot 2: JUL TUESDAY 07H 10M)
@@ -739,9 +742,6 @@ fun HomeScreen(
                               onAppClick(app)
                             }
                           },
-                          onLongClick = {
-                            isReorderingFavorites = true
-                          },
                           onOpenAppInfo = onOpenAppInfo,
                           onTogglePin = { onRemovePinnedApp(app) },
                           onToggleDock = onToggleDockApp,
@@ -868,7 +868,7 @@ fun HomeScreen(
 
       // Bottom Persistent Nothing Dock & Search (With Animated Visibility & Show-on-demand)
       AnimatedVisibility(
-        visible = isDockVisible,
+        visible = isBarsVisible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
@@ -884,7 +884,7 @@ fun HomeScreen(
               .background(theme.surface.copy(alpha = 0.5f))
               .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isDockVisible = false
+                isBarsVisible = false
               }
               .padding(horizontal = 16.dp, vertical = 3.dp)
               .testTag("collapse_dock_handle"),
@@ -914,7 +914,7 @@ fun HomeScreen(
 
       // Minimal Show-on-demand Pill for Bottom Dock ("ظهورها عند الطلب")
       AnimatedVisibility(
-        visible = !isDockVisible,
+        visible = !isBarsVisible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
@@ -931,7 +931,7 @@ fun HomeScreen(
               .border(1.dp, theme.border, RoundedCornerShape(22.dp))
               .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                isDockVisible = true
+                isBarsVisible = true
               }
               .padding(horizontal = 18.dp, vertical = 8.dp)
               .testTag("show_dock_pill")

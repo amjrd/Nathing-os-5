@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -8,14 +9,22 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,10 +75,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,7 +92,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -105,7 +113,6 @@ import com.example.ui.theme.NothingDarkSurface
 import com.example.ui.theme.NothingElevated
 import com.example.ui.theme.NothingRed
 import com.example.ui.theme.NothingWhite
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.min
@@ -146,6 +153,7 @@ val PASTEL_COLOUR_BADGE_PALETTE = listOf(
   Color(0xFFD4F1F4)  // Soft Aqua
 )
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AppIconItem(
   app: AppItem,
@@ -164,10 +172,84 @@ fun AppIconItem(
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
   val context = LocalContext.current
+  val view = androidx.compose.ui.platform.LocalView.current
   val haptic = LocalHapticFeedback.current
-  val coroutineScope = rememberCoroutineScope()
   val scale = remember { Animatable(1f) }
   var showContextMenu by remember { mutableStateOf(false) }
+
+  val interactionSource = remember { MutableInteractionSource() }
+  val isPressed by interactionSource.collectIsPressedAsState()
+
+  // Hardware Vibrator integration for guaranteed vibration feedback
+  val vibrator = remember(context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+      vm?.defaultVibrator
+    } else {
+      @Suppress("DEPRECATION")
+      context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
+  }
+
+  fun triggerVibration(durationMs: Long, isHeavy: Boolean = false) {
+    // 1. Android View level haptic (Guaranteed on touch and physical devices)
+    try {
+      if (isHeavy) {
+        view.performHapticFeedback(
+          HapticFeedbackConstants.LONG_PRESS,
+          HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+        )
+      } else {
+        view.performHapticFeedback(
+          HapticFeedbackConstants.KEYBOARD_TAP,
+          HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+        )
+      }
+    } catch (_: Exception) {}
+
+    // 2. Hardware Vibrator API for direct vibration motors
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val effect = if (isHeavy) {
+          VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
+        } else {
+          VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+        }
+        vibrator?.vibrate(effect)
+      } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator?.vibrate(VibrationEffect.createOneShot(durationMs, VibrationEffect.DEFAULT_AMPLITUDE))
+      } else {
+        @Suppress("DEPRECATION")
+        vibrator?.vibrate(durationMs)
+      }
+    } catch (_: Exception) {}
+
+    // 3. Compose fallback
+    try {
+      haptic.performHapticFeedback(if (isHeavy) HapticFeedbackType.LongPress else HapticFeedbackType.TextHandleMove)
+    } catch (_: Exception) {}
+  }
+
+  LaunchedEffect(isPressed) {
+    if (isPressed) {
+      triggerVibration(25L, false)
+      scale.animateTo(
+        targetValue = 0.88f,
+        animationSpec = spring(
+          dampingRatio = Spring.DampingRatioNoBouncy,
+          stiffness = Spring.StiffnessMedium
+        )
+      )
+    } else {
+      scale.animateTo(
+        targetValue = 1f,
+        animationSpec = spring(
+          dampingRatio = Spring.DampingRatioMediumBouncy,
+          stiffness = Spring.StiffnessMediumLow
+        )
+      )
+    }
+  }
 
   val pastelBg = remember(app.label) {
     PASTEL_COLOUR_BADGE_PALETTE[abs(app.label.hashCode()) % PASTEL_COLOUR_BADGE_PALETTE.size]
@@ -177,45 +259,16 @@ fun AppIconItem(
     modifier = modifier
       .scale(scale.value)
       .clip(RoundedCornerShape(14.dp))
-      .pointerInput(app.packageName) {
-        detectTapGestures(
-          onPress = {
-            // Touch feedback & spring shrink down to 0.88x
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            val pressJob = coroutineScope.launch {
-              scale.animateTo(
-                targetValue = 0.88f,
-                animationSpec = spring(
-                  dampingRatio = Spring.DampingRatioNoBouncy,
-                  stiffness = Spring.StiffnessMedium
-                )
-              )
-            }
-            try {
-              tryAwaitRelease()
-            } catch (_: Exception) {}
-            pressJob.cancel()
-            // Spring bounce back to 1.0x with DampingRatioMediumBouncy
-            coroutineScope.launch {
-              scale.animateTo(
-                targetValue = 1f,
-                animationSpec = spring(
-                  dampingRatio = Spring.DampingRatioMediumBouncy,
-                  stiffness = Spring.StiffnessMediumLow
-                )
-              )
-            }
-          },
-          onTap = {
-            onClick()
-          },
-          onLongPress = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            onLongClick?.invoke()
-            showContextMenu = true
-          }
-        )
-      }
+      .combinedClickable(
+        interactionSource = interactionSource,
+        indication = null,
+        onClick = onClick,
+        onLongClick = {
+          triggerVibration(55L, true)
+          showContextMenu = true
+          onLongClick?.invoke()
+        }
+      )
       .padding(4.dp)
       .testTag("app_item_${app.packageName}"),
     contentAlignment = Alignment.Center
@@ -439,17 +492,8 @@ fun AppIconItem(
         },
         onClick = {
           showContextMenu = false
-          if (onOpenAppInfo != null) {
-            onOpenAppInfo(app)
-          } else {
-            try {
-              val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:${app.packageName}")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-              }
-              context.startActivity(intent)
-            } catch (_: Exception) {}
-          }
+          launchAppInfo(context, app.packageName, app.label)
+          onOpenAppInfo?.invoke(app)
         }
       )
 
@@ -668,4 +712,42 @@ fun getIconVectorForApp(name: String): ImageVector {
     name.contains("Contact", true) -> Icons.Default.ContactPage
     else -> Icons.Default.Android
   }
+}
+
+fun launchAppInfo(context: Context, packageName: String, label: String = "") {
+  val cleanPkg = packageName.trim()
+  var launched = false
+  if (cleanPkg.isNotEmpty()) {
+    try {
+      val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", cleanPkg, null)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+      }
+      context.startActivity(intent)
+      launched = true
+    } catch (_: Exception) {}
+  }
+
+  if (!launched) {
+    try {
+      val intent = Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      context.startActivity(intent)
+      launched = true
+    } catch (_: Exception) {}
+  }
+
+  if (!launched) {
+    try {
+      val intent = Intent(Settings.ACTION_APPLICATION_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      context.startActivity(intent)
+      launched = true
+    } catch (_: Exception) {}
+  }
+
+  val display = if (label.isNotEmpty()) label else cleanPkg
+  android.widget.Toast.makeText(context, "معلومات التطبيق: $display", android.widget.Toast.LENGTH_SHORT).show()
 }
