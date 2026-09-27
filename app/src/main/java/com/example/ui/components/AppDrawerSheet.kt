@@ -3,6 +3,8 @@ package com.example.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -122,10 +124,12 @@ fun AppDrawerSheet(
       .sorted()
   }
 
+  val drawerBg = if (theme.isDark) Color(0xF20F0F11) else Color(0xF4F6F7F9)
+
   Box(
     modifier = modifier
       .fillMaxSize()
-      .background(theme.background)
+      .background(drawerBg)
       .testTag("app_drawer_container")
   ) {
     Column(
@@ -133,8 +137,40 @@ fun AppDrawerSheet(
         .fillMaxSize()
         .statusBarsPadding()
         .navigationBarsPadding()
-        .padding(top = 10.dp, start = 16.dp, end = 16.dp)
+        .padding(start = 16.dp, end = 16.dp)
     ) {
+      // Top Pull-Down Handle Pill (Authentic Nothing OS Bottom Drawer Handle)
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(top = 10.dp, bottom = 8.dp)
+          .pointerInput(Unit) {
+            var pullDownDist = 0f
+            detectVerticalDragGestures(
+              onDragStart = { pullDownDist = 0f },
+              onDragEnd = { pullDownDist = 0f },
+              onDragCancel = { pullDownDist = 0f },
+              onVerticalDrag = { _, dragAmount ->
+                pullDownDist += dragAmount
+                // Reduced touch sensitivity (requires deliberate drag > 110f to close)
+                if (pullDownDist > 110f) {
+                  onClose()
+                  pullDownDist = 0f
+                }
+              }
+            )
+          },
+        contentAlignment = Alignment.Center
+      ) {
+        Box(
+          modifier = Modifier
+            .width(42.dp)
+            .height(4.5.dp)
+            .clip(CircleShape)
+            .background(theme.textSecondary.copy(alpha = 0.45f))
+        )
+      }
+
       // Top Bar: Back button + Search Box + 3-Dot Overflow Menu (Screenshot 1 & 2)
       Row(
         modifier = Modifier.fillMaxWidth(),

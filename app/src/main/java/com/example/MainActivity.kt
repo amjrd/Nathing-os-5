@@ -12,6 +12,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -27,6 +30,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.model.LauncherClockStyle
 import com.example.model.LauncherScreen
@@ -40,6 +45,7 @@ import com.example.ui.components.AppDrawerSheet
 import com.example.ui.components.EditNoteDialog
 import com.example.ui.components.ExpandedFolderSheet
 import com.example.ui.components.LauncherSettingsDialog
+import com.example.ui.components.NosWidgetPortSheet
 import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.MyApplicationTheme
@@ -113,19 +119,22 @@ fun NothingLauncherApp(
 
   var isEditingNote by remember { mutableStateOf(false) }
   var isSettingsOpen by remember { mutableStateOf(false) }
+  var isWidgetSheetOpen by remember { mutableStateOf(false) }
 
   val accentColor = remember(settings.accentColorIndex) {
     ACCENT_COLORS.getOrElse(settings.accentColorIndex) { ACCENT_COLORS[0] }
   }
 
   // Handle hardware back press gracefully
-  BackHandler(enabled = currentScreen == LauncherScreen.APP_DRAWER || currentScreen == LauncherScreen.LOCK_SCREEN || isSettingsOpen || activeFolder != null) {
+  BackHandler(enabled = currentScreen == LauncherScreen.APP_DRAWER || currentScreen == LauncherScreen.LOCK_SCREEN || isSettingsOpen || isWidgetSheetOpen || activeFolder != null) {
     if (currentScreen == LauncherScreen.LOCK_SCREEN) {
       if (settings.lockScreen.securityType == com.example.model.LockSecurityType.SWIPE) {
         viewModel.unlockLauncherScreen()
       }
     } else if (activeFolder != null) {
       viewModel.openFolder(null)
+    } else if (isWidgetSheetOpen) {
+      isWidgetSheetOpen = false
     } else if (isSettingsOpen) {
       isSettingsOpen = false
     } else if (currentScreen == LauncherScreen.APP_DRAWER) {
@@ -184,7 +193,10 @@ fun NothingLauncherApp(
       onRemovePinnedApp = { app -> viewModel.removePinnedApp(app) },
       onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
-      onOpenAppInfo = { app -> viewModel.openAppInfo(app) }
+      onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
+      modifier = Modifier
+        .fillMaxSize()
+        .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
     )
 
     // 1.5. Signature Nothing OS 5 Lock Screen
@@ -208,11 +220,20 @@ fun NothingLauncherApp(
       )
     }
 
-    // 2. App Drawer Screen (Animated slide in/out)
+    // 2. App Drawer Screen (Animated slide in from bottom with spring & fade)
     AnimatedVisibility(
       visible = currentScreen == LauncherScreen.APP_DRAWER,
-      enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-      exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+      enter = slideInVertically(
+        initialOffsetY = { it },
+        animationSpec = spring(
+          dampingRatio = Spring.DampingRatioLowBouncy,
+          stiffness = Spring.StiffnessMediumLow
+        )
+      ) + fadeIn(animationSpec = tween(220)),
+      exit = slideOutVertically(
+        targetOffsetY = { it },
+        animationSpec = tween(220)
+      ) + fadeOut(animationSpec = tween(180))
     ) {
       AppDrawerSheet(
         apps = installedApps,
@@ -262,11 +283,25 @@ fun NothingLauncherApp(
         onUpdateSettings = { viewModel.updateSettings(it) },
         onPickCustomWallpaper = { uri, target -> viewModel.setCustomWallpaper(uri, target) },
         onRemoveCustomWallpaper = { target -> viewModel.clearCustomWallpaper(target) },
+        onOpenWidgetCustomizer = {
+          isWidgetSheetOpen = true
+          isSettingsOpen = false
+        },
         onLockScreenNow = {
           viewModel.lockScreen()
           isSettingsOpen = false
         },
         onDismiss = { isSettingsOpen = false },
+        accentColor = accentColor
+      )
+    }
+
+    // 4.5. NOS Widgets Port Customizer Bottom Sheet
+    if (isWidgetSheetOpen) {
+      NosWidgetPortSheet(
+        activeWidgets = settings.activeWidgets,
+        onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
+        onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
       )
     }

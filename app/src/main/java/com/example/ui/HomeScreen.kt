@@ -230,11 +230,20 @@ fun HomeScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .pointerInput(settings.swipeDownNotifications) {
               if (settings.swipeDownNotifications) {
-                detectVerticalDragGestures { _, dragAmount ->
-                  if (dragAmount > 30f) {
-                    onSwipeDown()
+                var totalDrag = 0f
+                detectVerticalDragGestures(
+                  onDragStart = { totalDrag = 0f },
+                  onDragEnd = { totalDrag = 0f },
+                  onDragCancel = { totalDrag = 0f },
+                  onVerticalDrag = { _, dragAmount ->
+                    totalDrag += dragAmount
+                    // Deliberate swipe down with reduced touch sensitivity
+                    if (totalDrag > 120f) {
+                      onSwipeDown()
+                      totalDrag = 0f
+                    }
                   }
-                }
+                )
               }
             },
           horizontalArrangement = Arrangement.SpaceBetween,
@@ -258,37 +267,32 @@ fun HomeScreen(
               color = theme.textPrimary,
               letterSpacing = 2.sp
             )
-            // Explicit Version Badge (v1.3.0)
-            Box(
-              modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(accentColor.copy(alpha = 0.18f))
-                .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-              Text(
-                text = "v1.3.0",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = accentColor,
-                letterSpacing = 0.5.sp
-              )
-            }
           }
 
-          // Internal Settings Access Icon
-          IconButton(
-            onClick = {
-              com.example.util.VibrationHelper.vibrateTouch(context)
-              onOpenSettings()
-            },
-            modifier = Modifier.testTag("home_settings_button")
+          // Internal Settings Access Icon with matching red dot indicator (Request 3)
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-            Icon(
-              imageVector = Icons.Default.Settings,
-              contentDescription = "Launcher Settings",
-              tint = theme.textSecondary
+            IconButton(
+              onClick = {
+                com.example.util.VibrationHelper.vibrateTouch(context)
+                onOpenSettings()
+              },
+              modifier = Modifier.testTag("home_settings_button")
+            ) {
+              Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Launcher Settings",
+                tint = theme.textSecondary
+              )
+            }
+            // Signature Nothing Red Circle at the end of the settings row
+            Box(
+              modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(accentColor)
             )
           }
         }
@@ -529,15 +533,6 @@ fun HomeScreen(
           }
         }
 
-        // 10. Quick Memo
-        item {
-          NothingQuickNoteWidget(
-            note = quickNote,
-            onEditNote = onEditNote,
-            accentColor = accentColor
-          )
-        }
-
         // 11. Signature Nothing OS 2x2 Enlarged Folders
         item {
           Row(
@@ -764,66 +759,52 @@ fun HomeScreen(
           }
         }
 
-        // Customize NOS Widgets Port Button
-        item {
-          Button(
-            onClick = { showWidgetSheet = true },
-            colors = ButtonDefaults.buttonColors(
-              containerColor = theme.surface,
-              contentColor = theme.textPrimary
-            ),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(46.dp)
-              .border(1.dp, theme.border, RoundedCornerShape(14.dp))
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.Widgets,
-                contentDescription = null,
-                tint = accentColor,
-                modifier = Modifier.size(16.dp)
-              )
-              Text(
-                text = "+ CUSTOMIZE NOS 3.5 WIDGETS",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-              )
-            }
-          }
-        }
-
         item {
           Spacer(modifier = Modifier.height(10.dp))
         }
       }
 
-      // Bottom Persistent Nothing Dock & Search (With Animated Visibility & Show-on-demand)
+      // Bottom Persistent Nothing Dock & Search (With Animated Visibility & Swipe-up to open Drawer)
       AnimatedVisibility(
         visible = isBarsVisible,
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut()
       ) {
-        NothingDock(
-          dockApps = dockApps,
-          onAppClick = onAppClick,
-          onOpenDrawer = onOpenDrawer,
-          onOpenSearch = onOpenDrawer,
-          iconPack = settings.iconPack,
-          accentColor = accentColor,
-          showSearchBar = settings.showSearchBarOnDock,
-          onToggleDockApp = onToggleDockApp,
-          onOpenAppInfo = { appTarget ->
-            selectedAppForInfo = appTarget
-            onOpenAppInfo(appTarget)
-          }
-        )
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+              var accumulatedUpDrag = 0f
+              detectVerticalDragGestures(
+                onDragStart = { accumulatedUpDrag = 0f },
+                onDragEnd = { accumulatedUpDrag = 0f },
+                onDragCancel = { accumulatedUpDrag = 0f },
+                onVerticalDrag = { _, dragAmount ->
+                  accumulatedUpDrag += dragAmount
+                  // Deliberate swipe up (reduced touch sensitivity)
+                  if (accumulatedUpDrag < -100f) {
+                    onOpenDrawer()
+                    accumulatedUpDrag = 0f
+                  }
+                }
+              )
+            }
+        ) {
+          NothingDock(
+            dockApps = dockApps,
+            onAppClick = onAppClick,
+            onOpenDrawer = onOpenDrawer,
+            onOpenSearch = onOpenDrawer,
+            iconPack = settings.iconPack,
+            accentColor = accentColor,
+            showSearchBar = settings.showSearchBarOnDock,
+            onToggleDockApp = onToggleDockApp,
+            onOpenAppInfo = { appTarget ->
+              selectedAppForInfo = appTarget
+              onOpenAppInfo(appTarget)
+            }
+          )
+        }
       }
 
     }

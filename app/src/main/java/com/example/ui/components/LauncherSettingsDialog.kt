@@ -147,6 +147,7 @@ fun LauncherSettingsDialog(
   onUpdateSettings: (LauncherSettings) -> Unit,
   onPickCustomWallpaper: (android.net.Uri, WallpaperTarget) -> Unit = { _, _ -> },
   onRemoveCustomWallpaper: (WallpaperTarget) -> Unit = {},
+  onOpenWidgetCustomizer: () -> Unit = {},
   onLockScreenNow: () -> Unit,
   onDismiss: () -> Unit,
   accentColor: Color
@@ -218,6 +219,12 @@ fun LauncherSettingsDialog(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
+            Box(
+              modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(accentColor)
+            )
             Text(
               text = "NOTHING OS 5.0",
               fontFamily = FontFamily.Monospace,
@@ -226,24 +233,9 @@ fun LauncherSettingsDialog(
               color = theme.textPrimary,
               letterSpacing = 2.sp
             )
-            Box(
-              modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(accentColor.copy(alpha = 0.15f))
-                .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp)
-            ) {
-              Text(
-                text = "v1.3.0",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = accentColor
-              )
-            }
           }
           Text(
-            text = "LAUNCHER PREFERENCES • BUILD 4",
+            text = "LAUNCHER PREFERENCES",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary
@@ -388,10 +380,52 @@ fun LauncherSettingsDialog(
             accentColor = accentColor,
             onCheckedChange = { onUpdateSettings(settings.copy(showSearchBarOnDock = it)) }
           )
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // Customize NOS Widgets launcher button inside settings
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(theme.surface)
+              .border(1.dp, theme.border, RoundedCornerShape(12.dp))
+              .clickable { onOpenWidgetCustomizer() }
+              .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Widgets,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(20.dp)
+              )
+              Column {
+                Text(
+                  text = "CUSTOMIZE WIDGETS",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = theme.textPrimary
+                )
+                Text(
+                  text = "Enable or disable Nothing OS 5.0 home widgets",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 10.sp,
+                  color = theme.textSecondary
+                )
+              }
+            }
+          }
         }
 
-        // TAB 2: THEMES & WALLPAPERS
-        2 -> {
+        // TAB 1: THEMES & WALLPAPERS
+        1 -> {
           // 1. LAUNCHER THEME MODE: THEME JOUR (Image 3) vs THEME NUIT (Image 2) vs SYSTEM
           Text(
             text = "THEME MODE (THÈME DU LAUNCHER)",
@@ -881,8 +915,8 @@ fun LauncherSettingsDialog(
           )
         }
 
-        // TAB 3: SYSTEM PERMISSIONS & GESTURES
-        3 -> {
+        // TAB 2: SYSTEM PERMISSIONS & GESTURES
+        2 -> {
           // Gestures
           Text(
             text = "SYSTEM GESTURES",
@@ -1021,66 +1055,7 @@ fun LauncherSettingsDialog(
         }
       }
 
-      // Dedicated Build & Version Information Section
-      Spacer(modifier = Modifier.height(16.dp))
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(16.dp))
-          .background(theme.surface)
-          .border(1.dp, theme.border, RoundedCornerShape(16.dp))
-          .padding(16.dp)
-      ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Box(
-                modifier = Modifier
-                  .size(8.dp)
-                  .clip(CircleShape)
-                  .background(accentColor)
-              )
-              Text(
-                text = "VERSION & BUILD INFO",
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                color = theme.textPrimary,
-                letterSpacing = 1.sp
-              )
-            }
-            Text(
-              text = "v1.2.0",
-              fontFamily = FontFamily.Monospace,
-              fontWeight = FontWeight.Bold,
-              fontSize = 12.sp,
-              color = accentColor
-            )
-          }
-
-          Text(
-            text = "NOTHING OS 5.0 LAUNCHER • BUILD 3 (STABLE)",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = theme.textSecondary
-          )
-          Text(
-            text = "• Version: 1.2.0 (Build 3)\n• UI: Visible version badge, clean uncropped full immersive mode\n• Haptics: Guaranteed physical vibration on every touch and tap\n• Diagnostics: Integrated Nothing OS App Info sheet",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = theme.textSecondary
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(30.dp))
+      Spacer(modifier = Modifier.height(24.dp))
     }
   }
 }
