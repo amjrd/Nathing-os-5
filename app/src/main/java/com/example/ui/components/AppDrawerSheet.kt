@@ -89,6 +89,7 @@ fun AppDrawerSheet(
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
 ) {
+  val context = androidx.compose.ui.platform.LocalContext.current
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
   var selectedAppForMenu by remember { mutableStateOf<AppItem?>(null) }
@@ -449,6 +450,7 @@ fun AppDrawerSheet(
                 color = theme.textSecondary,
                 modifier = Modifier
                   .clickable {
+                    com.example.util.VibrationHelper.vibrateTouch(context)
                     val targetIdx = filteredApps.indexOfFirst {
                       it.label.startsWith(letter, ignoreCase = true)
                     }
@@ -588,11 +590,15 @@ private fun MenuRow(
   textColor: Color = NothingWhite,
   onClick: () -> Unit
 ) {
+  val context = androidx.compose.ui.platform.LocalContext.current
   Row(
     modifier = Modifier
       .fillMaxWidth()
       .clip(RoundedCornerShape(12.dp))
-      .clickable { onClick() }
+      .clickable {
+        com.example.util.VibrationHelper.vibrateTouch(context)
+        onClick()
+      }
       .padding(vertical = 12.dp, horizontal = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(16.dp)

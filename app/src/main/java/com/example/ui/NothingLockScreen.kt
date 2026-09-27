@@ -511,6 +511,7 @@ fun NothingLockScreen(
                       .background(theme.surface)
                       .border(1.dp, theme.border, CircleShape)
                       .clickable {
+                        com.example.util.VibrationHelper.vibrateTouch(context)
                         pinError = false
                         when (key) {
                           "DEL" -> {
@@ -522,6 +523,7 @@ fun NothingLockScreen(
                             if (enteredPin == lockSettings.pinCode) {
                               onUnlock()
                             } else {
+                              com.example.util.VibrationHelper.vibrateTouch(context, isHeavy = true)
                               pinError = true
                               enteredPin = ""
                             }
@@ -534,6 +536,7 @@ fun NothingLockScreen(
                                 if (newPin == lockSettings.pinCode) {
                                   onUnlock()
                                 } else {
+                                  com.example.util.VibrationHelper.vibrateTouch(context, isHeavy = true)
                                   pinError = true
                                   enteredPin = ""
                                 }
@@ -681,6 +684,7 @@ fun NothingLockScreen(
               shape = CircleShape
             )
             .clickable {
+              com.example.util.VibrationHelper.vibrateTouch(context)
               if (lockSettings.leftShortcut == LockShortcutType.TORCH) {
                 onToggleTorch()
               } else {
@@ -716,6 +720,7 @@ fun NothingLockScreen(
             .background(theme.surface)
             .border(1.dp, theme.border, CircleShape)
             .clickable {
+              com.example.util.VibrationHelper.vibrateTouch(context)
               onLaunchShortcut(lockSettings.rightShortcut)
             },
           contentAlignment = Alignment.Center

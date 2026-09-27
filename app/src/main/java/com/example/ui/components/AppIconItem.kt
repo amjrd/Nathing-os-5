@@ -113,6 +113,7 @@ import com.example.ui.theme.NothingDarkSurface
 import com.example.ui.theme.NothingElevated
 import com.example.ui.theme.NothingRed
 import com.example.ui.theme.NothingWhite
+import com.example.util.VibrationHelper
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.min
@@ -191,29 +192,8 @@ fun AppIconItem(
     }
   }
 
-  fun triggerVibration(durationMs: Long = 30L, isHeavy: Boolean = false) {
-    // 1. Hardware Vibrator API for direct vibration motor (Primary for physical devices)
-    try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        vibrator?.vibrate(VibrationEffect.createOneShot(if (isHeavy) 60L else 30L, VibrationEffect.DEFAULT_AMPLITUDE))
-      } else {
-        @Suppress("DEPRECATION")
-        vibrator?.vibrate(if (isHeavy) 60L else 30L)
-      }
-    } catch (_: Exception) {}
-
-    // 2. Android View level haptic (Guaranteed on touch and physical devices)
-    try {
-      view.performHapticFeedback(
-        if (isHeavy) HapticFeedbackConstants.LONG_PRESS else HapticFeedbackConstants.VIRTUAL_KEY,
-        HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING or HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING
-      )
-    } catch (_: Exception) {}
-
-    // 3. Compose fallback
-    try {
-      haptic.performHapticFeedback(if (isHeavy) HapticFeedbackType.LongPress else HapticFeedbackType.TextHandleMove)
-    } catch (_: Exception) {}
+  fun triggerVibration(durationMs: Long = 35L, isHeavy: Boolean = false) {
+    VibrationHelper.vibrateTouch(context, view, isHeavy)
   }
 
   LaunchedEffect(isPressed) {
@@ -481,7 +461,6 @@ fun AppIconItem(
         },
         onClick = {
           showContextMenu = false
-          launchAppInfo(context, app.packageName, app.label)
           onOpenAppInfo?.invoke(app)
         }
       )

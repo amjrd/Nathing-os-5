@@ -94,19 +94,18 @@ val LocalLauncherTheme = staticCompositionLocalOf {
 
 @Composable
 fun MyApplicationTheme(
-  themeMode: LauncherThemeMode = LauncherThemeMode.SYSTEM,
+  themeMode: LauncherThemeMode = LauncherThemeMode.ORIGINAL,
   darkTheme: Boolean = isSystemInDarkTheme(),
   dynamicColor: Boolean = false,
   content: @Composable () -> Unit
 ) {
   val colorScheme = when (themeMode) {
-    LauncherThemeMode.DARK -> NothingDarkColorScheme
-    LauncherThemeMode.LIGHT -> NothingLightColorScheme
-    LauncherThemeMode.RETRO_PASTEL -> NothingRetroColorScheme
-    LauncherThemeMode.SYSTEM -> if (darkTheme) NothingDarkColorScheme else NothingLightColorScheme
+    LauncherThemeMode.ORIGINAL -> NothingDarkColorScheme
+    LauncherThemeMode.MONOCHROME_STUDIO -> NothingDarkColorScheme
+    LauncherThemeMode.ATMOSPHERE_PASTEL -> NothingRetroColorScheme
   }
   val themeColors = when (themeMode) {
-    LauncherThemeMode.DARK -> {
+    LauncherThemeMode.ORIGINAL -> {
       LauncherThemeColors(
         isDark = true,
         background = NothingBlack,
@@ -122,70 +121,37 @@ fun MyApplicationTheme(
         searchPillBg = NothingDarkSurface
       )
     }
-    LauncherThemeMode.LIGHT -> {
+    LauncherThemeMode.MONOCHROME_STUDIO -> {
       LauncherThemeColors(
-        isDark = false,
-        background = NothingLightBackground,
-        surface = NothingLightSurface,
-        elevated = NothingLightElevated,
-        border = NothingLightBorder,
-        textPrimary = NothingLightTextPrimary,
-        textSecondary = NothingLightTextSecondary,
-        unlitDot = NothingLightUnlitDot,
-        dockBg = NothingLightSurface.copy(alpha = 0.92f),
+        isDark = true,
+        background = Color(0xFF0F0F12),
+        surface = Color(0xFFFFFFFF),
+        elevated = Color(0xFFF0F0F0),
+        border = Color(0xFF282828),
+        textPrimary = Color.White,
+        textSecondary = Color(0xFFAAAAAA),
+        unlitDot = Color(0xFF333333),
+        dockBg = Color(0x991E1E1E),
         dockButtonBg = Color.White,
-        dockIconTint = Color(0xFF1A1A1A),
-        searchPillBg = NothingLightSurface
+        dockIconTint = Color(0xFF111111),
+        searchPillBg = Color(0xFFFFFFFF)
       )
     }
-    LauncherThemeMode.RETRO_PASTEL -> {
+    LauncherThemeMode.ATMOSPHERE_PASTEL -> {
       LauncherThemeColors(
         isDark = false,
-        background = NothingRetroBackground,
-        surface = NothingRetroSurface,
-        elevated = NothingRetroElevated,
-        border = NothingRetroBorder,
-        textPrimary = NothingRetroTextPrimary,
-        textSecondary = NothingRetroTextSecondary,
+        background = Color(0xFFE2E9DE),
+        surface = Color(0xFFEEF3EC),
+        elevated = Color(0xFFF7FAF5),
+        border = Color(0xFFCDD6C8),
+        textPrimary = Color(0xFF1E281D),
+        textSecondary = Color(0xFF5D6B5A),
         unlitDot = NothingRetroUnlitDot,
-        dockBg = NothingRetroDockBg.copy(alpha = 0.92f),
+        dockBg = Color(0xDDE4ECE1),
         dockButtonBg = Color.White,
-        dockIconTint = NothingRetroAccent,
-        searchPillBg = NothingRetroSurface
+        dockIconTint = Color(0xFF1E281D),
+        searchPillBg = Color(0xFFEEF3EC)
       )
-    }
-    LauncherThemeMode.SYSTEM -> {
-      if (darkTheme) {
-        LauncherThemeColors(
-          isDark = true,
-          background = NothingBlack,
-          surface = NothingDarkSurface,
-          elevated = NothingElevated,
-          border = NothingBorder,
-          textPrimary = NothingWhite,
-          textSecondary = NothingGrey,
-          unlitDot = NothingUnlitDot,
-          dockBg = NothingDarkSurface.copy(alpha = 0.88f),
-          dockButtonBg = NothingElevated,
-          dockIconTint = NothingWhite,
-          searchPillBg = NothingDarkSurface
-        )
-      } else {
-        LauncherThemeColors(
-          isDark = false,
-          background = NothingLightBackground,
-          surface = NothingLightSurface,
-          elevated = NothingLightElevated,
-          border = NothingLightBorder,
-          textPrimary = NothingLightTextPrimary,
-          textSecondary = NothingLightTextSecondary,
-          unlitDot = NothingLightUnlitDot,
-          dockBg = NothingLightSurface.copy(alpha = 0.92f),
-          dockButtonBg = Color.White,
-          dockIconTint = Color(0xFF1A1A1A),
-          searchPillBg = NothingLightSurface
-        )
-      }
     }
   }
 

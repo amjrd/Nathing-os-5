@@ -155,8 +155,8 @@ fun LauncherSettingsDialog(
   val context = LocalContext.current
   val lifecycleOwner = LocalLifecycleOwner.current
 
-  // Selected tab: 0 = HOME, 1 = LOCK SCREEN, 2 = THEMES, 3 = PERMISSIONS
-  var selectedTab by remember { mutableIntStateOf(1) } // Start on Lock Screen tab as requested
+  // Selected tab: 0 = HOME, 1 = THEMES, 2 = SYSTEM
+  var selectedTab by remember { mutableIntStateOf(0) }
   var wallpaperTarget by remember { mutableStateOf(WallpaperTarget.BOTH) }
 
   val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -234,7 +234,7 @@ fun LauncherSettingsDialog(
                 .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
               Text(
-                text = "v1.2.0",
+                text = "v1.3.0",
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -243,7 +243,7 @@ fun LauncherSettingsDialog(
             }
           }
           Text(
-            text = "LAUNCHER & LOCK SCREEN PREFERENCES • BUILD 3",
+            text = "LAUNCHER PREFERENCES • BUILD 4",
             fontFamily = FontFamily.Monospace,
             fontSize = 10.sp,
             color = theme.textSecondary
@@ -260,7 +260,7 @@ fun LauncherSettingsDialog(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // Tab selector row (5 Tabs)
+      // Tab selector row (3 Clean Tabs)
       Row(
         modifier = Modifier
           .fillMaxWidth()
@@ -270,328 +270,42 @@ fun LauncherSettingsDialog(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
       ) {
         TabButton(
-          title = "LOCK",
-          icon = Icons.Default.Lock,
-          selected = selectedTab == 1,
-          accentColor = accentColor,
-          modifier = Modifier.weight(1f)
-        ) { selectedTab = 1 }
-
-        TabButton(
           title = "HOME",
           icon = Icons.Default.Home,
           selected = selectedTab == 0,
           accentColor = accentColor,
           modifier = Modifier.weight(1f)
-        ) { selectedTab = 0 }
+        ) {
+          com.example.util.VibrationHelper.vibrateTouch(context)
+          selectedTab = 0
+        }
 
         TabButton(
-          title = "THEME",
+          title = "THEMES",
           icon = Icons.Default.Palette,
-          selected = selectedTab == 2,
+          selected = selectedTab == 1,
           accentColor = accentColor,
           modifier = Modifier.weight(1f)
-        ) { selectedTab = 2 }
+        ) {
+          com.example.util.VibrationHelper.vibrateTouch(context)
+          selectedTab = 1
+        }
 
         TabButton(
           title = "SYSTEM",
           icon = Icons.Default.Security,
-          selected = selectedTab == 3,
+          selected = selectedTab == 2,
           accentColor = accentColor,
           modifier = Modifier.weight(1f)
-        ) { selectedTab = 3 }
-
-        TabButton(
-          title = "WIDGETS",
-          icon = Icons.Default.Widgets,
-          selected = selectedTab == 4,
-          accentColor = accentColor,
-          modifier = Modifier.weight(1f)
-        ) { selectedTab = 4 }
+        ) {
+          com.example.util.VibrationHelper.vibrateTouch(context)
+          selectedTab = 2
+        }
       }
 
       Spacer(modifier = Modifier.height(20.dp))
 
       when (selectedTab) {
-        // TAB 1: LOCK SCREEN (NOTHING OS 5)
-        1 -> {
-          val lock = settings.lockScreen
-
-          // Preview / Lock Now Banner
-          Button(
-            onClick = {
-              onDismiss()
-              onLockScreenNow()
-            },
-            colors = ButtonDefaults.buttonColors(
-              containerColor = accentColor,
-              contentColor = NothingWhite
-            ),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(48.dp)
-              .testTag("preview_lock_screen_button")
-          ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Icon(imageVector = Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
-              Text(
-                text = "TEST / LOCK SCREEN NOW",
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                letterSpacing = 1.sp
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(18.dp))
-
-          // Enable Nothing Lockscreen
-          SettingsSwitchRow(
-            title = "NOTHING OS 5 LOCK SCREEN",
-            subtitle = "Enable signature Nothing lock experience",
-            checked = lock.isLockScreenEnabled,
-            accentColor = accentColor,
-            onCheckedChange = {
-              onUpdateSettings(settings.copy(lockScreen = lock.copy(isLockScreenEnabled = it)))
-            }
-          )
-
-          Spacer(modifier = Modifier.height(14.dp))
-
-          // Prevent System Lockscreen Overlap (حل مشكلة تداخل قفل النظام واللانشر)
-          SettingsSwitchRow(
-            title = "PREVENT SYSTEM LOCK OVERLAP",
-            subtitle = "Prevent visual conflict with Android system lockscreen & unlock smoothly",
-            checked = lock.preventSystemLockOverlap,
-            accentColor = accentColor,
-            onCheckedChange = {
-              onUpdateSettings(settings.copy(lockScreen = lock.copy(preventSystemLockOverlap = it)))
-            }
-          )
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Lock Clock Style
-          Text(
-            text = "LOCK CLOCK STYLE",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = NothingGrey,
-            letterSpacing = 1.sp
-          )
-          Spacer(modifier = Modifier.height(8.dp))
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            listOf(
-              LockClockStyle.DOT_MATRIX_BIG to "BIG NDOT",
-              LockClockStyle.VERTICAL_STACK to "STACK",
-              LockClockStyle.MINIMAL_ANALOG to "ANALOG",
-              LockClockStyle.CLASSIC_DIGITAL to "CLASSIC"
-            ).forEach { (style, label) ->
-              Box(
-                modifier = Modifier
-                  .weight(1f)
-                  .clip(RoundedCornerShape(10.dp))
-                  .background(if (lock.clockStyle == style) accentColor else NothingDarkSurface)
-                  .border(1.dp, if (lock.clockStyle == style) accentColor else NothingBorder, RoundedCornerShape(10.dp))
-                  .clickable {
-                    onUpdateSettings(settings.copy(lockScreen = lock.copy(clockStyle = style)))
-                  }
-                  .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-              ) {
-                Text(
-                  text = label,
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 10.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = NothingWhite
-                )
-              }
-            }
-          }
-
-          Spacer(modifier = Modifier.height(18.dp))
-
-          // Security Type (Swipe vs PIN)
-          Text(
-            text = "UNLOCK SECURITY",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = NothingGrey,
-            letterSpacing = 1.sp
-          )
-          Spacer(modifier = Modifier.height(8.dp))
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            listOf(
-              LockSecurityType.SWIPE to "SWIPE UP",
-              LockSecurityType.PIN to "4-DIGIT PIN"
-            ).forEach { (sec, label) ->
-              Box(
-                modifier = Modifier
-                  .weight(1f)
-                  .clip(RoundedCornerShape(10.dp))
-                  .background(if (lock.securityType == sec) accentColor else NothingDarkSurface)
-                  .border(1.dp, if (lock.securityType == sec) accentColor else NothingBorder, RoundedCornerShape(10.dp))
-                  .clickable {
-                    onUpdateSettings(settings.copy(lockScreen = lock.copy(securityType = sec)))
-                  }
-                  .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-              ) {
-                Text(
-                  text = label,
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = NothingWhite
-                )
-              }
-            }
-          }
-
-          // If PIN is selected, PIN customizer
-          if (lock.securityType == LockSecurityType.PIN) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-              modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(NothingDarkSurface)
-                .border(1.dp, NothingBorder, RoundedCornerShape(12.dp))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-              Column {
-                Text(
-                  text = "CURRENT PIN CODE",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = NothingWhite
-                )
-                Text(
-                  text = "Enter 4 numeric digits",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 10.sp,
-                  color = NothingGrey
-                )
-              }
-              BasicTextField(
-                value = lock.pinCode,
-                onValueChange = {
-                  if (it.length <= 4 && it.all { char -> char.isDigit() }) {
-                    onUpdateSettings(settings.copy(lockScreen = lock.copy(pinCode = it)))
-                  }
-                },
-                textStyle = TextStyle(
-                  color = accentColor,
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 16.sp,
-                  fontWeight = FontWeight.Bold
-                ),
-                cursorBrush = SolidColor(accentColor),
-                modifier = Modifier
-                  .clip(RoundedCornerShape(8.dp))
-                  .background(NothingElevated)
-                  .padding(horizontal = 12.dp, vertical = 6.dp)
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Lock Screen Features Toggles
-          SettingsSwitchRow(
-            title = "LOCK SCREEN WIDGETS",
-            subtitle = "Weather & steps capsule pills",
-            checked = lock.showWidgets,
-            accentColor = accentColor,
-            onCheckedChange = {
-              onUpdateSettings(settings.copy(lockScreen = lock.copy(showWidgets = it)))
-            }
-          )
-
-          Spacer(modifier = Modifier.height(12.dp))
-
-          SettingsSwitchRow(
-            title = "LOCK NOTIFICATIONS",
-            subtitle = "Show unread notifications on lock screen",
-            checked = lock.showNotifications,
-            accentColor = accentColor,
-            onCheckedChange = {
-              onUpdateSettings(settings.copy(lockScreen = lock.copy(showNotifications = it)))
-            }
-          )
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Shortcuts config
-          Text(
-            text = "BOTTOM SHORTCUTS",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = NothingGrey,
-            letterSpacing = 1.sp
-          )
-          Spacer(modifier = Modifier.height(8.dp))
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Column(modifier = Modifier.weight(1f)) {
-              Text("LEFT: TORCH", fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = NothingGrey)
-            }
-            Column(modifier = Modifier.weight(1f)) {
-              Text("RIGHT: CAMERA", fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = NothingGrey)
-            }
-          }
-
-          Spacer(modifier = Modifier.height(14.dp))
-
-          // Owner Info Field
-          Text(
-            text = "DEVICE OWNER INFO",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = NothingGrey,
-            letterSpacing = 1.sp
-          )
-          Spacer(modifier = Modifier.height(6.dp))
-          BasicTextField(
-            value = lock.customOwnerInfo,
-            onValueChange = {
-              onUpdateSettings(settings.copy(lockScreen = lock.copy(customOwnerInfo = it)))
-            },
-            textStyle = TextStyle(
-              color = NothingWhite,
-              fontFamily = FontFamily.Monospace,
-              fontSize = 12.sp
-            ),
-            cursorBrush = SolidColor(accentColor),
-            modifier = Modifier
-              .fillMaxWidth()
-              .clip(RoundedCornerShape(10.dp))
-              .background(NothingDarkSurface)
-              .border(1.dp, NothingBorder, RoundedCornerShape(10.dp))
-              .padding(12.dp)
-          )
-        }
 
         // TAB 0: HOME SCREEN & ICONS
         0 -> {
@@ -693,10 +407,9 @@ fun LauncherSettingsDialog(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
           ) {
             listOf(
-              Triple(LauncherThemeMode.DARK, "NUIT", Icons.Default.DarkMode),
-              Triple(LauncherThemeMode.LIGHT, "JOUR", Icons.Default.LightMode),
-              Triple(LauncherThemeMode.RETRO_PASTEL, "RETRO", Icons.Default.Palette),
-              Triple(LauncherThemeMode.SYSTEM, "AUTO", Icons.Default.BrightnessAuto)
+              Triple(LauncherThemeMode.ORIGINAL, "ORIGINAL", Icons.Default.DarkMode),
+              Triple(LauncherThemeMode.MONOCHROME_STUDIO, "MONO STUDIO", Icons.Default.Layers),
+              Triple(LauncherThemeMode.ATMOSPHERE_PASTEL, "ATMOSPHERE", Icons.Default.Palette)
             ).forEach { (mode, label, icon) ->
               val isSelected = settings.themeMode == mode
               Box(
@@ -1306,15 +1019,6 @@ fun LauncherSettingsDialog(
             }
           }
         }
-
-        // TAB 4: NOTHING OS SYSTEM WIDGET PORTS SUITE
-        4 -> {
-          NothingWidgetsPortSettingsTab(
-            settings = settings,
-            onUpdateSettings = onUpdateSettings,
-            accentColor = accentColor
-          )
-        }
       }
 
       // Dedicated Build & Version Information Section
@@ -1545,139 +1249,7 @@ private fun PermissionIntegrationCard(
   }
 }
 
-@Composable
-private fun NothingWidgetsPortSettingsTab(
-  settings: LauncherSettings,
-  onUpdateSettings: (LauncherSettings) -> Unit,
-  accentColor: Color
-) {
-  val theme = LocalLauncherTheme.current
-  val context = LocalContext.current
 
-  Column(
-    modifier = Modifier.fillMaxWidth(),
-    verticalArrangement = Arrangement.spacedBy(16.dp)
-  ) {
-    // Header Banner
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .clip(RoundedCornerShape(16.dp))
-        .background(theme.surface)
-        .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-        .padding(16.dp)
-    ) {
-      Column {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.Widgets,
-            contentDescription = null,
-            tint = accentColor,
-            modifier = Modifier.size(20.dp)
-          )
-          Text(
-            text = "NOS 3.5 & KWGT WIDGETS SUITE",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-            color = theme.textPrimary,
-            letterSpacing = 1.sp
-          )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-          text = "تخصيص وتفعيل حزم ودجات Nothing OS الحصرية، بما في ذلك الودجات المستوحاة من KWGT وحزمة منافذ Pixel الرسمية لنظام Android 17.",
-          fontFamily = FontFamily.Monospace,
-          fontSize = 10.sp,
-          color = theme.textSecondary,
-          lineHeight = 14.sp
-        )
-      }
-    }
-
-    Text(
-      text = "ACTIVE WIDGETS ON HOME SCREEN",
-      fontFamily = FontFamily.Monospace,
-      fontSize = 11.sp,
-      fontWeight = FontWeight.Bold,
-      color = theme.textSecondary,
-      letterSpacing = 1.sp
-    )
-
-    val widgetOptions = listOf(
-      Triple(NosWidgetPortType.CALENDAR_DIGITAL_TIME, "CALENDAR + DIGITAL TIME", "JUL TUESDAY 07H 10M Dot Matrix"),
-      Triple(NosWidgetPortType.MINI_CLUSTER_2X2, "4-CIRCLE MINI CLUSTER (2x2)", "14° Temp, Cloud, ECG Pulse & Cam"),
-      Triple(NosWidgetPortType.GLANCE_TEXT_SUMMARY, "TEXT GLANCE SUMMARY", "TODAY IS TUESDAY AND TIME IS..."),
-      Triple(NosWidgetPortType.CIRCULAR_GAUGES, "CIRCULAR GAUGES (3 RINGS)", "73% Music, 57°C Red Flame, 98% Bell"),
-      Triple(NosWidgetPortType.DECIBEL_SOUND_METER, "DECIBEL SOUND METER", "103 dB with vertical LED dots"),
-      Triple(NosWidgetPortType.QUICK_CHECKLIST, "NOS TASKS CHECKLIST", "Checklist with interactive items"),
-      Triple(NosWidgetPortType.CONTACT_PILL, "FAVORITE CONTACT PILL", "Quick call & chat contact pill"),
-      Triple(NosWidgetPortType.CLOCK_MAIN, "NOTHING OS MAIN CLOCK", "Dot Matrix or Minimalist Analog Clock"),
-      Triple(NosWidgetPortType.WEATHER_MAIN, "WEATHER & QUICK TOGGLES", "Dynamic Weather + Torch & Sound"),
-      Triple(NosWidgetPortType.CASSETTE_PLAYER, "CASSETTE TAPE PLAYER", "Retro Teenage Engineering player"),
-      Triple(NosWidgetPortType.PEDOMETER_GAUGE, "HEALTH & HARDWARE GAUGES", "Step counter & RAM storage monitors"),
-      Triple(NosWidgetPortType.GIANT_CIRCLES_CLUSTER, "GIANT CIRCLES CLUSTER", "Giant Camera, Rain Weather & Globe Disc (Screenshot 3)"),
-      Triple(NosWidgetPortType.STICKER_FOCUS_CLUSTER, "STICKER & FOCUS CLUSTER", "Focus rings, Retro Car sticker & Away capsule (Screenshot 5)"),
-      Triple(NosWidgetPortType.NOTHING_X_EARBUDS, "NOTHING X EARBUDS WIDGET", "Earbuds battery 90% & Noise Cancellation (Screenshot 5)")
-    )
-
-    fun toggleWidget(type: NosWidgetPortType) {
-      val list = settings.activeWidgets.toMutableList()
-      if (list.contains(type)) {
-        list.remove(type)
-      } else {
-        list.add(type)
-      }
-      onUpdateSettings(settings.copy(activeWidgets = list))
-    }
-
-    widgetOptions.forEach { (type, title, subtitle) ->
-      val checked = settings.activeWidgets.contains(type)
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(12.dp))
-          .background(theme.surface)
-          .border(1.dp, theme.border, RoundedCornerShape(12.dp))
-          .clickable { toggleWidget(type) }
-          .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-      ) {
-        Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = title,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = theme.textPrimary
-          )
-          Text(
-            text = subtitle,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp,
-            color = theme.textSecondary
-          )
-        }
-
-        Switch(
-          checked = checked,
-          onCheckedChange = { toggleWidget(type) },
-          colors = SwitchDefaults.colors(
-            checkedThumbColor = if (accentColor == Color.White) Color.Black else Color.White,
-            checkedTrackColor = accentColor,
-            uncheckedTrackColor = theme.elevated
-          )
-        )
-      }
-    }
-
-    Spacer(modifier = Modifier.height(10.dp))
-  }
-}
 
 /**
  * Visual Icon Pack Switcher Component matching Screenshot 4:

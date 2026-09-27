@@ -587,41 +587,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
   fun openAppInfo(app: AppItem) {
     _selectedAppForInfo.value = app
-    val cleanPkg = app.packageName.trim()
-    var launched = false
-    if (cleanPkg.isNotEmpty()) {
-      try {
-        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-          data = android.net.Uri.parse("package:$cleanPkg")
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-        context.startActivity(intent)
-        launched = true
-      } catch (_: Exception) {}
-    }
-
-    if (!launched) {
-      try {
-        val intent = Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS).apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
-        launched = true
-      } catch (_: Exception) {}
-    }
-
-    if (!launched) {
-      try {
-        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_SETTINGS).apply {
-          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
-        launched = true
-      } catch (_: Exception) {}
-    }
-
-    val display = if (app.label.isNotEmpty()) app.label else cleanPkg
-    android.widget.Toast.makeText(context, "معلومات التطبيق: $display", android.widget.Toast.LENGTH_SHORT).show()
   }
 
   private fun loadInstalledApps() {

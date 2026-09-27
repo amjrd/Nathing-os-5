@@ -49,23 +49,9 @@ class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
 
-  // Receiver to synchronize with system lock screen and prevent visual overlap
-  private val keyguardReceiver = object : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-      if (intent?.action == Intent.ACTION_USER_PRESENT) {
-        if (viewModel.settings.value.lockScreen.preventSystemLockOverlap) {
-          viewModel.unlockLauncherScreen()
-        }
-      }
-    }
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-
-    val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
-    registerReceiver(keyguardReceiver, filter)
 
     setContent {
       val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -98,9 +84,6 @@ class MainActivity : ComponentActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    try {
-      unregisterReceiver(keyguardReceiver)
-    } catch (_: Exception) {}
   }
 }
 
@@ -183,10 +166,9 @@ fun NothingLauncherApp(
       onDoubleTap = { viewModel.lockScreen() },
       onToggleThemeMode = {
         val newTheme = when (settings.themeMode) {
-          LauncherThemeMode.DARK -> LauncherThemeMode.LIGHT
-          LauncherThemeMode.LIGHT -> LauncherThemeMode.RETRO_PASTEL
-          LauncherThemeMode.RETRO_PASTEL -> LauncherThemeMode.DARK
-          LauncherThemeMode.SYSTEM -> LauncherThemeMode.DARK
+          LauncherThemeMode.ORIGINAL -> LauncherThemeMode.MONOCHROME_STUDIO
+          LauncherThemeMode.MONOCHROME_STUDIO -> LauncherThemeMode.ATMOSPHERE_PASTEL
+          LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.ORIGINAL
         }
         viewModel.updateSettings(settings.copy(themeMode = newTheme))
       },
@@ -204,6 +186,27 @@ fun NothingLauncherApp(
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       onOpenAppInfo = { app -> viewModel.openAppInfo(app) }
     )
+
+    // 1.5. Signature Nothing OS 5 Lock Screen
+    AnimatedVisibility(
+      visible = currentScreen == LauncherScreen.LOCK_SCREEN,
+      enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+      exit = fadeOut() + slideOutVertically(targetOffsetY = { -it })
+    ) {
+      NothingLockScreen(
+        currentTime = currentTime,
+        currentDate = currentDate,
+        weather = weather,
+        fitness = fitness,
+        toggles = toggles,
+        notifications = notifications,
+        settings = settings,
+        onUnlock = { viewModel.unlockLauncherScreen() },
+        onToggleTorch = { viewModel.toggleTorch() },
+        onLaunchShortcut = { shortcut: LockShortcutType -> viewModel.launchShortcut(shortcut) },
+        onDismissNotification = { id: String -> viewModel.dismissNotification(id) }
+      )
+    }
 
     // 2. App Drawer Screen (Animated slide in/out)
     AnimatedVisibility(
@@ -227,10 +230,9 @@ fun NothingLauncherApp(
         accentColor = accentColor,
         onToggleThemeMode = {
           val newTheme = when (settings.themeMode) {
-            LauncherThemeMode.DARK -> LauncherThemeMode.LIGHT
-            LauncherThemeMode.LIGHT -> LauncherThemeMode.RETRO_PASTEL
-            LauncherThemeMode.RETRO_PASTEL -> LauncherThemeMode.DARK
-            LauncherThemeMode.SYSTEM -> LauncherThemeMode.DARK
+            LauncherThemeMode.ORIGINAL -> LauncherThemeMode.MONOCHROME_STUDIO
+            LauncherThemeMode.MONOCHROME_STUDIO -> LauncherThemeMode.ATMOSPHERE_PASTEL
+            LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.ORIGINAL
           }
           viewModel.updateSettings(settings.copy(themeMode = newTheme))
         },
@@ -260,7 +262,10 @@ fun NothingLauncherApp(
         onUpdateSettings = { viewModel.updateSettings(it) },
         onPickCustomWallpaper = { uri, target -> viewModel.setCustomWallpaper(uri, target) },
         onRemoveCustomWallpaper = { target -> viewModel.clearCustomWallpaper(target) },
-        onLockScreenNow = { viewModel.lockLauncherScreen() },
+        onLockScreenNow = {
+          viewModel.lockScreen()
+          isSettingsOpen = false
+        },
         onDismiss = { isSettingsOpen = false },
         accentColor = accentColor
       )
@@ -276,28 +281,7 @@ fun NothingLauncherApp(
       )
     }
 
-    // 6. Signature Nothing OS 5 Lock Screen
-    AnimatedVisibility(
-      visible = currentScreen == LauncherScreen.LOCK_SCREEN,
-      enter = fadeIn(androidx.compose.animation.core.tween(300)),
-      exit = fadeOut(androidx.compose.animation.core.tween(250)) + slideOutVertically(targetOffsetY = { -it / 3 })
-    ) {
-      NothingLockScreen(
-        currentTime = currentTime,
-        currentDate = currentDate,
-        weather = weather,
-        fitness = fitness,
-        toggles = toggles,
-        notifications = notifications,
-        settings = settings,
-        onUnlock = { viewModel.unlockLauncherScreen() },
-        onToggleTorch = { viewModel.toggleTorch() },
-        onLaunchShortcut = { shortcut: LockShortcutType -> viewModel.launchShortcut(shortcut) },
-        onDismissNotification = { id: String -> viewModel.dismissNotification(id) }
-      )
-    }
-
-    // 7. Signature Nothing OS 5 App Info Sheet (Guaranteed App Info display)
+    // 6. Signature Nothing OS 5 App Info Sheet (Guaranteed App Info display)
     val appForInfo by viewModel.selectedAppForInfo.collectAsStateWithLifecycle()
     if (appForInfo != null) {
       NothingAppInfoSheet(

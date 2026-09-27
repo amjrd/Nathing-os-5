@@ -43,10 +43,9 @@ enum class WallpaperTarget {
 }
 
 enum class LauncherThemeMode {
-  DARK,         // Theme Nuit (Image 2: Pure Nothing Matte Black, dark cards, neon accents)
-  LIGHT,        // Theme Jour (Image 3: Crisp Nothing White/Pastel Glass, sleek circular buttons, analog clock)
-  RETRO_PASTEL, // Theme Retro / Pastel (Image 3 & 5: Soft Pastel Sage Mint & Lavender aesthetic)
-  SYSTEM        // Auto match system night mode
+  ORIGINAL,          // Nothing OS الأصلي: أسود غير لامع كلاسيكي وشبكة نقطية
+  MONOCHROME_STUDIO, // الصورة 1: أبيض وأسود فوتوغرافي عالي التباين بودجات بيضاء دائرية
+  ATMOSPHERE_PASTEL  // الصورة 2: ثيم Nothing OS 5.0 نيو باستيل وأتموسفير
 }
 
 enum class LauncherClockStyle {
@@ -144,7 +143,7 @@ enum class NosWidgetPortType {
 
 data class LauncherSettings(
   val iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
-  val themeMode: LauncherThemeMode = LauncherThemeMode.DARK, // DARK = Theme Nuit (Image 2), LIGHT = Theme Jour (Image 3)
+  val themeMode: LauncherThemeMode = LauncherThemeMode.ORIGINAL,
   val clockStyle: LauncherClockStyle = LauncherClockStyle.ANALOG, // ANALOG (Image 3) or DIGITAL (Image 2)
   val accentColorIndex: Int = 0, // 0: Red, 1: White, 2: Orange, 3: Yellow
   val gridColumns: Int = 4,

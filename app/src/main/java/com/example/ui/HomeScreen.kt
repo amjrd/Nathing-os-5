@@ -258,7 +258,7 @@ fun HomeScreen(
               color = theme.textPrimary,
               letterSpacing = 2.sp
             )
-            // Explicit Version Badge (v1.2.0)
+            // Explicit Version Badge (v1.3.0)
             Box(
               modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
@@ -267,7 +267,7 @@ fun HomeScreen(
                 .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
               Text(
-                text = "v1.2.0",
+                text = "v1.3.0",
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
@@ -279,7 +279,10 @@ fun HomeScreen(
 
           // Internal Settings Access Icon
           IconButton(
-            onClick = onOpenSettings,
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              onOpenSettings()
+            },
             modifier = Modifier.testTag("home_settings_button")
           ) {
             Icon(
