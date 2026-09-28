@@ -28,6 +28,7 @@ import com.example.model.QuickToggleState
 import com.example.model.WeatherInfo
 import com.example.service.SystemLocationHelper
 import com.example.service.SystemPortHelper
+import com.example.util.LauncherPreferencesManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,9 +43,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
   private val context: Context get() = getApplication<Application>().applicationContext
 
+  // Pre-load saved user customizations from disk
+  private val _initialSettings = LauncherPreferencesManager.loadSettings(application.applicationContext)
+
   // Screen navigation - Starts with Nothing OS 5 Lock Screen when enabled
   private val _currentScreen = MutableStateFlow(
-    if (LauncherSettings().lockScreen.isLockScreenEnabled) LauncherScreen.LOCK_SCREEN else LauncherScreen.HOME
+    if (_initialSettings.lockScreen.isLockScreenEnabled) LauncherScreen.LOCK_SCREEN else LauncherScreen.HOME
   )
   val currentScreen: StateFlow<LauncherScreen> = _currentScreen.asStateFlow()
 
@@ -100,8 +104,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private val _audio = MutableStateFlow(AudioState())
   val audio: StateFlow<AudioState> = _audio.asStateFlow()
 
-  // Quick Note
-  private val _quickNote = MutableStateFlow("NOTHING OS 5.0\n• Pure Minimalism\n• Zero Bloatware\n• Dot Matrix Engine")
+  // Quick Note (persisted across app restarts)
+  private val _quickNote = MutableStateFlow(
+    LauncherPreferencesManager.loadQuickNote(application.applicationContext)
+  )
   val quickNote: StateFlow<String> = _quickNote.asStateFlow()
 
   // System storage
@@ -134,8 +140,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   )
   val notifications: StateFlow<List<com.example.model.LockNotificationItem>> = _notifications.asStateFlow()
 
-  // Settings
-  private val _settings = MutableStateFlow(LauncherSettings())
+  // Settings (persisted across app restarts)
+  private val _settings = MutableStateFlow(_initialSettings)
   val settings: StateFlow<LauncherSettings> = _settings.asStateFlow()
 
   // Active folder dialog
@@ -274,16 +280,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
   fun toggleFolderEnlarged(folderId: String) {
     _folders.update { list ->
-      list.map { if (it.id == folderId) it.copy(isEnlarged = !it.isEnlarged) else it }
+      list.map {
+        if (it.id == folderId) {
+          val next = !it.isEnlarged
+          LauncherPreferencesManager.saveFolderEnlarged(context, folderId, next)
+          it.copy(isEnlarged = next)
+        } else it
+      }
     }
   }
 
   fun updateQuickNote(note: String) {
     _quickNote.value = note
+    LauncherPreferencesManager.saveQuickNote(context, note)
   }
 
   fun updateSettings(newSettings: LauncherSettings) {
     _settings.value = newSettings
+    LauncherPreferencesManager.saveSettings(context, newSettings)
   }
 
   fun toggleWidgetActive(widgetType: NosWidgetPortType) {
@@ -294,7 +308,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
       } else {
         currentList.add(widgetType)
       }
-      current.copy(activeWidgets = currentList)
+      val updated = current.copy(activeWidgets = currentList)
+      LauncherPreferencesManager.saveSettings(context, updated)
+      updated
     }
   }
 
@@ -332,6 +348,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
               }
             }
           }
+          LauncherPreferencesManager.saveSettings(context, _settings.value)
           android.widget.Toast.makeText(context, "Nothing OS: Wallpaper set successfully", android.widget.Toast.LENGTH_SHORT).show()
         }
       } catch (e: Exception) {
@@ -361,6 +378,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         )
       }
     }
+    LauncherPreferencesManager.saveSettings(context, _settings.value)
     android.widget.Toast.makeText(context, "Photo removed. Default Nothing OS wallpaper restored.", android.widget.Toast.LENGTH_SHORT).show()
   }
 
@@ -480,13 +498,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
   fun toggleDockApp(app: AppItem) {
     _dockApps.update { current ->
-      if (current.any { it.packageName == app.packageName }) {
+      val updated = if (current.any { it.packageName == app.packageName }) {
         current.filterNot { it.packageName == app.packageName }
       } else if (current.size < 5) {
         current + app.copy(isDock = true)
       } else {
         current
       }
+      LauncherPreferencesManager.saveDockAppPackages(context, updated.map { it.packageName })
+      updated
     }
   }
 
@@ -630,11 +650,23 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
         _installedApps.value = allApps
 
-        // Set default Dock Apps (5 Apps in Transparent Dock)
-        val dockList = allApps.filter { app ->
-          app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
-        }.take(5).ifEmpty {
-          allApps.take(5)
+        // Restore or Set default Dock Apps (5 Apps in Transparent Dock)
+        val savedDockPkgs = LauncherPreferencesManager.loadDockAppPackages(context)
+        val dockList = if (savedDockPkgs != null) {
+          val dockFromSaved = savedDockPkgs.mapNotNull { pkg -> allApps.firstOrNull { it.packageName == pkg } }
+          if (dockFromSaved.isNotEmpty()) dockFromSaved else {
+            allApps.filter { app ->
+              app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
+            }.take(5).ifEmpty { allApps.take(5) }
+          }
+        } else {
+          val defaultDock = allApps.filter { app ->
+            app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
+          }.take(5).ifEmpty {
+            allApps.take(5)
+          }
+          LauncherPreferencesManager.saveDockAppPackages(context, defaultDock.map { it.packageName })
+          defaultDock
         }
         _dockApps.value = dockList
 
@@ -642,13 +674,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         val pinned = allApps.filterNot { it in dockList }.take(6)
         _pinnedApps.value = pinned
 
-        // Create default Nothing OS signature folders
+        // Create default Nothing OS signature folders with saved enlarged state
         val mediaApps = allApps.filter { it.category == "Media" || it.label in listOf("Camera", "Photos", "Gallery", "Music", "YouTube") }.take(4)
         val toolApps = allApps.filter { it.category == "Tools" || it.label in listOf("Settings", "Clock", "Calculator", "Files", "Notes") }.take(4)
 
+        val isMediaEnlarged = LauncherPreferencesManager.isFolderEnlarged(context, "folder_media", true)
+        val isToolsEnlarged = LauncherPreferencesManager.isFolderEnlarged(context, "folder_tools", true)
+
         _folders.value = listOf(
-          FolderItem(id = "folder_media", name = "MEDIA", isEnlarged = true, apps = mediaApps.ifEmpty { allApps.take(4) }),
-          FolderItem(id = "folder_tools", name = "TOOLS", isEnlarged = true, apps = toolApps.ifEmpty { allApps.drop(4).take(4) })
+          FolderItem(id = "folder_media", name = "MEDIA", isEnlarged = isMediaEnlarged, apps = mediaApps.ifEmpty { allApps.take(4) }),
+          FolderItem(id = "folder_tools", name = "TOOLS", isEnlarged = isToolsEnlarged, apps = toolApps.ifEmpty { allApps.drop(4).take(4) })
         )
       } catch (e: Exception) {
         _installedApps.value = getFallbackApps()
