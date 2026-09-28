@@ -630,11 +630,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
         _installedApps.value = allApps
 
-        // Set default Dock Apps
+        // Set default Dock Apps (5 Apps in Transparent Dock)
         val dockList = allApps.filter { app ->
           app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
-        }.take(4).ifEmpty {
-          allApps.take(4)
+        }.take(5).ifEmpty {
+          allApps.take(5)
         }
         _dockApps.value = dockList
 

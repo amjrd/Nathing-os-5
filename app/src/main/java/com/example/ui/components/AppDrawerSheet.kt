@@ -94,7 +94,6 @@ fun AppDrawerSheet(
   val context = androidx.compose.ui.platform.LocalContext.current
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
-  var selectedAppForMenu by remember { mutableStateOf<AppItem?>(null) }
   var showOverflowMenu by remember { mutableStateOf(false) }
   val gridState = rememberLazyGridState()
   val scope = rememberCoroutineScope()
@@ -410,7 +409,6 @@ fun AppDrawerSheet(
             AppIconItem(
               app = app,
               onClick = { onAppClick(app) },
-              onLongClick = { selectedAppForMenu = app },
               onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin,
               onToggleDock = onToggleDock,
@@ -456,7 +454,6 @@ fun AppDrawerSheet(
             AppIconItem(
               app = app,
               onClick = { onAppClick(app) },
-              onLongClick = { selectedAppForMenu = app },
               onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin,
               onToggleDock = onToggleDock,
@@ -501,156 +498,5 @@ fun AppDrawerSheet(
         }
       }
     }
-
-    // App Long-Press Action Sheet
-    selectedAppForMenu?.let { app ->
-      AppContextMenuSheet(
-        app = app,
-        onDismiss = { selectedAppForMenu = null },
-        onLaunch = {
-          onAppClick(app)
-          selectedAppForMenu = null
-        },
-        onTogglePin = {
-          onTogglePin(app)
-          selectedAppForMenu = null
-        },
-        onToggleDock = {
-          onToggleDock(app)
-          selectedAppForMenu = null
-        },
-        onAppInfo = {
-          onOpenAppInfo(app)
-          selectedAppForMenu = null
-        },
-        accentColor = accentColor
-      )
-    }
-  }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppContextMenuSheet(
-  app: AppItem,
-  onDismiss: () -> Unit,
-  onLaunch: () -> Unit,
-  onTogglePin: () -> Unit,
-  onToggleDock: () -> Unit,
-  onAppInfo: () -> Unit,
-  accentColor: Color
-) {
-  val theme = LocalLauncherTheme.current
-  val sheetState = rememberModalBottomSheetState()
-
-  ModalBottomSheet(
-    onDismissRequest = onDismiss,
-    sheetState = sheetState,
-    containerColor = theme.surface,
-    contentColor = theme.textPrimary
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(horizontal = 24.dp, vertical = 12.dp)
-        .testTag("app_context_menu")
-    ) {
-      // Header with App name
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-      ) {
-        Box(
-          modifier = Modifier
-            .size(10.dp)
-            .clip(CircleShape)
-            .background(accentColor)
-        )
-        Text(
-          text = app.label.uppercase(Locale.ROOT),
-          fontFamily = FontFamily.Monospace,
-          fontSize = 18.sp,
-          fontWeight = FontWeight.Bold,
-          color = theme.textPrimary
-        )
-      }
-
-      Spacer(modifier = Modifier.height(16.dp))
-
-      // Action 1: Open
-      MenuRow(
-        title = "OPEN APP",
-        icon = Icons.AutoMirrored.Filled.OpenInNew,
-        accentColor = accentColor,
-        textColor = theme.textPrimary,
-        onClick = onLaunch
-      )
-
-      // Action 2: Pin / Unpin Home
-      MenuRow(
-        title = if (app.isPinned) "REMOVE FROM HOME" else "PIN TO HOME SCREEN",
-        icon = Icons.Default.PushPin,
-        accentColor = accentColor,
-        textColor = theme.textPrimary,
-        onClick = onTogglePin
-      )
-
-      // Action 3: Add to Dock
-      MenuRow(
-        title = if (app.isDock) "REMOVE FROM DOCK" else "ADD TO DOCK FAVORITES",
-        icon = Icons.Default.Star,
-        accentColor = accentColor,
-        textColor = theme.textPrimary,
-        onClick = onToggleDock
-      )
-
-      // Action 4: App Info
-      MenuRow(
-        title = "APP INFO & PERMISSIONS",
-        icon = Icons.Default.Info,
-        accentColor = accentColor,
-        textColor = theme.textPrimary,
-        onClick = onAppInfo
-      )
-
-      Spacer(modifier = Modifier.height(24.dp))
-    }
-  }
-}
-
-@Composable
-private fun MenuRow(
-  title: String,
-  icon: androidx.compose.ui.graphics.vector.ImageVector,
-  accentColor: Color,
-  textColor: Color = NothingWhite,
-  onClick: () -> Unit
-) {
-  val context = androidx.compose.ui.platform.LocalContext.current
-  Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .clip(RoundedCornerShape(12.dp))
-      .clickable {
-        com.example.util.VibrationHelper.vibrateTouch(context)
-        onClick()
-      }
-      .padding(vertical = 12.dp, horizontal = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(16.dp)
-  ) {
-    Icon(
-      imageVector = icon,
-      contentDescription = title,
-      tint = accentColor,
-      modifier = Modifier.size(20.dp)
-    )
-    Text(
-      text = title,
-      fontFamily = FontFamily.Monospace,
-      fontSize = 13.sp,
-      fontWeight = FontWeight.Medium,
-      color = textColor
-    )
   }
 }

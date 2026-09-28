@@ -175,29 +175,6 @@ fun HomeScreen(
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(true) }
 
-  // Automatically reveal bars when user is at the top of the home screen
-  LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset) {
-    if (lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset <= 10) {
-      isBarsVisible = true
-    }
-  }
-
-  val nestedScrollConnection = remember {
-    object : NestedScrollConnection {
-      override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-        // Auto-hide when scrolling down (Full Immersive Widgets Mode)
-        if (available.y < -12f && isBarsVisible) {
-          isBarsVisible = false
-        }
-        // Auto-show when scrolling up
-        else if (available.y > 12f && !isBarsVisible) {
-          isBarsVisible = true
-        }
-        return Offset.Zero
-      }
-    }
-  }
-
   Box(
     modifier = modifier
       .fillMaxSize()
@@ -304,11 +281,10 @@ fun HomeScreen(
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
-          .nestedScroll(nestedScrollConnection)
           .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(
-          top = if (isBarsVisible) 6.dp else 2.dp,
-          bottom = if (isBarsVisible) 14.dp else 8.dp
+          top = 6.dp,
+          bottom = 28.dp
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
       ) {
@@ -764,47 +740,41 @@ fun HomeScreen(
         }
       }
 
-      // Bottom Persistent Nothing Dock & Search (With Animated Visibility & Swipe-up to open Drawer)
-      AnimatedVisibility(
-        visible = isBarsVisible,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-              var accumulatedUpDrag = 0f
-              detectVerticalDragGestures(
-                onDragStart = { accumulatedUpDrag = 0f },
-                onDragEnd = { accumulatedUpDrag = 0f },
-                onDragCancel = { accumulatedUpDrag = 0f },
-                onVerticalDrag = { _, dragAmount ->
-                  accumulatedUpDrag += dragAmount
-                  // Deliberate swipe up (reduced touch sensitivity)
-                  if (accumulatedUpDrag < -100f) {
-                    onOpenDrawer()
-                    accumulatedUpDrag = 0f
-                  }
+      // Bottom Persistent Transparent Nothing Dock & Search (Smooth Deliberate Swipe-up to open Drawer)
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .pointerInput(Unit) {
+            var accumulatedUpDrag = 0f
+            detectVerticalDragGestures(
+              onDragStart = { accumulatedUpDrag = 0f },
+              onDragEnd = { accumulatedUpDrag = 0f },
+              onDragCancel = { accumulatedUpDrag = 0f },
+              onVerticalDrag = { _, dragAmount ->
+                accumulatedUpDrag += dragAmount
+                // Deliberate swipe up (-60f threshold for natural, responsive opening)
+                if (accumulatedUpDrag < -60f) {
+                  onOpenDrawer()
+                  accumulatedUpDrag = 0f
                 }
-              )
-            }
-        ) {
-          NothingDock(
-            dockApps = dockApps,
-            onAppClick = onAppClick,
-            onOpenDrawer = onOpenDrawer,
-            onOpenSearch = onOpenDrawer,
-            iconPack = settings.iconPack,
-            accentColor = accentColor,
-            showSearchBar = settings.showSearchBarOnDock,
-            onToggleDockApp = onToggleDockApp,
-            onOpenAppInfo = { appTarget ->
-              selectedAppForInfo = appTarget
-              onOpenAppInfo(appTarget)
-            }
-          )
-        }
+              }
+            )
+          }
+      ) {
+        NothingDock(
+          dockApps = dockApps,
+          onAppClick = onAppClick,
+          onOpenDrawer = onOpenDrawer,
+          onOpenSearch = onOpenDrawer,
+          iconPack = settings.iconPack,
+          accentColor = accentColor,
+          showSearchBar = settings.showSearchBarOnDock,
+          onToggleDockApp = onToggleDockApp,
+          onOpenAppInfo = { appTarget ->
+            selectedAppForInfo = appTarget
+            onOpenAppInfo(appTarget)
+          }
+        )
       }
 
     }

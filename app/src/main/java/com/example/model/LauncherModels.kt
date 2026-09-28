@@ -161,6 +161,8 @@ data class LauncherSettings(
   val wallpaperDimPct: Int = 30, // 0% to 70% dim overlay for icon clarity
   val lockScreen: LockScreenSettings = LockScreenSettings(),
   val activeWidgets: List<NosWidgetPortType> = listOf(
+    NosWidgetPortType.CALENDAR_DIGITAL_TIME,
+    NosWidgetPortType.MINI_CLUSTER_2X2,
     NosWidgetPortType.CLOCK_MAIN,
     NosWidgetPortType.WEATHER_MAIN
   )

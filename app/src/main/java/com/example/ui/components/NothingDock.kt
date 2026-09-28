@@ -60,47 +60,26 @@ fun NothingDock(
       .padding(horizontal = 16.dp, vertical = 8.dp),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    // Dock Icons Row (Image 2: Dark / Image 3: Frosted White Capsule)
+    // Dock Icons Row - Fully Transparent, Sleek Floating Icons
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .clip(RoundedCornerShape(32.dp))
-        .background(theme.dockBg)
-        .border(1.dp, theme.border, RoundedCornerShape(32.dp))
-        .padding(horizontal = 12.dp, vertical = 8.dp),
+        .background(Color.Transparent)
+        .padding(horizontal = 8.dp, vertical = 4.dp),
       horizontalArrangement = Arrangement.SpaceEvenly,
       verticalAlignment = Alignment.CenterVertically
     ) {
-      // 4 Pinned Apps
-      dockApps.take(4).forEach { app ->
+      // 5 Pinned Dock Apps (Transparent Dock without extra drawer square)
+      dockApps.take(5).forEach { app ->
         AppIconItem(
           app = app,
           onClick = { onAppClick(app) },
           onOpenAppInfo = onOpenAppInfo,
           onToggleDock = onToggleDockApp,
-          iconSize = 48.dp,
+          iconSize = 52.dp,
           showLabel = false,
           iconPack = iconPack,
           accentColor = accentColor
-        )
-      }
-
-      // 5th Item: Signature Nothing App Drawer Icon (9 dots in circle)
-      Box(
-        modifier = Modifier
-          .size(48.dp)
-          .clip(CircleShape)
-          .background(theme.dockButtonBg)
-          .border(1.dp, theme.border, CircleShape)
-          .clickable { onOpenDrawer() }
-          .testTag("app_drawer_dock_button"),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = Icons.Default.Apps,
-          contentDescription = "App Drawer",
-          tint = if (theme.isDark) accentColor else Color(0xFF1A1A1A),
-          modifier = Modifier.size(24.dp)
         )
       }
     }

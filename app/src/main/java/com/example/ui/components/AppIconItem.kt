@@ -446,8 +446,8 @@ fun AppIconItem(
           ) {
             Icon(
               imageVector = Icons.Default.Info,
-              contentDescription = null,
-              tint = theme.textPrimary,
+              contentDescription = "App info",
+              tint = accentColor,
               modifier = Modifier.size(16.dp)
             )
             Text(
@@ -461,7 +461,20 @@ fun AppIconItem(
         },
         onClick = {
           showContextMenu = false
-          onOpenAppInfo?.invoke(app)
+          var handled = false
+          try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+              data = Uri.parse("package:${app.packageName}")
+              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            handled = true
+          } catch (_: Exception) {
+            handled = false
+          }
+          if (!handled) {
+            onOpenAppInfo?.invoke(app)
+          }
         }
       )
 
