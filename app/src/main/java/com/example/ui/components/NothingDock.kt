@@ -62,28 +62,40 @@ fun NothingDock(
       .padding(horizontal = 16.dp, vertical = 6.dp),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    // Dock Icons Row - Fully Transparent, Sleek Floating Icons (iOS Style)
-    Row(
+    // Dock Icons Container - iOS Frosted Glass Blur Pill
+    Box(
       modifier = Modifier
         .fillMaxWidth()
-        .background(Color.Transparent)
-        .padding(horizontal = 8.dp, vertical = 4.dp),
-      horizontalArrangement = Arrangement.SpaceEvenly,
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      // 5 Pinned Dock Apps (Transparent Dock without extra drawer square)
-      dockApps.take(5).forEach { app ->
-        AppIconItem(
-          app = app,
-          onClick = { onAppClick(app) },
-          onOpenAppInfo = onOpenAppInfo,
-          onToggleDock = onToggleDockApp,
-          onCycleIconSize = onCycleIconSize,
-          iconSize = iconSize,
-          showLabel = false,
-          iconPack = iconPack,
-          accentColor = accentColor
+        .clip(RoundedCornerShape(32.dp))
+        .background(
+          if (theme.isDark) Color(0xDD1C1C1E) else Color(0xE8F4F4F6)
         )
+        .border(
+          width = 1.dp,
+          color = if (theme.isDark) Color(0x33FFFFFF) else Color(0x1F000000),
+          shape = RoundedCornerShape(32.dp)
+        )
+        .padding(horizontal = 8.dp, vertical = 7.dp)
+    ) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        // 5 Pinned Dock Apps (iOS Style Frosted Dock)
+        dockApps.take(5).forEach { app ->
+          AppIconItem(
+            app = app,
+            onClick = { onAppClick(app) },
+            onOpenAppInfo = onOpenAppInfo,
+            onToggleDock = onToggleDockApp,
+            onCycleIconSize = onCycleIconSize,
+            iconSize = iconSize,
+            showLabel = false,
+            iconPack = iconPack,
+            accentColor = accentColor
+          )
+        }
       }
     }
 

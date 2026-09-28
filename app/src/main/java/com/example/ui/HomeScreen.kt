@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -237,7 +238,7 @@ fun HomeScreen(
         .padding(horizontal = 16.dp),
       contentPadding = PaddingValues(
         top = topInset + (if (isBarsVisible) 60.dp else 16.dp),
-        bottom = bottomInset + 125.dp
+        bottom = bottomInset + 185.dp
       ),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -684,6 +685,15 @@ fun HomeScreen(
       modifier = Modifier
         .align(Alignment.BottomCenter)
         .fillMaxWidth()
+        .background(
+          brush = Brush.verticalGradient(
+            colors = listOf(
+              Color.Transparent,
+              (if (theme.isDark) Color(0xCC000000) else Color(0xCCFFFFFF)),
+              (if (theme.isDark) Color(0xF5000000) else Color(0xF5FFFFFF))
+            )
+          )
+        )
         .navigationBarsPadding()
         .pointerInput(Unit) {
           var accumulatedUpDrag = 0f
