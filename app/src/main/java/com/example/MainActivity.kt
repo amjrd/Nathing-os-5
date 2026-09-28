@@ -179,7 +179,44 @@ fun NothingLauncherApp(
           LauncherThemeMode.MONOCHROME_STUDIO -> LauncherThemeMode.ATMOSPHERE_PASTEL
           LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.ORIGINAL
         }
-        viewModel.updateSettings(settings.copy(themeMode = newTheme))
+        val newSettings = when (newTheme) {
+          LauncherThemeMode.ORIGINAL -> settings.copy(
+            themeMode = newTheme,
+            wallpaperIndex = 0,
+            accentColorIndex = 0,
+            clockStyle = LauncherClockStyle.DIGITAL,
+            iconPack = com.example.model.IconPackStyle.MONOCHROME,
+            activeWidgets = listOf(
+              com.example.model.NosWidgetPortType.CLOCK_MAIN,
+              com.example.model.NosWidgetPortType.WEATHER_MAIN,
+              com.example.model.NosWidgetPortType.MINI_CLUSTER_2X2
+            )
+          )
+          LauncherThemeMode.MONOCHROME_STUDIO -> settings.copy(
+            themeMode = newTheme,
+            wallpaperIndex = 1,
+            accentColorIndex = 1,
+            clockStyle = LauncherClockStyle.ANALOG,
+            iconPack = com.example.model.IconPackStyle.SYSTEM_DEFAULT,
+            activeWidgets = listOf(
+              com.example.model.NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
+              com.example.model.NosWidgetPortType.CALENDAR_DIGITAL_TIME
+            )
+          )
+          LauncherThemeMode.ATMOSPHERE_PASTEL -> settings.copy(
+            themeMode = newTheme,
+            wallpaperIndex = 2,
+            accentColorIndex = 0,
+            clockStyle = LauncherClockStyle.ANALOG,
+            iconPack = com.example.model.IconPackStyle.SYSTEM_DEFAULT,
+            activeWidgets = listOf(
+              com.example.model.NosWidgetPortType.STICKER_FOCUS_CLUSTER,
+              com.example.model.NosWidgetPortType.CLOCK_MAIN,
+              com.example.model.NosWidgetPortType.WEATHER_MAIN
+            )
+          )
+        }
+        viewModel.updateSettings(newSettings)
       },
       onToggleClockStyle = {
         val newClock = if (settings.clockStyle == LauncherClockStyle.ANALOG) {
@@ -255,7 +292,44 @@ fun NothingLauncherApp(
             LauncherThemeMode.MONOCHROME_STUDIO -> LauncherThemeMode.ATMOSPHERE_PASTEL
             LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.ORIGINAL
           }
-          viewModel.updateSettings(settings.copy(themeMode = newTheme))
+          val newSettings = when (newTheme) {
+            LauncherThemeMode.ORIGINAL -> settings.copy(
+              themeMode = newTheme,
+              wallpaperIndex = 0,
+              accentColorIndex = 0,
+              clockStyle = LauncherClockStyle.DIGITAL,
+              iconPack = com.example.model.IconPackStyle.MONOCHROME,
+              activeWidgets = listOf(
+                com.example.model.NosWidgetPortType.CLOCK_MAIN,
+                com.example.model.NosWidgetPortType.WEATHER_MAIN,
+                com.example.model.NosWidgetPortType.MINI_CLUSTER_2X2
+              )
+            )
+            LauncherThemeMode.MONOCHROME_STUDIO -> settings.copy(
+              themeMode = newTheme,
+              wallpaperIndex = 1,
+              accentColorIndex = 1,
+              clockStyle = LauncherClockStyle.ANALOG,
+              iconPack = com.example.model.IconPackStyle.SYSTEM_DEFAULT,
+              activeWidgets = listOf(
+                com.example.model.NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
+                com.example.model.NosWidgetPortType.CALENDAR_DIGITAL_TIME
+              )
+            )
+            LauncherThemeMode.ATMOSPHERE_PASTEL -> settings.copy(
+              themeMode = newTheme,
+              wallpaperIndex = 2,
+              accentColorIndex = 0,
+              clockStyle = LauncherClockStyle.ANALOG,
+              iconPack = com.example.model.IconPackStyle.SYSTEM_DEFAULT,
+              activeWidgets = listOf(
+                com.example.model.NosWidgetPortType.STICKER_FOCUS_CLUSTER,
+                com.example.model.NosWidgetPortType.CLOCK_MAIN,
+                com.example.model.NosWidgetPortType.WEATHER_MAIN
+              )
+            )
+          }
+          viewModel.updateSettings(newSettings)
         },
         onSelectIconPack = { pack ->
           viewModel.updateSettings(settings.copy(iconPack = pack))

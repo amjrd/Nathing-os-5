@@ -130,14 +130,10 @@ data class WallpaperChoice(
 )
 
 val WALLPAPER_CHOICES = listOf(
-  WallpaperChoice(0, "DOT MATRIX NOIR", "SIGNATURE", "Nothing signature white dots grid"),
-  WallpaperChoice(1, "CARBON MATTE", "STEALTH", "Pure deep black Nothing finish"),
-  WallpaperChoice(2, "RED CIRCUIT GLOW", "CYBER", "Red electronic traces & glowing nodes"),
-  WallpaperChoice(3, "LIGHT MONOCHROME", "MINIMAL", "Monochrome high-contrast inverted dots"),
-  WallpaperChoice(4, "NOTHING GLYPH", "ARTWORK", "Phone (2) signature Glyph light geometry"),
-  WallpaperChoice(5, "RETRO SAGE NOIR", "NOTHING 3.5", "Futuristic subtle dark matte gradient with ambient aura"),
-  WallpaperChoice(6, "RETRO WIREFRAME", "VECTOR", "Futuristic 3D isometric perspective grid"),
-  WallpaperChoice(7, "CUSTOM GALLERY PHOTO", "GALLERY", "User photo loaded from phone storage")
+  WallpaperChoice(0, "NOTHING ORIGINAL", "CLASSIC", "Nothing signature Noir dot matrix"),
+  WallpaperChoice(1, "MONOCHROME STUDIO", "PHOTO 1", "Artistic high-contrast black & white bokeh (Image 1)"),
+  WallpaperChoice(2, "ATMOSPHERE PASTEL", "PHOTO 2", "Ambient aura mint green & lavender glow (Image 2)"),
+  WallpaperChoice(3, "CUSTOM GALLERY PHOTO", "GALLERY", "Personal photo loaded from phone storage")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -452,7 +448,46 @@ fun LauncherSettingsDialog(
                   .clip(RoundedCornerShape(10.dp))
                   .background(if (isSelected) accentColor else theme.surface)
                   .border(1.dp, if (isSelected) accentColor else theme.border, RoundedCornerShape(10.dp))
-                  .clickable { onUpdateSettings(settings.copy(themeMode = mode)) }
+                  .clickable {
+                    val updatedSettings = when (mode) {
+                      LauncherThemeMode.ORIGINAL -> settings.copy(
+                        themeMode = mode,
+                        wallpaperIndex = 0,
+                        accentColorIndex = 0,
+                        clockStyle = LauncherClockStyle.DIGITAL,
+                        iconPack = IconPackStyle.MONOCHROME,
+                        activeWidgets = listOf(
+                          NosWidgetPortType.CLOCK_MAIN,
+                          NosWidgetPortType.WEATHER_MAIN,
+                          NosWidgetPortType.MINI_CLUSTER_2X2
+                        )
+                      )
+                      LauncherThemeMode.MONOCHROME_STUDIO -> settings.copy(
+                        themeMode = mode,
+                        wallpaperIndex = 1,
+                        accentColorIndex = 1,
+                        clockStyle = LauncherClockStyle.ANALOG,
+                        iconPack = IconPackStyle.SYSTEM_DEFAULT,
+                        activeWidgets = listOf(
+                          NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
+                          NosWidgetPortType.CALENDAR_DIGITAL_TIME
+                        )
+                      )
+                      LauncherThemeMode.ATMOSPHERE_PASTEL -> settings.copy(
+                        themeMode = mode,
+                        wallpaperIndex = 2,
+                        accentColorIndex = 0,
+                        clockStyle = LauncherClockStyle.ANALOG,
+                        iconPack = IconPackStyle.SYSTEM_DEFAULT,
+                        activeWidgets = listOf(
+                          NosWidgetPortType.STICKER_FOCUS_CLUSTER,
+                          NosWidgetPortType.CLOCK_MAIN,
+                          NosWidgetPortType.WEATHER_MAIN
+                        )
+                      )
+                    }
+                    onUpdateSettings(updatedSettings)
+                  }
                   .padding(vertical = 10.dp, horizontal = 2.dp),
                 contentAlignment = Alignment.Center
               ) {
@@ -840,7 +875,7 @@ fun LauncherSettingsDialog(
                     shape = RoundedCornerShape(12.dp)
                   )
                   .clickable {
-                    if (choice.index == 7 && (settings.customWallpaperUri == null && settings.customLockScreenWallpaperUri == null)) {
+                    if (choice.index == 3 && (settings.customWallpaperUri == null && settings.customLockScreenWallpaperUri == null)) {
                       photoPickerLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                       )
