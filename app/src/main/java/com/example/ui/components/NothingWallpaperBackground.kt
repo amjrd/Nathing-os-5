@@ -29,6 +29,7 @@ fun NothingWallpaperBackground(
   isLockScreen: Boolean = false,
   accentColor: Color,
   onDoubleTap: (() -> Unit)? = null,
+  onLongPress: (() -> Unit)? = null,
   modifier: Modifier = Modifier
 ) {
   val theme = LocalLauncherTheme.current
@@ -170,14 +171,15 @@ fun NothingWallpaperBackground(
       )
     }
 
-    // 3. Double-tap background detector (non-interfering)
-    if (onDoubleTap != null && settings.doubleTapToSleep) {
+    // 3. Tap & Long-press background detector (non-interfering)
+    if ((onDoubleTap != null && settings.doubleTapToSleep) || onLongPress != null) {
       Box(
         modifier = Modifier
           .fillMaxSize()
           .pointerInput(Unit) {
             detectTapGestures(
-              onDoubleTap = { onDoubleTap() }
+              onDoubleTap = if (onDoubleTap != null && settings.doubleTapToSleep) { { onDoubleTap() } } else null,
+              onLongPress = if (onLongPress != null) { { onLongPress() } } else null
             )
           }
       )

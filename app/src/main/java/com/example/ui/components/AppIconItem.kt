@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Call
@@ -168,7 +169,8 @@ fun AppIconItem(
   iconSize: Dp = 54.dp,
   showLabel: Boolean = true,
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
-  accentColor: Color = NothingRed
+  accentColor: Color = NothingRed,
+  onCycleIconSize: (() -> Unit)? = null
 ) {
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
@@ -538,7 +540,37 @@ fun AppIconItem(
         )
       }
 
-      // 4. Uninstall
+      // 4. Resize Icons (تكبير وتصغير)
+      if (onCycleIconSize != null) {
+        DropdownMenuItem(
+          text = {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.AspectRatio,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(16.dp)
+              )
+              Text(
+                text = "Resize / تكبير وتصغير",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = theme.textPrimary
+              )
+            }
+          },
+          onClick = {
+            showContextMenu = false
+            onCycleIconSize()
+          }
+        )
+      }
+
+      // 5. Uninstall
       DropdownMenuItem(
         text = {
           Row(

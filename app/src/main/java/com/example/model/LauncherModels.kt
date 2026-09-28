@@ -160,6 +160,8 @@ data class LauncherSettings(
   val customLockScreenWallpaperUri: String? = null,
   val wallpaperDimPct: Int = 30, // 0% to 70% dim overlay for icon clarity
   val lockScreen: LockScreenSettings = LockScreenSettings(),
+  val iconSizeLevel: Int = 1, // 0: Small (44dp), 1: Standard (52dp), 2: Large (60dp), 3: Extra Large (68dp)
+  val widgetSizeLevel: Int = 1, // 0: Compact (85%), 1: Standard (100%), 2: Expanded (115%)
   val activeWidgets: List<NosWidgetPortType> = listOf(
     NosWidgetPortType.CALENDAR_DIGITAL_TIME,
     NosWidgetPortType.MINI_CLUSTER_2X2,

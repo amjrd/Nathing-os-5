@@ -231,6 +231,7 @@ fun NothingLauncherApp(
       onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
+      onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
       modifier = Modifier
         .fillMaxSize()
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
@@ -286,6 +287,7 @@ fun NothingLauncherApp(
         },
         iconPack = settings.iconPack,
         accentColor = accentColor,
+        iconSizeLevel = settings.iconSizeLevel,
         onToggleThemeMode = {
           val newTheme = when (settings.themeMode) {
             LauncherThemeMode.ORIGINAL -> LauncherThemeMode.MONOCHROME_STUDIO

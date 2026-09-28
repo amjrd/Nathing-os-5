@@ -6,6 +6,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,13 +20,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +42,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -116,6 +123,7 @@ import com.example.ui.components.NothingResourceWidget
 import com.example.ui.components.NothingStepWidget
 import com.example.ui.components.NothingWallpaperBackground
 import com.example.ui.components.NothingWeatherWidget
+import com.example.ui.components.WidgetResizeFrame
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.NothingBlack
 import com.example.ui.theme.NothingBorder
@@ -160,6 +168,7 @@ fun HomeScreen(
   onToggleDockApp: (AppItem) -> Unit = {},
   onToggleWidget: (NosWidgetPortType) -> Unit = {},
   onOpenAppInfo: (AppItem) -> Unit = {},
+  onUpdateSettings: (LauncherSettings) -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val theme = LocalLauncherTheme.current
@@ -173,12 +182,40 @@ fun HomeScreen(
   var showWidgetSheet by remember { mutableStateOf(false) }
   var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   val lazyListState = rememberLazyListState()
-  var isBarsVisible by remember { mutableStateOf(true) }
+  var isBarsVisible by remember { mutableStateOf(false) }
+  var resizingWidget by remember { mutableStateOf<NosWidgetPortType?>(null) }
+  val currentIconSize = when (settings.iconSizeLevel) {
+    0 -> 44.dp
+    2 -> 60.dp
+    3 -> 68.dp
+    else -> 52.dp
+  }
+  val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+  val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
   Box(
     modifier = modifier
       .fillMaxSize()
       .background(theme.background)
+      .pointerInput(settings.swipeDownNotifications) {
+        if (settings.swipeDownNotifications) {
+          var totalDrag = 0f
+          detectVerticalDragGestures(
+            onDragStart = { totalDrag = 0f },
+            onDragEnd = { totalDrag = 0f },
+            onDragCancel = { totalDrag = 0f },
+            onVerticalDrag = { _, dragAmount ->
+              totalDrag += dragAmount
+              if (totalDrag > 120f) {
+                // Reveal top bar on pull down
+                isBarsVisible = true
+                onSwipeDown()
+                totalDrag = 0f
+              }
+            }
+          )
+        }
+      }
       .testTag("home_screen_container")
   ) {
     // Dynamic Nothing OS 5 Wallpaper Background (Supports built-in & custom gallery photos)
@@ -186,176 +223,141 @@ fun HomeScreen(
       settings = settings,
       isLockScreen = false,
       accentColor = accentColor,
-      onDoubleTap = onDoubleTap
+      onDoubleTap = onDoubleTap,
+      onLongPress = {
+        com.example.util.VibrationHelper.vibrateTouch(context)
+        isBarsVisible = true
+      }
     )
 
-    Column(
+    // Scrollable Home Screen Body (Widgets, Folders, Pinned Apps - Edge-to-Edge without clipping!)
+    LazyColumn(
+      state = lazyListState,
       modifier = Modifier
         .fillMaxSize()
-        .statusBarsPadding()
-        .navigationBarsPadding()
+        .padding(horizontal = 16.dp),
+      contentPadding = PaddingValues(
+        top = topInset + (if (isBarsVisible) 60.dp else 16.dp),
+        bottom = bottomInset + 125.dp
+      ),
+      verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      // Top Navigation / Glance Bar (With Animated Visibility & Auto-hide)
-      AnimatedVisibility(
-        visible = isBarsVisible,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .pointerInput(settings.swipeDownNotifications) {
-              if (settings.swipeDownNotifications) {
-                var totalDrag = 0f
-                detectVerticalDragGestures(
-                  onDragStart = { totalDrag = 0f },
-                  onDragEnd = { totalDrag = 0f },
-                  onDragCancel = { totalDrag = 0f },
-                  onVerticalDrag = { _, dragAmount ->
-                    totalDrag += dragAmount
-                    // Deliberate swipe down with reduced touch sensitivity
-                    if (totalDrag > 120f) {
-                      onSwipeDown()
-                      totalDrag = 0f
-                    }
-                  }
-                )
-              }
-            },
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Box(
-              modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(accentColor)
-            )
-            Text(
-              text = "NOTHING",
-              fontFamily = FontFamily.Monospace,
-              fontWeight = FontWeight.Bold,
-              fontSize = 13.sp,
-              color = theme.textPrimary,
-              letterSpacing = 2.sp
-            )
-          }
-
-          // Internal Settings Access Icon with matching red dot indicator (Request 3)
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            IconButton(
-              onClick = {
-                com.example.util.VibrationHelper.vibrateTouch(context)
-                onOpenSettings()
-              },
-              modifier = Modifier.testTag("home_settings_button")
-            ) {
-              Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Launcher Settings",
-                tint = theme.textSecondary
-              )
-            }
-            // Signature Nothing Red Circle at the end of the settings row
-            Box(
-              modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(accentColor)
-            )
-          }
-        }
-      }
-
-      // Scrollable Home Screen Body (Widgets, Folders, Pinned Apps)
-      LazyColumn(
-        state = lazyListState,
-        modifier = Modifier
-          .weight(1f)
-          .fillMaxWidth()
-          .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(
-          top = 6.dp,
-          bottom = 28.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-      ) {
         // 1. Calendar & Digital Time Widget (Screenshot 2: JUL TUESDAY 07H 10M)
         if (settings.activeWidgets.contains(NosWidgetPortType.CALENDAR_DIGITAL_TIME)) {
           item {
-            NosCalendarDigitalTimeWidget(
-              currentTime = currentTime,
-              accentColor = accentColor,
-              onCalendarClick = { SystemPortHelper.launchPixelCalendar(context) },
-              onClockClick = { SystemPortHelper.launchPixelClock(context) }
-            )
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.CALENDAR_DIGITAL_TIME,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.CALENDAR_DIGITAL_TIME },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.CALENDAR_DIGITAL_TIME)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosCalendarDigitalTimeWidget(
+                currentTime = currentTime,
+                accentColor = accentColor,
+                onCalendarClick = { SystemPortHelper.launchPixelCalendar(context) },
+                onClockClick = { SystemPortHelper.launchPixelClock(context) }
+              )
+            }
           }
         }
 
         // 2. 2x2 Mini Cluster (Screenshot 2) + Analog Clock / Weather
         if (settings.activeWidgets.contains(NosWidgetPortType.MINI_CLUSTER_2X2)) {
           item {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.MINI_CLUSTER_2X2,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.MINI_CLUSTER_2X2 },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.MINI_CLUSTER_2X2)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
             ) {
-              NosMiniClusterWidget(
-                weather = weather,
-                accentColor = accentColor,
-                onWeatherClick = { SystemPortHelper.launchPixelWeather(context) },
-                onHealthClick = { SystemPortHelper.launchHealthConnect(context) },
-                onRecorderClick = { SystemPortHelper.launchPixelClock(context) },
-                modifier = Modifier.weight(1f)
-              )
-
-              if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
-                val timeParts = currentTime.split(":")
-                val hours = timeParts.getOrNull(0) ?: "12"
-                val minutes = timeParts.getOrNull(1) ?: "00"
-                NothingAnalogClockWidget(
-                  hours = hours,
-                  minutes = minutes,
-                  date = currentDate,
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                NosMiniClusterWidget(
+                  weather = weather,
                   accentColor = accentColor,
-                  onToggleStyle = onToggleClockStyle,
-                  onOpenClockPort = { SystemPortHelper.launchPixelClock(context) },
+                  onWeatherClick = { SystemPortHelper.launchPixelWeather(context) },
+                  onHealthClick = { SystemPortHelper.launchHealthConnect(context) },
+                  onRecorderClick = { SystemPortHelper.launchPixelClock(context) },
                   modifier = Modifier.weight(1f)
                 )
+
+                if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
+                  val timeParts = currentTime.split(":")
+                  val hours = timeParts.getOrNull(0) ?: "12"
+                  val minutes = timeParts.getOrNull(1) ?: "00"
+                  NothingAnalogClockWidget(
+                    hours = hours,
+                    minutes = minutes,
+                    date = currentDate,
+                    accentColor = accentColor,
+                    onToggleStyle = onToggleClockStyle,
+                    onOpenClockPort = { SystemPortHelper.launchPixelClock(context) },
+                    modifier = Modifier.weight(1f)
+                  )
+                }
               }
             }
           }
         } else if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
           // Signature Large Clock Widget (Dot Matrix or Round Analog)
           item {
-            val timeParts = currentTime.split(":")
-            val hours = timeParts.getOrNull(0) ?: "12"
-            val minutes = timeParts.getOrNull(1) ?: "00"
-            if (settings.clockStyle == LauncherClockStyle.ANALOG) {
-              NothingAnalogClockWidget(
-                hours = hours,
-                minutes = minutes,
-                date = currentDate,
-                accentColor = accentColor,
-                onToggleStyle = onToggleClockStyle,
-                onOpenClockPort = { SystemPortHelper.launchPixelClock(context) }
-              )
-            } else {
-              NothingClockWidget(
-                hours = hours,
-                minutes = minutes,
-                date = currentDate,
-                accentColor = accentColor,
-                onToggleStyle = onToggleClockStyle,
-                onOpenClockPort = { SystemPortHelper.launchPixelClock(context) }
-              )
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.CLOCK_MAIN,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.CLOCK_MAIN },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.CLOCK_MAIN)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              val timeParts = currentTime.split(":")
+              val hours = timeParts.getOrNull(0) ?: "12"
+              val minutes = timeParts.getOrNull(1) ?: "00"
+              if (settings.clockStyle == LauncherClockStyle.ANALOG) {
+                NothingAnalogClockWidget(
+                  hours = hours,
+                  minutes = minutes,
+                  date = currentDate,
+                  accentColor = accentColor,
+                  onToggleStyle = onToggleClockStyle,
+                  onOpenClockPort = { SystemPortHelper.launchPixelClock(context) }
+                )
+              } else {
+                NothingClockWidget(
+                  hours = hours,
+                  minutes = minutes,
+                  date = currentDate,
+                  accentColor = accentColor,
+                  onToggleStyle = onToggleClockStyle,
+                  onOpenClockPort = { SystemPortHelper.launchPixelClock(context) }
+                )
+              }
             }
           }
         }
@@ -363,52 +365,132 @@ fun HomeScreen(
         // 3. Text Glance Summary Widget (Screenshot 2: "TODAY IS TUESDAY AND TIME IS...")
         if (settings.activeWidgets.contains(NosWidgetPortType.GLANCE_TEXT_SUMMARY)) {
           item {
-            NosGlanceTextWidget(
-              currentTime = currentTime,
-              weather = weather,
-              batteryPct = toggles.batteryLevel,
-              isCharging = toggles.isCharging,
-              onGlanceClick = { SystemPortHelper.launchPixelWeather(context) }
-            )
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.GLANCE_TEXT_SUMMARY,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.GLANCE_TEXT_SUMMARY },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.GLANCE_TEXT_SUMMARY)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosGlanceTextWidget(
+                currentTime = currentTime,
+                weather = weather,
+                batteryPct = toggles.batteryLevel,
+                isCharging = toggles.isCharging,
+                onGlanceClick = { SystemPortHelper.launchPixelWeather(context) }
+              )
+            }
           }
         }
 
         // 3.5. Giant Circles Cluster (Screenshot 3: Giant Camera, Rain Weather, Globe Disc)
         if (settings.activeWidgets.contains(NosWidgetPortType.GIANT_CIRCLES_CLUSTER)) {
           item {
-            NosGiantCirclesClusterWidget(
-              weather = weather,
-              currentTime = currentTime,
-              accentColor = accentColor,
-              onLaunchCamera = {
-                val camApp = AppItem("com.google.android.GoogleCamera", "", "Camera")
-                onAppClick(camApp)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.GIANT_CIRCLES_CLUSTER },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
               },
-              onLaunchWeather = {
-                SystemPortHelper.launchPixelWeather(context)
-              }
-            )
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.GIANT_CIRCLES_CLUSTER)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosGiantCirclesClusterWidget(
+                weather = weather,
+                currentTime = currentTime,
+                accentColor = accentColor,
+                onLaunchCamera = {
+                  val camApp = AppItem("com.google.android.GoogleCamera", "", "Camera")
+                  onAppClick(camApp)
+                },
+                onLaunchWeather = {
+                  SystemPortHelper.launchPixelWeather(context)
+                }
+              )
+            }
           }
         }
 
         // 3.6. Sticker & Focus Cluster (Screenshot 5: Focus rings, Retro Car, Capsule)
         if (settings.activeWidgets.contains(NosWidgetPortType.STICKER_FOCUS_CLUSTER)) {
           item {
-            NosStickerFocusClusterWidget(accentColor = accentColor)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.STICKER_FOCUS_CLUSTER,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.STICKER_FOCUS_CLUSTER },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.STICKER_FOCUS_CLUSTER)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosStickerFocusClusterWidget(accentColor = accentColor)
+            }
           }
         }
 
         // 3.7. Nothing X Earbuds Widget (Screenshot 5: Headphones 90%, ANC mode)
         if (settings.activeWidgets.contains(NosWidgetPortType.NOTHING_X_EARBUDS)) {
           item {
-            NosNothingXEarbudsWidget(accentColor = accentColor)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.NOTHING_X_EARBUDS,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.NOTHING_X_EARBUDS },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.NOTHING_X_EARBUDS)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosNothingXEarbudsWidget(accentColor = accentColor)
+            }
           }
         }
 
         // 4. NOS 3.5 Circular Progress Gauges (Screenshot 1: Music 73%, Red Flame 57°C, Bell 98%)
         if (settings.activeWidgets.contains(NosWidgetPortType.CIRCULAR_GAUGES)) {
           item {
-            NosCircularGaugesWidget(accentColor = accentColor)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.CIRCULAR_GAUGES,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.CIRCULAR_GAUGES },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.CIRCULAR_GAUGES)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosCircularGaugesWidget(accentColor = accentColor)
+            }
           }
         }
 
@@ -439,36 +521,68 @@ fun HomeScreen(
         // 6. Favorite Contact Pill (Screenshot 1)
         if (settings.activeWidgets.contains(NosWidgetPortType.CONTACT_PILL)) {
           item {
-            NosContactPillWidget(
-              accentColor = accentColor,
-              onCall = { SystemPortHelper.launchPixelClock(context) },
-              onChat = { SystemPortHelper.launchPixelCalendar(context) }
-            )
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.CONTACT_PILL,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.CONTACT_PILL },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.CONTACT_PILL)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
+            ) {
+              NosContactPillWidget(
+                accentColor = accentColor,
+                onCall = { SystemPortHelper.launchPixelClock(context) },
+                onChat = { SystemPortHelper.launchPixelCalendar(context) }
+              )
+            }
           }
         }
 
         // 7. 2-Column Modular Widgets: Weather + Quick Toggles
         if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)) {
           item {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.WEATHER_MAIN,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.WEATHER_MAIN },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.WEATHER_MAIN)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
             ) {
-              NothingWeatherWidget(
-                weather = weather,
-                onToggleCondition = onToggleWeather,
-                accentColor = accentColor,
-                onOpenWeatherPort = { SystemPortHelper.launchPixelWeather(context) },
-                modifier = Modifier.weight(1f)
-              )
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                NothingWeatherWidget(
+                  weather = weather,
+                  onToggleCondition = onToggleWeather,
+                  accentColor = accentColor,
+                  onOpenWeatherPort = { SystemPortHelper.launchPixelWeather(context) },
+                  modifier = Modifier.weight(1f)
+                )
 
-              NothingQuickTogglesWidget(
-                toggles = toggles,
-                onToggleTorch = onToggleTorch,
-                onCycleSound = onCycleSound,
-                accentColor = accentColor,
-                modifier = Modifier.weight(1.1f)
-              )
+                NothingQuickTogglesWidget(
+                  toggles = toggles,
+                  onToggleTorch = onToggleTorch,
+                  onCycleSound = onCycleSound,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1.1f)
+                )
+              }
             }
           }
         }
@@ -476,35 +590,67 @@ fun HomeScreen(
         // 8. Teenage Cassette Retro Player
         if (settings.activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)) {
           item {
-            NothingCassetteWidget(
-              audio = audio,
-              onTogglePlay = onToggleAudioPlay,
-              onNextTrack = onNextAudioTrack,
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.CASSETTE_PLAYER,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.CASSETTE_PLAYER },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.CASSETTE_PLAYER)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
               accentColor = accentColor
-            )
+            ) {
+              NothingCassetteWidget(
+                audio = audio,
+                onTogglePlay = onToggleAudioPlay,
+                onNextTrack = onNextAudioTrack,
+                accentColor = accentColor
+              )
+            }
           }
         }
 
         // 9. 2-Column Widgets: Pedometer & Storage/RAM
         if (settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)) {
           item {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            WidgetResizeFrame(
+              isSelected = resizingWidget == NosWidgetPortType.PEDOMETER_GAUGE,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { resizingWidget = NosWidgetPortType.PEDOMETER_GAUGE },
+              onCycleSize = {
+                val next = (settings.widgetSizeLevel + 1) % 3
+                onUpdateSettings(settings.copy(widgetSizeLevel = next))
+              },
+              onRemove = {
+                onToggleWidget(NosWidgetPortType.PEDOMETER_GAUGE)
+                resizingWidget = null
+              },
+              onDismiss = { resizingWidget = null },
+              accentColor = accentColor
             ) {
-              NothingStepWidget(
-                fitness = fitness,
-                onAddStep = onAddStep,
-                accentColor = accentColor,
-                modifier = Modifier.weight(1.1f)
-              )
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                NothingStepWidget(
+                  fitness = fitness,
+                  onAddStep = onAddStep,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1.1f)
+                )
 
-              NothingResourceWidget(
-                storagePct = storagePct,
-                ramPct = ramPct,
-                accentColor = accentColor,
-                modifier = Modifier.weight(1f)
-              )
+                NothingResourceWidget(
+                  storagePct = storagePct,
+                  ramPct = ramPct,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1f)
+                )
+              }
             }
           }
         }
@@ -654,7 +800,11 @@ fun HomeScreen(
                           },
                           onTogglePin = { onRemovePinnedApp(app) },
                           onToggleDock = onToggleDockApp,
-                          iconSize = 52.dp,
+                          iconSize = currentIconSize,
+                          onCycleIconSize = {
+                            val nextLevel = (settings.iconSizeLevel + 1) % 4
+                            onUpdateSettings(settings.copy(iconSizeLevel = nextLevel))
+                          },
                           showLabel = settings.showLabels,
                           iconPack = settings.iconPack,
                           accentColor = accentColor
@@ -740,43 +890,163 @@ fun HomeScreen(
         }
       }
 
-      // Bottom Persistent Transparent Nothing Dock & Search (Smooth Deliberate Swipe-up to open Drawer)
-      Box(
+    // 2. Bottom Persistent Floating iOS-style Transparent Nothing Dock & Search
+    Box(
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .fillMaxWidth()
+        .navigationBarsPadding()
+        .pointerInput(Unit) {
+          var accumulatedUpDrag = 0f
+          detectVerticalDragGestures(
+            onDragStart = { accumulatedUpDrag = 0f },
+            onDragEnd = { accumulatedUpDrag = 0f },
+            onDragCancel = { accumulatedUpDrag = 0f },
+            onVerticalDrag = { _, dragAmount ->
+              accumulatedUpDrag += dragAmount
+              // Deliberate swipe up (-60f threshold for natural, responsive opening)
+              if (accumulatedUpDrag < -60f) {
+                onOpenDrawer()
+                accumulatedUpDrag = 0f
+              }
+            }
+          )
+        }
+    ) {
+      NothingDock(
+        dockApps = dockApps,
+        onAppClick = onAppClick,
+        onOpenDrawer = onOpenDrawer,
+        onOpenSearch = onOpenDrawer,
+        iconPack = settings.iconPack,
+        accentColor = accentColor,
+        showSearchBar = settings.showSearchBarOnDock,
+        iconSize = currentIconSize,
+        onToggleDockApp = onToggleDockApp,
+        onOpenAppInfo = { appTarget ->
+          selectedAppForInfo = appTarget
+          onOpenAppInfo(appTarget)
+        },
+        onCycleIconSize = {
+          val nextLevel = (settings.iconSizeLevel + 1) % 4
+          onUpdateSettings(settings.copy(iconSizeLevel = nextLevel))
+        }
+      )
+    }
+
+    // 3. Top Navigation & Settings Bar (Hidden by default, slides down smoothly when requested)
+    AnimatedVisibility(
+      visible = isBarsVisible,
+      enter = slideInVertically { -it } + fadeIn(),
+      exit = slideOutVertically { -it } + fadeOut(),
+      modifier = Modifier
+        .align(Alignment.TopCenter)
+        .fillMaxWidth()
+        .statusBarsPadding()
+        .padding(horizontal = 16.dp, vertical = 6.dp)
+    ) {
+      Row(
         modifier = Modifier
           .fillMaxWidth()
-          .pointerInput(Unit) {
-            var accumulatedUpDrag = 0f
-            detectVerticalDragGestures(
-              onDragStart = { accumulatedUpDrag = 0f },
-              onDragEnd = { accumulatedUpDrag = 0f },
-              onDragCancel = { accumulatedUpDrag = 0f },
-              onVerticalDrag = { _, dragAmount ->
-                accumulatedUpDrag += dragAmount
-                // Deliberate swipe up (-60f threshold for natural, responsive opening)
-                if (accumulatedUpDrag < -60f) {
-                  onOpenDrawer()
-                  accumulatedUpDrag = 0f
-                }
-              }
+          .clip(RoundedCornerShape(24.dp))
+          .background(if (theme.isDark) Color(0xF018181C) else Color(0xF0FFFFFF))
+          .border(1.dp, theme.border.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+          .padding(horizontal = 14.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(8.dp)
+              .clip(CircleShape)
+              .background(accentColor)
+          )
+          Text(
+            text = "NOTHING",
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = theme.textPrimary,
+            letterSpacing = 2.sp
+          )
+        }
+
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          // Quick Resize Icons shortcut (تكبير وتصغير الأيقونات)
+          IconButton(
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              val nextLevel = (settings.iconSizeLevel + 1) % 4
+              onUpdateSettings(settings.copy(iconSizeLevel = nextLevel))
+            },
+            modifier = Modifier.size(36.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.AspectRatio,
+              contentDescription = "Resize Icons",
+              tint = accentColor,
+              modifier = Modifier.size(18.dp)
             )
           }
-      ) {
-        NothingDock(
-          dockApps = dockApps,
-          onAppClick = onAppClick,
-          onOpenDrawer = onOpenDrawer,
-          onOpenSearch = onOpenDrawer,
-          iconPack = settings.iconPack,
-          accentColor = accentColor,
-          showSearchBar = settings.showSearchBarOnDock,
-          onToggleDockApp = onToggleDockApp,
-          onOpenAppInfo = { appTarget ->
-            selectedAppForInfo = appTarget
-            onOpenAppInfo(appTarget)
-          }
-        )
-      }
 
+          // Settings Access Button (طلب الإعدادات)
+          IconButton(
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              onOpenSettings()
+            },
+            modifier = Modifier.size(36.dp).testTag("home_settings_button")
+          ) {
+            Icon(
+              imageVector = Icons.Default.Settings,
+              contentDescription = "Launcher Settings",
+              tint = theme.textSecondary,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+
+          // Close / Hide top bar button (إخفاء الشريط العلوي)
+          IconButton(
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              isBarsVisible = false
+            },
+            modifier = Modifier.size(36.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.Close,
+              contentDescription = "Hide Bar",
+              tint = theme.textSecondary,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+        }
+      }
+    }
+
+    // 4. Subtle Top Pull/Access Handle when top bar is hidden (Tap or pull down opens Settings / Bar)
+    if (!isBarsVisible) {
+      Box(
+        modifier = Modifier
+          .align(Alignment.TopCenter)
+          .statusBarsPadding()
+          .padding(top = 6.dp)
+          .clip(RoundedCornerShape(8.dp))
+          .background(theme.textSecondary.copy(alpha = 0.35f))
+          .clickable {
+            com.example.util.VibrationHelper.vibrateTouch(context)
+            isBarsVisible = true
+          }
+          .size(width = 38.dp, height = 5.dp)
+          .testTag("top_settings_pull_handle")
+      )
     }
 
     // Nothing OS 5 App Info & Diagnostics Sheet (Ensures App Info always displays)

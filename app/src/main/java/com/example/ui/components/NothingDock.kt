@@ -49,18 +49,20 @@ fun NothingDock(
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   accentColor: Color = NothingRed,
   showSearchBar: Boolean = true,
+  iconSize: androidx.compose.ui.unit.Dp = 52.dp,
   onToggleDockApp: ((AppItem) -> Unit)? = null,
-  onOpenAppInfo: ((AppItem) -> Unit)? = null
+  onOpenAppInfo: ((AppItem) -> Unit)? = null,
+  onCycleIconSize: (() -> Unit)? = null
 ) {
   val theme = LocalLauncherTheme.current
 
   Column(
     modifier = modifier
       .fillMaxWidth()
-      .padding(horizontal = 16.dp, vertical = 8.dp),
+      .padding(horizontal = 16.dp, vertical = 6.dp),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    // Dock Icons Row - Fully Transparent, Sleek Floating Icons
+    // Dock Icons Row - Fully Transparent, Sleek Floating Icons (iOS Style)
     Row(
       modifier = Modifier
         .fillMaxWidth()
@@ -76,7 +78,8 @@ fun NothingDock(
           onClick = { onAppClick(app) },
           onOpenAppInfo = onOpenAppInfo,
           onToggleDock = onToggleDockApp,
-          iconSize = 52.dp,
+          onCycleIconSize = onCycleIconSize,
+          iconSize = iconSize,
           showLabel = false,
           iconPack = iconPack,
           accentColor = accentColor

@@ -87,6 +87,7 @@ fun AppDrawerSheet(
   modifier: Modifier = Modifier,
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   accentColor: Color = NothingRed,
+  iconSizeLevel: Int = 1,
   onToggleThemeMode: () -> Unit = {},
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
@@ -94,6 +95,12 @@ fun AppDrawerSheet(
   val context = androidx.compose.ui.platform.LocalContext.current
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
+  val currentIconSize = when (iconSizeLevel) {
+    0 -> 44.dp
+    2 -> 60.dp
+    3 -> 68.dp
+    else -> 52.dp
+  }
   var showOverflowMenu by remember { mutableStateOf(false) }
   val gridState = rememberLazyGridState()
   val scope = rememberCoroutineScope()
@@ -412,7 +419,7 @@ fun AppDrawerSheet(
               onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin,
               onToggleDock = onToggleDock,
-              iconSize = 52.dp,
+              iconSize = currentIconSize,
               showLabel = true,
               iconPack = iconPack,
               accentColor = accentColor,
@@ -457,7 +464,7 @@ fun AppDrawerSheet(
               onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin,
               onToggleDock = onToggleDock,
-              iconSize = 56.dp,
+              iconSize = currentIconSize,
               showLabel = true,
               iconPack = iconPack,
               accentColor = accentColor

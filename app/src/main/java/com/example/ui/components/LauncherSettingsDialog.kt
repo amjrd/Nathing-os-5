@@ -357,6 +357,110 @@ fun LauncherSettingsDialog(
             }
           }
 
+          // 1. Icon Size (Taille des icônes)
+          Spacer(modifier = Modifier.height(16.dp))
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column {
+              Text(
+                text = "ICON SIZE (TAILLE)",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = theme.textPrimary
+              )
+              Text(
+                text = when (settings.iconSizeLevel) {
+                  0 -> "Small (44dp)"
+                  1 -> "Standard (52dp)"
+                  2 -> "Large (60dp)"
+                  else -> "Extra (68dp)"
+                },
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                color = theme.textSecondary
+              )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+              listOf(
+                0 to "S",
+                1 to "M",
+                2 to "L",
+                3 to "XL"
+              ).forEach { (level, lbl) ->
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (settings.iconSizeLevel == level) accentColor else NothingElevated)
+                    .clickable { onUpdateSettings(settings.copy(iconSizeLevel = level)) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                  Text(
+                    text = lbl,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = if (settings.iconSizeLevel == level) (if (accentColor == NothingWhite) Color.Black else Color.White) else theme.textPrimary
+                  )
+                }
+              }
+            }
+          }
+
+          // 2. Widget Scale (Échelle des widgets)
+          Spacer(modifier = Modifier.height(16.dp))
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column {
+              Text(
+                text = "WIDGET SCALE (ÉCHELLE)",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = theme.textPrimary
+              )
+              Text(
+                text = when (settings.widgetSizeLevel) {
+                  0 -> "Compact (85%)"
+                  1 -> "Standard (100%)"
+                  else -> "Expanded (115%)"
+                },
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                color = theme.textSecondary
+              )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+              listOf(
+                0 to "MINI",
+                1 to "STD",
+                2 to "MAX"
+              ).forEach { (level, lbl) ->
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (settings.widgetSizeLevel == level) accentColor else NothingElevated)
+                    .clickable { onUpdateSettings(settings.copy(widgetSizeLevel = level)) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                  Text(
+                    text = lbl,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = if (settings.widgetSizeLevel == level) (if (accentColor == NothingWhite) Color.Black else Color.White) else theme.textPrimary
+                  )
+                }
+              }
+            }
+          }
+
           Spacer(modifier = Modifier.height(16.dp))
 
           SettingsSwitchRow(
