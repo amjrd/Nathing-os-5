@@ -167,7 +167,10 @@ fun NothingWallpaperBackground(
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .background(Color.Black.copy(alpha = dimAlpha))
+          .background(
+            if (theme.isDark) Color.Black.copy(alpha = dimAlpha)
+            else Color.White.copy(alpha = dimAlpha * 0.35f)
+          )
       )
     }
 

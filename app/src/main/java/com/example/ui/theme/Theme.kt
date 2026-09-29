@@ -101,7 +101,7 @@ fun MyApplicationTheme(
 ) {
   val colorScheme = when (themeMode) {
     LauncherThemeMode.ORIGINAL -> NothingDarkColorScheme
-    LauncherThemeMode.MONOCHROME_STUDIO -> NothingDarkColorScheme
+    LauncherThemeMode.MONOCHROME_STUDIO -> NothingLightColorScheme
     LauncherThemeMode.ATMOSPHERE_PASTEL -> NothingRetroColorScheme
   }
   val themeColors = when (themeMode) {
@@ -123,16 +123,16 @@ fun MyApplicationTheme(
     }
     LauncherThemeMode.MONOCHROME_STUDIO -> {
       LauncherThemeColors(
-        isDark = true,
-        background = Color(0xFF0F0F12),
+        isDark = false,
+        background = Color(0xFFF4F5F8),
         surface = Color(0xFFFFFFFF),
-        elevated = Color(0xFFF0F0F0),
-        border = Color(0xFF282828),
-        textPrimary = Color.White,
-        textSecondary = Color(0xFFAAAAAA),
-        unlitDot = Color(0xFF333333),
-        dockBg = Color(0x991E1E1E),
-        dockButtonBg = Color.White,
+        elevated = Color(0xFFF8F9FA),
+        border = Color(0xFFE2E4E8),
+        textPrimary = Color(0xFF111115),
+        textSecondary = Color(0xFF6B7280),
+        unlitDot = Color(0xFFD1D5DB),
+        dockBg = Color(0xEEFFFFFF),
+        dockButtonBg = Color(0xFFF0F2F5),
         dockIconTint = Color(0xFF111111),
         searchPillBg = Color(0xFFFFFFFF)
       )
