@@ -196,6 +196,10 @@ fun NothingLockScreen(
       Row(
         modifier = Modifier
           .fillMaxWidth()
+          .clip(RoundedCornerShape(22.dp))
+          .background(theme.surface.copy(alpha = 0.78f))
+          .border(1.dp, theme.border.copy(alpha = 0.72f), RoundedCornerShape(22.dp))
+          .padding(horizontal = 14.dp, vertical = 9.dp)
           .padding(top = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -211,7 +215,7 @@ fun NothingLockScreen(
               .background(accentColor)
           )
           Text(
-            text = "NOTHING OS 5 • v1.2.0 • LOCKED",
+            text = "NOTHING OS 5 • v1.5.0 • LOCKED",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -593,12 +597,12 @@ fun NothingLockScreen(
               color = NothingGrey
             )
             Text(
-              text = "BYPASS UNLOCK",
+              text = "SWIPE UP",
               fontFamily = FontFamily.Monospace,
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
               color = accentColor,
-              modifier = Modifier.clickable { onUnlock() }
+              modifier = Modifier.clickable { showPinKeypad = true }
             )
           }
         }
@@ -635,8 +639,8 @@ fun NothingLockScreen(
           modifier = Modifier
             .padding(bottom = 12.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(theme.surface.copy(alpha = 0.9f))
-            .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(24.dp))
+            .background(theme.surface.copy(alpha = 0.86f))
+            .border(1.dp, accentColor.copy(alpha = 0.72f), RoundedCornerShape(24.dp))
             .clickable {
               if (lockSettings.securityType == LockSecurityType.PIN) {
                 showPinKeypad = true
@@ -703,7 +707,7 @@ fun NothingLockScreen(
 
         // Center Owner Info
         Text(
-          text = lockSettings.customOwnerInfo,
+          text = if (lockSettings.customOwnerInfo.isBlank()) "NOTHING OS 5" else lockSettings.customOwnerInfo,
           fontFamily = FontFamily.Monospace,
           fontSize = 9.sp,
           color = theme.textSecondary,
