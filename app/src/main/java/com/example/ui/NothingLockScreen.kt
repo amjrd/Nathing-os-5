@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -644,7 +645,7 @@ fun NothingLockScreen(
           modifier = Modifier
             .padding(bottom = 12.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(theme.surface.copy(alpha = 0.9f))
+            .background(if (theme.isDark) Color(0xCC18181C) else Color(0xDDF4F4F6))
             .border(1.dp, accentColor.copy(alpha = 0.6f), RoundedCornerShape(24.dp))
             .clickable {
               if (lockSettings.securityType == LockSecurityType.PIN) {
