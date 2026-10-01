@@ -99,7 +99,7 @@ fun AppDrawerSheet(
     0 -> 44.dp
     2 -> 60.dp
     3 -> 68.dp
-    else -> 52.dp
+    else -> 56.dp
   }
   var showOverflowMenu by remember { mutableStateOf(false) }
   val gridState = rememberLazyGridState()
@@ -403,55 +403,38 @@ fun AppDrawerSheet(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Upper Tray: Recents/Favorites row separated by a subtle divider (Screenshot 2)
-      if (searchQuery.isEmpty() && suggestedApps.isNotEmpty()) {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-          horizontalArrangement = Arrangement.SpaceAround,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          suggestedApps.forEach { app ->
-            AppIconItem(
-              app = app,
-              onClick = { onAppClick(app) },
-              onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin,
-              onToggleDock = onToggleDock,
-              iconSize = currentIconSize,
-              showLabel = true,
-              iconPack = iconPack,
-              accentColor = accentColor,
-              modifier = Modifier.weight(1f)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Subtle divider separating recents from the alphabetized app list (Screenshot 2)
-        Box(
-          modifier = Modifier.fillMaxWidth(),
-          contentAlignment = Alignment.Center
-        ) {
-          HorizontalDivider(
-            modifier = Modifier.width(60.dp),
-            thickness = 2.dp,
-            color = theme.border.copy(alpha = 0.5f)
-          )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
+      // Pixel-style app drawer: clean app grid with no legacy favorites tray.
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text(
+          text = if (searchQuery.isBlank()) "ALL APPS" else "SEARCH RESULTS",
+          fontFamily = FontFamily.Monospace,
+          fontSize = 11.sp,
+          fontWeight = FontWeight.Bold,
+          letterSpacing = 1.5.sp,
+          color = theme.textSecondary
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+          text = "${filteredApps.size}",
+          fontFamily = FontFamily.Monospace,
+          fontSize = 10.sp,
+          color = theme.textSecondary
+        )
       }
+      Spacer(modifier = Modifier.height(8.dp))
 
       // Drawer Content: Grid + Fast-Scroll Alphabet Sidebar
       Row(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
-          columns = GridCells.Fixed(4),
+          columns = GridCells.Fixed(5),
           state = gridState,
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          verticalArrangement = Arrangement.spacedBy(20.dp),
+          horizontalArrangement = Arrangement.spacedBy(6.dp),
           modifier = Modifier
             .weight(1f)
             .fillMaxSize()
