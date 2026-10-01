@@ -4,6 +4,10 @@ import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.os.Build
+import androidx.core.content.ContextCompat
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
@@ -40,6 +44,18 @@ import java.util.Calendar
 import java.util.Locale
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
+  private val packageReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      val packageName = intent?.data?.schemeSpecificPart ?: return
+      if (packageName == this@LauncherViewModel.context.packageName) return
+      viewModelScope.launch {
+        delay(250)
+        refreshInstalledAppsOnly()
+      }
+    }
+  }
+
+
 
   private val context: Context get() = getApplication<Application>().applicationContext
 
@@ -748,6 +764,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
   }
 
+  private fun registerPackageReceiver() {
+    try {
+      val filter = IntentFilter().apply {
+        addAction(Intent.ACTION_PACKAGE_ADDED)
+        addAction(Intent.ACTION_PACKAGE_REMOVED)
+        addAction(Intent.ACTION_PACKAGE_REPLACED)
+        addAction(Intent.ACTION_PACKAGE_CHANGED)
+        addDataScheme("package")
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.registerReceiver(context, packageReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+      } else {
+        @Suppress("DEPRECATION")
+        context.registerReceiver(packageReceiver, filter)
+      }
+    } catch (_: Exception) {}
+  }
+
   private fun updateBatteryFromIntent(intent: Intent) {
     val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
     val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
@@ -758,6 +792,27 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     if (level >= 0 && scale > 0) {
       val batteryPct = (level * 100) / scale
       _toggles.update { it.copy(batteryLevel = batteryPct, isCharging = isCharging) }
+    }
+  }
+
+  private fun refreshInstalledAppsOnly() {
+    viewModelScope.launch {
+      try {
+        val packageManager = context.packageManager
+        val refreshed = packageManager.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
+          .filter { it.packageName != context.packageName && packageManager.getLaunchIntentForPackage(it.packageName) != null }
+          .mapNotNull { appInfo ->
+            try {
+              AppItem(
+                appInfo.packageName,
+                appInfo.loadIcon(packageManager),
+                packageManager.getApplicationLabel(appInfo).toString()
+              )
+            } catch (_: Exception) { null }
+          }
+          .sortedBy { it.label.lowercase() }
+        _installedApps.value = refreshed
+      } catch (_: Exception) {}
     }
   }
 
@@ -779,6 +834,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     super.onCleared()
     try {
       context.unregisterReceiver(batteryReceiver)
+    } catch (_: Exception) {}
+    try {
+      context.unregisterReceiver(packageReceiver)
     } catch (_: Exception) {}
   }
 }
