@@ -196,7 +196,16 @@ fun NothingLockScreen(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(top = 8.dp),
+          .clip(RoundedCornerShape(24.dp))
+          .background(
+            if (theme.isDark) Color(0xAA18181C) else Color(0xCCF4F4F6)
+          )
+          .border(
+            1.dp,
+            if (theme.isDark) Color(0x33FFFFFF) else Color(0x1F000000),
+            RoundedCornerShape(24.dp)
+          )
+          .padding(horizontal = 14.dp, vertical = 9.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
@@ -211,7 +220,7 @@ fun NothingLockScreen(
               .background(accentColor)
           )
           Text(
-            text = "NOTHING OS 5 • v1.2.0 • LOCKED",
+            text = "NOTHING OS 5 • v1.5.0 • LOCKED",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
@@ -593,7 +602,7 @@ fun NothingLockScreen(
               color = NothingGrey
             )
             Text(
-              text = "BYPASS UNLOCK",
+              text = "SWIPE UP",
               fontFamily = FontFamily.Monospace,
               fontSize = 11.sp,
               fontWeight = FontWeight.Bold,
