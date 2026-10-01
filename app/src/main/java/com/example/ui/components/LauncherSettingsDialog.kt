@@ -1308,6 +1308,47 @@ fun LauncherSettingsDialog(
               )
             }
           }
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // System Build & Version Info
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(theme.surface)
+              .border(1.dp, theme.border, RoundedCornerShape(12.dp))
+              .padding(14.dp)
+          ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Text(
+                  text = "NOTHING OS 5 • RELEASE",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = accentColor
+                )
+                Text(
+                  text = "v1.6.0",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = theme.textPrimary
+                )
+              }
+              Text(
+                text = "Build 7 (Stable Production) • 120Hz Ultra Smooth",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                color = theme.textSecondary
+              )
+            }
+          }
         }
       }
 

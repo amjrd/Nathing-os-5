@@ -57,12 +57,23 @@ class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
 
-  // Screen Off receiver to lock the launcher screen when phone goes to sleep / power button pressed
-  private val screenOffReceiver = object : BroadcastReceiver() {
+  // Screen State receiver to lock the launcher screen when phone goes to sleep or wakes
+  private val screenStateReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-      if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-        if (viewModel.settings.value.lockScreen.isLockScreenEnabled) {
-          viewModel.lockLauncherScreen()
+      when (intent?.action) {
+        Intent.ACTION_SCREEN_OFF -> {
+          if (viewModel.settings.value.lockScreen.isLockScreenEnabled) {
+            viewModel.lockLauncherScreen()
+          }
+        }
+        Intent.ACTION_SCREEN_ON -> {
+          val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+          val isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+          if ((isDeviceLocked || viewModel.settings.value.lockScreen.isLockScreenEnabled) &&
+            viewModel.currentScreen.value != LauncherScreen.LOCK_SCREEN
+          ) {
+            viewModel.lockLauncherScreen()
+          }
         }
       }
     }
@@ -72,17 +83,35 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
-    // Allow Nothing OS lock screen to show over system lock when active
+    // Allow Nothing OS lock screen to show over system lock when active and turn screen on
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
       setShowWhenLocked(true)
+      setTurnScreenOn(true)
     } else {
       @Suppress("DEPRECATION")
-      window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+      window.addFlags(
+        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+          WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+      )
     }
 
-    // Register screen off listener
-    val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
-    registerReceiver(screenOffReceiver, filter)
+    // Register screen state listener (using ContextCompat for Android 14+ receiver safety)
+    val filter = IntentFilter().apply {
+      addAction(Intent.ACTION_SCREEN_OFF)
+      addAction(Intent.ACTION_SCREEN_ON)
+      addAction(Intent.ACTION_USER_PRESENT)
+    }
+    try {
+      androidx.core.content.ContextCompat.registerReceiver(
+        this,
+        screenStateReceiver,
+        filter,
+        androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+      )
+    } catch (_: Exception) {
+      @Suppress("UnspecifiedRegisterReceiverFlag")
+      registerReceiver(screenStateReceiver, filter)
+    }
 
     setContent {
       val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -96,6 +125,7 @@ class MainActivity : ComponentActivity() {
           NothingLauncherApp(
             viewModel = viewModel,
             settings = settings,
+            onDismissKeyguard = { dismissSystemKeyguard() },
             modifier = Modifier.fillMaxSize()
           )
         }
@@ -103,8 +133,33 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  override fun onResume() {
+    super.onResume()
+    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+    val isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+    if (isDeviceLocked && viewModel.settings.value.lockScreen.isLockScreenEnabled) {
+      if (viewModel.currentScreen.value != LauncherScreen.LOCK_SCREEN) {
+        viewModel.lockLauncherScreen()
+      }
+    }
+  }
+
+  private fun dismissSystemKeyguard() {
+    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      keyguardManager?.requestDismissKeyguard(this, null)
+    }
+  }
+
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
+    val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+    val isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+    if (isDeviceLocked && viewModel.settings.value.lockScreen.isLockScreenEnabled) {
+      viewModel.lockLauncherScreen()
+      return
+    }
+
     // If Home button or Launcher icon pressed while currently in App Drawer, close drawer
     if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.action == Intent.ACTION_MAIN) {
       if (viewModel.currentScreen.value == LauncherScreen.APP_DRAWER) {
@@ -116,7 +171,7 @@ class MainActivity : ComponentActivity() {
   override fun onDestroy() {
     super.onDestroy()
     try {
-      unregisterReceiver(screenOffReceiver)
+      unregisterReceiver(screenStateReceiver)
     } catch (_: Exception) {}
   }
 }
@@ -125,6 +180,7 @@ class MainActivity : ComponentActivity() {
 fun NothingLauncherApp(
   viewModel: LauncherViewModel,
   settings: LauncherSettings,
+  onDismissKeyguard: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
@@ -279,7 +335,10 @@ fun NothingLauncherApp(
         toggles = toggles,
         notifications = notifications,
         settings = settings,
-        onUnlock = { viewModel.unlockLauncherScreen() },
+        onUnlock = {
+          viewModel.unlockLauncherScreen()
+          onDismissKeyguard()
+        },
         onToggleTorch = { viewModel.toggleTorch() },
         onLaunchShortcut = { shortcut: LockShortcutType -> viewModel.launchShortcut(shortcut) },
         onDismissNotification = { id: String -> viewModel.dismissNotification(id) }

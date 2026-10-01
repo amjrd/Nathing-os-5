@@ -199,10 +199,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     }
   }
 
-  fun lockLauncherScreen() {
+  fun lockLauncherScreen(turnOffDisplay: Boolean = false) {
     if (_settings.value.lockScreen.isLockScreenEnabled) {
       _currentScreen.value = LauncherScreen.LOCK_SCREEN
-    } else {
+    }
+    if (turnOffDisplay) {
       com.example.service.SystemIntegrationHelper.lockScreen(context)
     }
   }
