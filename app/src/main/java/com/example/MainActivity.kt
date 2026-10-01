@@ -470,7 +470,7 @@ fun NothingLauncherApp(
               activeWidgets = listOf(
                 com.example.model.NosWidgetPortType.STICKER_FOCUS_CLUSTER,
                 com.example.model.NosWidgetPortType.CLOCK_MAIN,
-                com.example.ui.theme.MyApplicationTheme@TODO
+                com.example.model.NosWidgetPortType.WEATHER_MAIN
               )
             )
           }
