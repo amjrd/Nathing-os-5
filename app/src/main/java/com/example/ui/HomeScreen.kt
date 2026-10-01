@@ -217,6 +217,37 @@ fun HomeScreen(
         }
       }
       .testTag("home_screen_container")
+      .pointerInput(Unit) {
+        var horizontalDistance = 0f
+        detectHorizontalDragGestures(
+          onDragStart = { horizontalDistance = 0f },
+          onDragEnd = { horizontalDistance = 0f },
+          onDragCancel = { horizontalDistance = 0f },
+          onHorizontalDrag = { _, dragAmount ->
+            horizontalDistance += dragAmount
+            if (horizontalDistance < -120f) {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              try {
+                val googleIntent = context.packageManager
+                  .getLaunchIntentForPackage("com.google.android.googlequicksearchbox")
+                if (googleIntent != null) {
+                  googleIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                  context.startActivity(googleIntent)
+                } else {
+                  val webIntent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://www.google.com")
+                  ).apply { addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) }
+                  context.startActivity(webIntent)
+                }
+              } catch (_: Exception) {
+                // Google unavailable: keep launcher unchanged.
+              }
+              horizontalDistance = 0f
+            }
+          }
+        )
+      }
   ) {
     // Dynamic Nothing OS 5 Wallpaper Background (Supports built-in & custom gallery photos)
     NothingWallpaperBackground(
