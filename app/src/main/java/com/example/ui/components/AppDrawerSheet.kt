@@ -115,13 +115,6 @@ fun AppDrawerSheet(
     }
   }
 
-  // Top suggested / recent apps for the upper tray (Screenshot 2)
-  val suggestedApps = remember(apps) {
-    apps.filter {
-      it.label in listOf("Play Store", "Telegram X", "Amazon", "Calendar", "Chrome", "Camera", "Messages", "Nothing X")
-    }.take(4).ifEmpty { apps.take(4) }
-  }
-
   // Available Alphabet headers for fast scroll
   val alphabetLetters = remember(apps) {
     apps.mapNotNull { it.label.firstOrNull()?.uppercaseChar() }
@@ -181,7 +174,7 @@ fun AppDrawerSheet(
       Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
       ) {
         IconButton(
           onClick = onClose,
