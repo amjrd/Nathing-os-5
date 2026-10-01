@@ -165,6 +165,31 @@ object SystemPortHelper {
     }
   }
 
+  // 5. Google Discover / Google App feed (Pixel-style left page)
+  fun launchGoogleFeed(context: Context): Boolean {
+    val pm = context.packageManager
+
+    try {
+      val launchIntent = pm.getLaunchIntentForPackage("com.google.android.googlequicksearchbox")
+      if (launchIntent != null) {
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(launchIntent)
+        return true
+      }
+    } catch (_: Exception) {}
+
+    return try {
+      val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/")).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      context.startActivity(webIntent)
+      true
+    } catch (_: Exception) {
+      Toast.makeText(context, "Google app not found", Toast.LENGTH_SHORT).show()
+      false
+    }
+  }
+
   // Package detection helper
   fun isAppInstalled(context: Context, packageName: String): Boolean {
     return try {
