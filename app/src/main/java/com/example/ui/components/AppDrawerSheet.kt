@@ -507,7 +507,6 @@ fun AppDrawerSheet(
           }
         }
       } else {
-$anchor
         LazyVerticalGrid(
           columns = GridCells.Fixed(4),
           state = gridState,
