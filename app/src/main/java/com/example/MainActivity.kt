@@ -21,14 +21,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -216,7 +212,6 @@ fun NothingLauncherApp(
     ACCENT_COLORS.getOrElse(settings.accentColorIndex) { ACCENT_COLORS[0] }
   }
 
-  // Handle hardware back press gracefully
   BackHandler(enabled = currentScreen == LauncherScreen.APP_DRAWER || currentScreen == LauncherScreen.LOCK_SCREEN || isSettingsOpen || isWidgetSheetOpen || activeFolder != null) {
     if (currentScreen == LauncherScreen.LOCK_SCREEN) {
       if (settings.lockScreen.securityType == com.example.model.LockSecurityType.SWIPE) {
@@ -235,7 +230,6 @@ fun NothingLauncherApp(
   }
 
   Box(modifier = modifier.fillMaxSize()) {
-    // 1. Home Screen
     HomeScreen(
       currentTime = currentTime,
       currentDate = currentDate,
@@ -328,11 +322,63 @@ fun NothingLauncherApp(
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
     )
 
-    // Home gestures:
-    // The App Drawer is opened only by the dedicated drawer/dock gesture.
-    // Do NOT intercept a full-screen swipe here: that could let the Google
-    // feed/assistant win the same gesture and prevent the drawer from opening.
-    // 1.5. Signature Nothing OS 5 Lock Screen
+    // Single Home gesture arbiter:
+    // - Swipe up starting in the bottom zone -> App Drawer
+    // - Swipe left starting above the bottom zone -> Google Discover
+    // Keeping both decisions in one detector prevents gesture competition.
+    if (currentScreen == LauncherScreen.HOME) {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .pointerInput(Unit) {
+            val bottomZonePx = 180.dp.toPx()
+            var startX = 0f
+            var startY = 0f
+            var totalX = 0f
+            var totalY = 0f
+
+            detectDragGestures(
+              onDragStart = { offset ->
+                startX = offset.x
+                startY = offset.y
+                totalX = 0f
+                totalY = 0f
+              },
+              onDragEnd = {
+                val absX = kotlin.math.abs(totalX)
+                val absY = kotlin.math.abs(totalY)
+                val bottomZone = size.height - bottomZonePx
+
+                when {
+                  totalY < -90f && absY > absX && startY >= bottomZone -> {
+                    viewModel.setScreen(LauncherScreen.APP_DRAWER)
+                  }
+                  totalX < -90f && absX > absY && startY < bottomZone -> {
+                    com.example.service.SystemPortHelper.launchGoogleFeed(context)
+                  }
+                }
+
+                startX = 0f
+                startY = 0f
+                totalX = 0f
+                totalY = 0f
+              },
+              onDragCancel = {
+                startX = 0f
+                startY = 0f
+                totalX = 0f
+                totalY = 0f
+              },
+              onDrag = { change, dragAmount ->
+                totalX += dragAmount.x
+                totalY += dragAmount.y
+                change.consume()
+              }
+            )
+          }
+      )
+    }
+
     AnimatedVisibility(
       visible = currentScreen == LauncherScreen.LOCK_SCREEN,
       enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
@@ -356,7 +402,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 2. App Drawer Screen (Animated slide in from bottom with spring & fade)
     AnimatedVisibility(
       visible = currentScreen == LauncherScreen.APP_DRAWER,
       enter = slideInVertically(
@@ -425,7 +470,7 @@ fun NothingLauncherApp(
               activeWidgets = listOf(
                 com.example.model.NosWidgetPortType.STICKER_FOCUS_CLUSTER,
                 com.example.model.NosWidgetPortType.CLOCK_MAIN,
-                com.example.model.NosWidgetPortType.WEATHER_MAIN
+                com.example.ui.theme.MyApplicationTheme@TODO
               )
             )
           }
@@ -438,7 +483,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 3. Expanded Folder Dialog
     activeFolder?.let { folder ->
       ExpandedFolderSheet(
         folder = folder,
@@ -450,7 +494,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 4. Launcher Settings Dialog
     if (isSettingsOpen) {
       LauncherSettingsDialog(
         settings = settings,
@@ -470,7 +513,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 4.5. NOS Widgets Port Customizer Bottom Sheet
     if (isWidgetSheetOpen) {
       NosWidgetPortSheet(
         activeWidgets = settings.activeWidgets,
@@ -480,7 +522,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 5. Quick Memo Edit Dialog
     if (isEditingNote) {
       EditNoteDialog(
         initialNote = quickNote,
@@ -490,7 +531,6 @@ fun NothingLauncherApp(
       )
     }
 
-    // 6. Signature Nothing OS 5 App Info Sheet (Guaranteed App Info display)
     val appForInfo by viewModel.selectedAppForInfo.collectAsStateWithLifecycle()
     if (appForInfo != null) {
       NothingAppInfoSheet(
