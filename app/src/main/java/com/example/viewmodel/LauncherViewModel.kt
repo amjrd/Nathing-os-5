@@ -4,11 +4,9 @@ import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.os.Build
 import androidx.core.content.ContextCompat
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCharacteristics
@@ -183,6 +181,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     loadInstalledApps()
     startClockUpdates()
     registerBatteryReceiver()
+    registerPackageReceiver()
     checkSystemStorage()
     observeNotificationCounts()
   }
@@ -804,9 +803,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
           .mapNotNull { appInfo ->
             try {
               AppItem(
-                appInfo.packageName,
-                appInfo.loadIcon(packageManager),
-                packageManager.getApplicationLabel(appInfo).toString()
+                packageName = appInfo.packageName,
+                activityName = packageManager.getLaunchIntentForPackage(appInfo.packageName)?.component?.className ?: "",
+                label = packageManager.getApplicationLabel(appInfo).toString(),
+                icon = appInfo.loadIcon(packageManager)
               )
             } catch (_: Exception) { null }
           }
