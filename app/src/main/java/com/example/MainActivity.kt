@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -55,9 +57,32 @@ class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
 
+  // Screen Off receiver to lock the launcher screen when phone goes to sleep / power button pressed
+  private val screenOffReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+        if (viewModel.settings.value.lockScreen.isLockScreenEnabled) {
+          viewModel.lockLauncherScreen()
+        }
+      }
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
+    // Allow Nothing OS lock screen to show over system lock when active
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+      setShowWhenLocked(true)
+    } else {
+      @Suppress("DEPRECATION")
+      window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+    }
+
+    // Register screen off listener
+    val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+    registerReceiver(screenOffReceiver, filter)
 
     setContent {
       val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -78,18 +103,21 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  override fun onResume() {
-    super.onResume()
-    val km = getSystemService(KeyguardManager::class.java)
-    if (km != null && !km.isKeyguardLocked && viewModel.settings.value.lockScreen.preventSystemLockOverlap) {
-      if (viewModel.currentScreen.value == LauncherScreen.LOCK_SCREEN) {
-        viewModel.unlockLauncherScreen()
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    // If Home button or Launcher icon pressed while currently in App Drawer, close drawer
+    if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.action == Intent.ACTION_MAIN) {
+      if (viewModel.currentScreen.value == LauncherScreen.APP_DRAWER) {
+        viewModel.setScreen(LauncherScreen.HOME)
       }
     }
   }
 
   override fun onDestroy() {
     super.onDestroy()
+    try {
+      unregisterReceiver(screenOffReceiver)
+    } catch (_: Exception) {}
   }
 }
 

@@ -1056,6 +1056,123 @@ fun LauncherSettingsDialog(
 
         // TAB 2: SYSTEM PERMISSIONS & GESTURES
         2 -> {
+          // 0. NOTHING OS 5 LOCK SCREEN (ÉCRAN DE VERROUILLAGE)
+          Text(
+            text = "NOTHING OS 5 LOCK SCREEN (ÉCRAN DE VERROUILLAGE)",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = accentColor,
+            letterSpacing = 1.sp
+          )
+          Spacer(modifier = Modifier.height(8.dp))
+
+          SettingsSwitchRow(
+            title = "ENABLE LOCK SCREEN (ACTIVÉ PAR DÉFAUT)",
+            subtitle = "Shows Nothing OS 5 Lock Screen on launch & sleep wake",
+            checked = settings.lockScreen.isLockScreenEnabled,
+            accentColor = accentColor,
+            onCheckedChange = { isEnabled ->
+              onUpdateSettings(
+                settings.copy(
+                  lockScreen = settings.lockScreen.copy(isLockScreenEnabled = isEnabled)
+                )
+              )
+            }
+          )
+
+          Spacer(modifier = Modifier.height(10.dp))
+
+          // Lock Screen Test & Lock Button
+          Button(
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              onLockScreenNow()
+            },
+            colors = ButtonDefaults.buttonColors(
+              containerColor = accentColor,
+              contentColor = if (accentColor == Color.White) Color.Black else Color.White
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(44.dp)
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+              )
+              Text(
+                text = "TEST LOCK SCREEN NOW (VERROUILLER)",
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp
+              )
+            }
+          }
+
+          Spacer(modifier = Modifier.height(14.dp))
+
+          // Security Type: Swipe vs PIN
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column {
+              Text(
+                text = "SECURITY TYPE",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = theme.textPrimary
+              )
+              Text(
+                text = if (settings.lockScreen.securityType == LockSecurityType.SWIPE) "Swipe up to unlock" else "4-digit PIN lock",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                color = theme.textSecondary
+              )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              listOf(
+                LockSecurityType.SWIPE to "SWIPE",
+                LockSecurityType.PIN to "PIN"
+              ).forEach { (type, label) ->
+                val isSelected = settings.lockScreen.securityType == type
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) accentColor else theme.surface)
+                    .border(1.dp, if (isSelected) accentColor else theme.border, RoundedCornerShape(8.dp))
+                    .clickable {
+                      onUpdateSettings(
+                        settings.copy(
+                          lockScreen = settings.lockScreen.copy(securityType = type)
+                        )
+                      )
+                    }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                  Text(
+                    text = label,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = if (isSelected) (if (accentColor == Color.White) Color.Black else Color.White) else theme.textPrimary
+                  )
+                }
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(18.dp))
+
           // Gestures
           Text(
             text = "SYSTEM GESTURES",
