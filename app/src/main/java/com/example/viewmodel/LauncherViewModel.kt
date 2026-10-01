@@ -46,10 +46,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   // Pre-load saved user customizations from disk
   private val _initialSettings = LauncherPreferencesManager.loadSettings(application.applicationContext)
 
-  // Screen navigation - Starts with Nothing OS 5 Lock Screen when enabled
-  private val _currentScreen = MutableStateFlow(
-    if (_initialSettings.lockScreen.isLockScreenEnabled) LauncherScreen.LOCK_SCREEN else LauncherScreen.HOME
-  )
+  // Screen navigation - Default to Home Screen; Lock Screen activates on screen off / lock
+  private val _currentScreen = MutableStateFlow(LauncherScreen.HOME)
   val currentScreen: StateFlow<LauncherScreen> = _currentScreen.asStateFlow()
 
   // App lists
