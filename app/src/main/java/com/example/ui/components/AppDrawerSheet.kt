@@ -1,5 +1,21 @@
 package com.example.ui.components
 
+private fun smartCategory(label: String): String {
+  val s = label.lowercase(Locale.ROOT)
+  return when {
+    listOf("facebook","instagram","telegram","whatsapp","messenger","tiktok","twitter").any { s.contains(it) } -> "SOCIAL"
+    listOf("calculator","calendar","clock","settings","files","contacts","phone","recorder").any { s.contains(it) } -> "UTILITIES"
+    listOf("camera","gallery","photos","music","youtube","spotify","video").any { s.contains(it) } -> "MULTIMEDIA TOOLS"
+    listOf("maps","weather","health","fit","wallet").any { s.contains(it) } -> "LIFESTYLE"
+    listOf("netflix","prime video","disney","games","play games").any { s.contains(it) } -> "ENTERTAINMENT"
+    listOf("bank","finance","pay","revolut").any { s.contains(it) } -> "FINANCE"
+    listOf("gmail","drive","docs","sheets","meet","notion","tasks","todo").any { s.contains(it) } -> "PRODUCTIVITY"
+    listOf("amazon","shop","store","ebay","aliexpress").any { s.contains(it) } -> "SHOPPING"
+    else -> "OTHER APPS"
+  }
+}
+
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -445,8 +461,53 @@ fun AppDrawerSheet(
         Spacer(modifier = Modifier.height(12.dp))
       }
 
-      // Drawer Content: Grid + Fast-Scroll Alphabet Sidebar
-      Row(modifier = Modifier.fillMaxSize()) {
+      if (searchQuery.isBlank()) {
+        val categories = filteredApps.groupBy { smartCategory(it.label) }
+          .toList().sortedBy { it.first == "OTHER APPS" }
+
+        androidx.compose.foundation.lazy.LazyColumn(
+          modifier = Modifier.fillMaxWidth().weight(1f).testTag("smart_category_drawer"),
+          verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          items(categories.size) { index ->
+            val (title, categoryApps) = categories[index]
+            Column(
+              modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+                .background(theme.surface.copy(alpha = 0.92f))
+                .border(1.dp, theme.border, RoundedCornerShape(22.dp))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+            ) {
+              Text(
+                title, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp,
+                color = theme.textPrimary,
+                modifier = Modifier.padding(start = 4.dp, bottom = 10.dp)
+              )
+              Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                categoryApps.take(4).forEach { app ->
+                  AppIconItem(
+                    app = app,
+                    onClick = { onAppClick(app) },
+                    onOpenAppInfo = onOpenAppInfo,
+                    onTogglePin = onTogglePin,
+                    onToggleDock = onToggleDock,
+                    iconSize = currentIconSize,
+                    showLabel = true,
+                    iconPack = iconPack,
+                    accentColor = accentColor,
+                    modifier = Modifier.weight(1f)
+                  )
+                }
+                repeat((4 - categoryApps.take(4).size).coerceAtLeast(0)) {
+                  Spacer(Modifier.weight(1f))
+                }
+              }
+            }
+          }
+        }
+      } else {
+$anchor
         LazyVerticalGrid(
           columns = GridCells.Fixed(4),
           state = gridState,
@@ -503,6 +564,7 @@ fun AppDrawerSheet(
             }
           }
         }
+      }
       }
     }
   }
