@@ -21,6 +21,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -183,6 +186,7 @@ fun NothingLauncherApp(
   onDismissKeyguard: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
+  val context = LocalContext.current
   val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
   val currentTime by viewModel.currentTime.collectAsStateWithLifecycle()
   val currentDate by viewModel.currentDate.collectAsStateWithLifecycle()
@@ -320,6 +324,51 @@ fun NothingLauncherApp(
         .fillMaxSize()
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
     )
+
+    // Home gestures: Pixel-style Google page on right swipe + reliable app drawer swipe zone.
+    if (currentScreen == LauncherScreen.HOME) {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .pointerInput(Unit) {
+            var totalRight = 0f
+            detectHorizontalDragGestures(
+              onDragStart = { totalRight = 0f },
+              onDragEnd = { totalRight = 0f },
+              onDragCancel = { totalRight = 0f },
+              onHorizontalDrag = { _, amount ->
+                totalRight += amount
+                if (totalRight > 90f) {
+                  com.example.service.SystemPortHelper.launchGoogleFeed(context)
+                  totalRight = 0f
+                }
+              }
+            )
+          }
+      )
+      Box(
+        modifier = Modifier
+          .align(androidx.compose.ui.Alignment.BottomCenter)
+          .fillMaxWidth()
+          .height(110.dp)
+          .padding(bottom = 95.dp)
+          .pointerInput(Unit) {
+            var totalUp = 0f
+            detectVerticalDragGestures(
+              onDragStart = { totalUp = 0f },
+              onDragEnd = { totalUp = 0f },
+              onDragCancel = { totalUp = 0f },
+              onVerticalDrag = { _, amount ->
+                totalUp += amount
+                if (totalUp < -55f) {
+                  viewModel.setScreen(LauncherScreen.APP_DRAWER)
+                  totalUp = 0f
+                }
+              }
+            )
+          }
+      )
+    }
 
     // 1.5. Signature Nothing OS 5 Lock Screen
     AnimatedVisibility(
