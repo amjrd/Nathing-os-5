@@ -13,7 +13,6 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import androidx.lifecycle.AndroidViewModel
@@ -773,7 +772,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         addDataScheme("package")
       }
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        ContextCompat.registerReceiver(context, packageReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+        ContextCompat.registerReceiver(context, packageReceiver, filter, ContextCompat.RECEIVER_EXPORTED)
       } else {
         @Suppress("DEPRECATION")
         context.registerReceiver(packageReceiver, filter)
@@ -797,20 +796,40 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private fun refreshInstalledAppsOnly() {
     viewModelScope.launch {
       try {
-        val packageManager = context.packageManager
-        val refreshed = packageManager.getInstalledApplications(android.content.pm.PackageManager.GET_META_DATA)
-          .filter { it.packageName != context.packageName && packageManager.getLaunchIntentForPackage(it.packageName) != null }
-          .mapNotNull { appInfo ->
+        val pm = context.packageManager
+        val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
+          addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+
+        val refreshed = pm.queryIntentActivities(mainIntent, 0)
+          .mapNotNull { resolveInfo ->
+            val pkg = resolveInfo.activityInfo.packageName
+            if (pkg == context.packageName) return@mapNotNull null
+
             try {
+              val label = resolveInfo.loadLabel(pm).toString()
+              val icon = resolveInfo.loadIcon(pm)
+              val category = when {
+                label.contains("Camera", true) || label.contains("Photo", true) || label.contains("Gallery", true) -> "Media"
+                label.contains("Message", true) || label.contains("Mail", true) || label.contains("Phone", true) || label.contains("Call", true) -> "Communication"
+                label.contains("Setting", true) || label.contains("File", true) || label.contains("Clock", true) || label.contains("Calc", true) -> "Tools"
+                else -> "General"
+              }
+
               AppItem(
-                packageName = appInfo.packageName,
-                activityName = packageManager.getLaunchIntentForPackage(appInfo.packageName)?.component?.className ?: "",
-                label = packageManager.getApplicationLabel(appInfo).toString(),
-                icon = appInfo.loadIcon(packageManager)
+                packageName = pkg,
+                activityName = resolveInfo.activityInfo.name,
+                label = label,
+                icon = icon,
+                category = category
               )
-            } catch (_: Exception) { null }
+            } catch (_: Exception) {
+              null
+            }
           }
-          .sortedBy { it.label.lowercase() }
+          .distinctBy { it.packageName }
+          .sortedBy { it.label.lowercase(Locale.ROOT) }
+
         _installedApps.value = refreshed
       } catch (_: Exception) {}
     }
