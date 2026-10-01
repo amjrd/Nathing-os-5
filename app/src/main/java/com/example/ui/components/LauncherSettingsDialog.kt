@@ -1081,6 +1081,61 @@ fun LauncherSettingsDialog(
             }
           )
 
+          // Warning banner if Superposition is Disabled on Android device
+          if (settings.lockScreen.isLockScreenEnabled && !isOverlayGranted) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFF2C1E0F))
+                .border(1.dp, Color(0xFFFF9800), RoundedCornerShape(10.dp))
+                .clickable { SystemIntegrationHelper.requestOverlayPermission(context) }
+                .padding(10.dp)
+            ) {
+              Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Layers,
+                  contentDescription = null,
+                  tint = Color(0xFFFF9800),
+                  modifier = Modifier.size(20.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                  Text(
+                    text = "SUPERPOSITION REQUISE (DÉSACTIVÉE)",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF9800)
+                  )
+                  Text(
+                    text = "Activez 'Superposition sur d'autres applis' pour afficher l'écran de verrouillage.",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 9.sp,
+                    color = Color(0xFFFFCC80)
+                  )
+                }
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFFFF9800))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                  Text(
+                    text = "ACTIVER",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                  )
+                }
+              }
+            }
+          }
+
           Spacer(modifier = Modifier.height(10.dp))
 
           // Lock Screen Test & Lock Button
