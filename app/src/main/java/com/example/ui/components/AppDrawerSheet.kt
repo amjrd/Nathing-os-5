@@ -315,7 +315,7 @@ private fun DrawerCategoryCard(
             rowApps.forEach { app ->
               DrawerAppIcon(
                 app = app,
-                iconSize = 46.dp,
+                iconSize = 58.dp,
                 onClick = { onAppClick(app) },
                 onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin,
@@ -324,7 +324,7 @@ private fun DrawerCategoryCard(
                 accentColor = accentColor
               )
             }
-            repeat(2 - rowApps.size) { Spacer(Modifier.width(46.dp)) }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(58.dp)) }
           }
         }
       }
@@ -375,7 +375,7 @@ private fun ExpandedDrawerCategoryPanel(
           rowApps.forEach { app ->
             DrawerAppIcon(
               app = app,
-              iconSize = 44.dp,
+              iconSize = 54.dp,
               onClick = { onAppClick(app) },
               onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin,
