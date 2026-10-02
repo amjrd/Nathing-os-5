@@ -32,25 +32,25 @@ private val NothingDarkColorScheme = darkColorScheme(
 )
 
 // Theme Jour (Light - Image 3)
-private val NothingLightColorScheme = darkColorScheme(
-  primary = NothingWhite,
-  onPrimary = NothingBlack,
-  primaryContainer = NothingElevated,
-  onPrimaryContainer = NothingWhite,
-  secondary = NothingDimWhite,
-  onSecondary = NothingBlack,
-  secondaryContainer = NothingDarkSurface,
-  onSecondaryContainer = NothingWhite,
+private val NothingLightColorScheme = lightColorScheme(
+  primary = Color(0xFF000000),
+  onPrimary = Color(0xFFFFFFFF),
+  primaryContainer = Color(0xFFE9E9E9),
+  onPrimaryContainer = Color(0xFF000000),
+  secondary = Color(0xFF333333),
+  onSecondary = Color(0xFFFFFFFF),
+  secondaryContainer = Color(0xFFE2E2E2),
+  onSecondaryContainer = Color(0xFF000000),
   tertiary = NothingRed,
-  onTertiary = NothingWhite,
-  background = NothingBlack,
-  onBackground = NothingWhite,
-  surface = NothingMatteBlack,
-  onSurface = NothingWhite,
-  surfaceVariant = NothingDarkSurface,
-  onSurfaceVariant = NothingDimWhite,
-  outline = NothingBorder,
-  outlineVariant = NothingUnlitDot
+  onTertiary = Color(0xFFFFFFFF),
+  background = Color(0xFFF4F5F8),
+  onBackground = Color(0xFF000000),
+  surface = Color(0xFFFFFFFF),
+  onSurface = Color(0xFF000000),
+  surfaceVariant = Color(0xFFE8E8EA),
+  onSurfaceVariant = Color(0xFF333333),
+  outline = Color(0xFFB8B8BC),
+  outlineVariant = Color(0xFFD0D0D3)
 )
 
 // Theme Retro Pastel (Image 3 & 5: Retro Car & Soft Sage/Mint aesthetic)
@@ -124,18 +124,18 @@ fun MyApplicationTheme(
     }
     LauncherThemeMode.MONOCHROME_STUDIO -> {
       LauncherThemeColors(
-        isDark = true,
-        background = Color(0xFF000000),
-        surface = Color(0xFF0B0B0C),
-        elevated = Color(0xFF151517),
-        border = Color(0xFF29292C),
-        textPrimary = Color(0xFFFFFFFF),
-        textSecondary = Color(0xFFB7B7BC),
-        unlitDot = Color(0xFF252527),
-        dockBg = Color(0xF5000000),
-        dockButtonBg = Color(0xFF151517),
-        dockIconTint = Color(0xFFFFFFFF),
-        searchPillBg = Color(0xFF0F0F10)
+        isDark = false,
+        background = Color(0xFFF4F5F8),
+        surface = Color(0xFFFFFFFF),
+        elevated = Color(0xFFF0F0F2),
+        border = Color(0xFFD0D0D3),
+        textPrimary = Color(0xFF000000),
+        textSecondary = Color(0xFF55555A),
+        unlitDot = Color(0xFFD2D2D5),
+        dockBg = Color(0xF2FFFFFF),
+        dockButtonBg = Color(0xFFE8E8EA),
+        dockIconTint = Color(0xFF000000),
+        searchPillBg = Color(0xFFE8E8EA)
       )
     }
     LauncherThemeMode.ATMOSPHERE_PASTEL -> {
