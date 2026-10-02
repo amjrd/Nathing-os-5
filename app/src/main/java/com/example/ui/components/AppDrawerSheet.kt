@@ -186,21 +186,100 @@ fun AppDrawerSheet(
           }
         }
 
-        if (searchQuery.isNotBlank()) {
-          item {
-            val resultCount = apps.count { app ->
+        // Full installed-app list: categories stay at the top, then every installed
+        // application is available here. This keeps the drawer useful even when an
+        // app is not assigned to one of the visual categories above.
+        item {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(top = 4.dp, start = 2.dp, end = 2.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text(
+              text = if (searchQuery.isBlank()) "ALL APPS" else "RESULTS",
+              color = primaryText,
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Medium,
+              letterSpacing = 1.2.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+              text = apps.count { app ->
+                searchQuery.isBlank() ||
+                  app.label.contains(searchQuery.trim(), ignoreCase = true)
+              }.toString(),
+              color = accentColor,
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Medium
+            )
+          }
+        }
+
+        val filteredAllApps = apps
+          .asSequence()
+          .filter { app ->
+            searchQuery.isBlank() ||
               app.label.contains(searchQuery.trim(), ignoreCase = true)
+          }
+          .sortedBy { it.label.lowercase() }
+          .toList()
+
+        items((filteredAllApps.size + 3) / 4) { rowIndex ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Top
+          ) {
+            for (column in 0..3) {
+              val index = rowIndex * 4 + column
+              if (index < filteredAllApps.size) {
+                val app = filteredAllApps[index]
+                Column(
+                  modifier = Modifier.width(72.dp),
+                  horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                  AppIconItem(
+                    app = app,
+                    onClick = { onAppClick(app) },
+                    onOpenAppInfo = onOpenAppInfo,
+                    onTogglePin = onTogglePin,
+                    onToggleDock = onToggleDock,
+                    iconSize = 48.dp,
+                    showLabel = false,
+                    iconPack = iconPack,
+                    accentColor = accentColor
+                  )
+                  Spacer(modifier = Modifier.height(4.dp))
+                  Text(
+                    text = app.label,
+                    color = primaryText,
+                    fontSize = 10.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                  )
+                }
+              } else {
+                Spacer(modifier = Modifier.width(72.dp))
+              }
             }
-            if (resultCount == 0) {
-              Text(
-                text = "NO APPS FOUND",
-                color = secondaryText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                textAlign = TextAlign.Center
-              )
-            }
+          }
+        }
+
+        if (filteredAllApps.isEmpty()) {
+          item {
+            Text(
+              text = "NO APPS FOUND",
+              color = secondaryText,
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Medium,
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+              textAlign = TextAlign.Center
+            )
           }
         }
       }
