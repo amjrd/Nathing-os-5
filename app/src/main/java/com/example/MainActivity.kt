@@ -356,29 +356,6 @@ fun NothingLauncherApp(
           }
       )
 
-      // Dedicated lower touch zone for opening the App Drawer.
-      // This zone is intentionally separate from the Google Feed gesture.
-      Box(
-        modifier = Modifier
-          .align(androidx.compose.ui.Alignment.BottomCenter)
-          .fillMaxWidth()
-          .height(220.dp)
-          .pointerInput(Unit) {
-            var totalUp = 0f
-            detectVerticalDragGestures(
-              onDragStart = { totalUp = 0f },
-              onDragEnd = { totalUp = 0f },
-              onDragCancel = { totalUp = 0f },
-              onVerticalDrag = { _, amount ->
-                totalUp += amount
-                if (totalUp < -120f) {
-                  viewModel.setScreen(LauncherScreen.APP_DRAWER)
-                  totalUp = 0f
-                }
-              }
-            )
-          }
-      )
     }
 
     // 1.5. Signature Nothing OS 5 Lock Screen
