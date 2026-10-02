@@ -90,6 +90,8 @@ fun AppDrawerSheet(
 
   val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle", "Other") }
 
+  var expandedCategory by remember { mutableStateOf<String?>(null) }
+
   val categories = remember(apps, searchQuery) {
     val query = searchQuery.trim()
     categoryNames.mapNotNull { title ->
@@ -193,8 +195,8 @@ fun AppDrawerSheet(
               iconPack = iconPack, accentColor = accentColor,
               primaryText = primaryText, secondaryText = secondaryText,
               cardSizeLevel = drawerCardSizeLevel,
-              isExpanded = false,
-              onExpand = { }
+              isExpanded = expandedCategory == left.title,
+              onExpand = { expandedCategory = left.title }
             )
 
             val rightIndex = rowIndex * 2 + 1
