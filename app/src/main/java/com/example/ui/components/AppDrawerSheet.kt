@@ -369,7 +369,8 @@ private fun DrawerCategoryCard(
                     onTogglePin = onTogglePin,
                     onToggleDock = onToggleDock,
                     iconPack = iconPack,
-                    accentColor = accentColor
+                    accentColor = accentColor,
+                    showLabel = true
                   )
                 }
               }
@@ -419,7 +420,8 @@ private fun DrawerAppIcon(
   onTogglePin: (AppItem) -> Unit,
   onToggleDock: (AppItem) -> Unit,
   iconPack: IconPackStyle,
-  accentColor: Color
+  accentColor: Color,
+  showLabel: Boolean = false
 ) {
   AppIconItem(
     app = app,
@@ -428,7 +430,7 @@ private fun DrawerAppIcon(
     onTogglePin = onTogglePin,
     onToggleDock = onToggleDock,
     iconSize = iconSize,
-    showLabel = false,
+    showLabel = showLabel,
     iconPack = iconPack,
     accentColor = accentColor,
     modifier = Modifier.size(iconSize + 8.dp)
