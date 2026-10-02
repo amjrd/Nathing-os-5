@@ -299,18 +299,24 @@ private fun DrawerCategoryCard(
         color = secondaryText,
         fontSize = 11.sp
       )
-      Spacer(modifier = Modifier.height(10.dp))
-      if (categoryApps.isNotEmpty()) {
-        DrawerAppIcon(
-          app = categoryApps.first(),
-          iconSize = 60.dp,
-          onClick = { onExpand() },
-          onOpenAppInfo = onOpenAppInfo,
-          onTogglePin = onTogglePin,
-          onToggleDock = onToggleDock,
-          iconPack = iconPack,
-          accentColor = accentColor
-        )
+      Spacer(modifier = Modifier.height(8.dp))
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Top
+      ) {
+        categoryApps.take(4).forEach { app ->
+          DrawerAppIcon(
+            app = app,
+            iconSize = 42.dp,
+            onClick = { onAppClick(app) },
+            onOpenAppInfo = onOpenAppInfo,
+            onTogglePin = onTogglePin,
+            onToggleDock = onToggleDock,
+            iconPack = iconPack,
+            accentColor = accentColor
+          )
+        }
       }
     }
 
