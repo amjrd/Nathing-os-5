@@ -157,6 +157,7 @@ fun HomeScreen(
   settings: LauncherSettings,
   systemWidgetView: AppWidgetHostView? = null,
   onAddSystemWidget: () -> Unit = {},
+  onRemoveSystemWidget: () -> Unit = {},
   onAppClick: (AppItem) -> Unit,
   onOpenFolder: (FolderItem) -> Unit,
   onToggleFolderEnlarged: (String) -> Unit,
@@ -264,7 +265,7 @@ fun HomeScreen(
               sizeMode = settings.widgetSizeLevel,
               onSelect = { },
               onCycleSize = { },
-              onRemove = { onAddSystemWidget() },
+              onRemove = { onRemoveSystemWidget() },
               onDismiss = { },
               accentColor = accentColor
             ) {
