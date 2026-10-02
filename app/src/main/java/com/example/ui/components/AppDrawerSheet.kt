@@ -318,7 +318,6 @@ private fun DrawerCategoryCard(
       }
     }
 
-    }
   }
 }
 
