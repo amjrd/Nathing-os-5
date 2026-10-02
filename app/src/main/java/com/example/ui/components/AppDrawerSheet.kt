@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 
-import android.appwidget.AppWidgetHostView
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,7 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -80,9 +78,6 @@ fun AppDrawerSheet(
   onToggleThemeMode: () -> Unit = {},
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {},
-  systemWidgetView: AppWidgetHostView? = null,
-  onAddSystemWidget: () -> Unit = {},
-  onRemoveSystemWidget: () -> Unit = {}
 ) {
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
@@ -176,59 +171,6 @@ fun AppDrawerSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 18.dp)
       ) {
-        item {
-          Column(
-            modifier = Modifier
-              .fillMaxWidth()
-              .clip(RoundedCornerShape(24.dp))
-              .background(Color(0xFF151517).copy(alpha = 0.96f))
-              .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(24.dp))
-              .padding(14.dp)
-          ) {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "SYSTEM WIDGET",
-                color = primaryText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
-              )
-              Text(
-                text = if (systemWidgetView == null) "ADD" else "REMOVE",
-                color = accentColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                  .clip(RoundedCornerShape(14.dp))
-                  .clickable {
-                    if (systemWidgetView == null) onAddSystemWidget() else onRemoveSystemWidget()
-                  }
-                  .padding(horizontal = 12.dp, vertical = 7.dp)
-              )
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            if (systemWidgetView != null) {
-              AndroidView(
-                factory = { systemWidgetView },
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .clip(RoundedCornerShape(18.dp))
-              )
-            } else {
-              Text(
-                text = "Add a real Android system widget",
-                color = secondaryText,
-                fontSize = 12.sp
-              )
-            }
-          }
-        }
-
         items((categories.size + 1) / 2) { rowIndex ->
           Row(
             modifier = Modifier.fillMaxWidth(),
