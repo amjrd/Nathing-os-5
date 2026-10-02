@@ -323,6 +323,7 @@ fun NothingLauncherApp(
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
+      onAddSystemWidget = { launchSystemWidgetPicker() },
       modifier = Modifier
         .fillMaxSize()
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
