@@ -232,40 +232,6 @@ fun HomeScreen(
           }
         }
       })
-      .pointerInput(settings.doubleTapToSleep) {
-        var lastTapTime = 0L
-        var lastTapPosition = Offset.Unspecified
-        awaitEachGesture {
-          val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
-          var moved = false
-          var currentPosition = down.position
-          while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Final)
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-            currentPosition = change.position
-            if ((change.position - down.position).getDistance() > 32.dp.toPx()) {
-              moved = true
-            }
-            if (!change.pressed) break
-          }
-          if (!moved && !down.isConsumed && settings.doubleTapToSleep) {
-            val now = SystemClock.uptimeMillis()
-            val closeToLast = lastTapPosition != Offset.Unspecified &&
-              (currentPosition - lastTapPosition).getDistance() < 48.dp.toPx()
-            if (now - lastTapTime in 1..350 && closeToLast) {
-              onDoubleTap()
-              lastTapTime = 0L
-              lastTapPosition = Offset.Unspecified
-            } else {
-              lastTapTime = now
-              lastTapPosition = currentPosition
-            }
-          } else {
-            lastTapTime = 0L
-            lastTapPosition = Offset.Unspecified
-          }
-        }
-      }
       .testTag("home_screen_container")
   ) {
     // Dynamic Nothing OS 5 Wallpaper Background (Supports built-in & custom gallery photos)
