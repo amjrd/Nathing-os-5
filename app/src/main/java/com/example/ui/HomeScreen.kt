@@ -1,5 +1,7 @@
 package com.example.ui
 
+import android.appwidget.AppWidgetHostView
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -9,6 +11,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -152,7 +155,8 @@ fun HomeScreen(
   pinnedApps: List<AppItem>,
   dockApps: List<AppItem>,
   settings: LauncherSettings,
-  onAppClick: (AppItem) -> Unit,
+  systemWidgetViews: List<AppWidgetHostView> = emptyList(),
+  onAddSystemWidget: () -> Unit = {},  onAppClick: (AppItem) -> Unit,
   onOpenFolder: (FolderItem) -> Unit,
   onToggleFolderEnlarged: (String) -> Unit,
   onToggleTorch: () -> Unit,
