@@ -328,11 +328,15 @@ fun NothingLauncherApp(
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
     )
 
-    // Home gestures: Pixel-style Google page on right swipe + reliable app drawer swipe zone.
+    // Home gestures: keep Google Feed and App Drawer in separate touch zones.
+    // Google Feed is deliberately disabled in the lower 220dp so an upward
+    // swipe from the dock can NEVER be interpreted as a horizontal Google swipe.
     if (currentScreen == LauncherScreen.HOME) {
       Box(
         modifier = Modifier
+          .fillMaxWidth()
           .fillMaxSize()
+          .padding(bottom = 220.dp)
           .pointerInput(Unit) {
             var totalRight = 0f
             detectHorizontalDragGestures(
@@ -341,7 +345,8 @@ fun NothingLauncherApp(
               onDragCancel = { totalRight = 0f },
               onHorizontalDrag = { _, amount ->
                 totalRight += amount
-                if (totalRight > 90f) {
+                // Require a deliberate horizontal gesture before launching Google.
+                if (totalRight > 110f) {
                   com.example.service.SystemPortHelper.launchGoogleFeed(context)
                   totalRight = 0f
                 }
@@ -349,12 +354,14 @@ fun NothingLauncherApp(
             )
           }
       )
+
+      // Dedicated lower touch zone for opening the App Drawer.
+      // This zone is intentionally separate from the Google Feed gesture.
       Box(
         modifier = Modifier
           .align(androidx.compose.ui.Alignment.BottomCenter)
           .fillMaxWidth()
-          .height(110.dp)
-          .padding(bottom = 95.dp)
+          .height(220.dp)
           .pointerInput(Unit) {
             var totalUp = 0f
             detectVerticalDragGestures(
@@ -363,7 +370,7 @@ fun NothingLauncherApp(
               onDragCancel = { totalUp = 0f },
               onVerticalDrag = { _, amount ->
                 totalUp += amount
-                if (totalUp < -55f) {
+                if (totalUp < -70f) {
                   viewModel.setScreen(LauncherScreen.APP_DRAWER)
                   totalUp = 0f
                 }
