@@ -201,28 +201,32 @@ fun HomeScreen(
     modifier = modifier
       .fillMaxSize()
       .background(theme.background)
-      .pointerInput(settings.swipeDownNotifications) {
-        if (settings.swipeDownNotifications) {
-          awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
-            var totalDrag = 0f
-            var lastY = down.position.y
-            while (true) {
-              val event = awaitPointerEvent(PointerEventPass.Final)
-              val change = event.changes.firstOrNull { it.id == down.id } ?: break
-              val dy = change.position.y - lastY
-              lastY = change.position.y
-              totalDrag += dy
-              if (totalDrag > 120f) {
-                isBarsVisible = true
-                onSwipeDown()
-                totalDrag = 0f
+      .nestedScroll(remember {
+        object : NestedScrollConnection {
+          var downDistance = 0f
+          override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+            if (settings.swipeDownNotifications && source == NestedScrollSource.UserInput) {
+              if (available.y > 0f) {
+                downDistance += available.y
+                if (downDistance > 120f) {
+                  isBarsVisible = true
+                  onSwipeDown()
+                  downDistance = 0f
+                }
+              } else if (available.y < -4f) {
+                downDistance = 0f
               }
-              if (!change.pressed) break
             }
+            return Offset.Zero
+          }
+          override suspend fun onPostFling(
+            consumed: androidx.compose.ui.unit.Velocity,
+            available: androidx.compose.ui.unit.Velocity
+          ) {
+            downDistance = 0f
           }
         }
-      }
+      })
       .pointerInput(settings.doubleTapToSleep) {
         var lastTapTime = 0L
         var lastTapPosition = Offset.Unspecified
