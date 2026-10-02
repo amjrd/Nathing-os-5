@@ -203,21 +203,24 @@ fun HomeScreen(
       .background(theme.background)
       .pointerInput(settings.swipeDownNotifications) {
         if (settings.swipeDownNotifications) {
-          var totalDrag = 0f
-          detectVerticalDragGestures(
-            onDragStart = { totalDrag = 0f },
-            onDragEnd = { totalDrag = 0f },
-            onDragCancel = { totalDrag = 0f },
-            onVerticalDrag = { _, dragAmount ->
-              totalDrag += dragAmount
+          awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+            var totalDrag = 0f
+            var lastY = down.position.y
+            while (true) {
+              val event = awaitPointerEvent(PointerEventPass.Final)
+              val change = event.changes.firstOrNull { it.id == down.id } ?: break
+              val dy = change.position.y - lastY
+              lastY = change.position.y
+              totalDrag += dy
               if (totalDrag > 120f) {
-                // Reveal top bar on pull down
                 isBarsVisible = true
                 onSwipeDown()
                 totalDrag = 0f
               }
+              if (!change.pressed) break
             }
-          )
+          }
         }
       }
       .pointerInput(settings.doubleTapToSleep) {
