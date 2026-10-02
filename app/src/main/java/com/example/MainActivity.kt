@@ -1,6 +1,7 @@
 package com.example
 
 import android.app.KeyguardManager
+import android.appwidget.AppWidgetHostView
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -58,10 +59,13 @@ import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.LauncherViewModel
+import com.example.service.SystemWidgetHostManager
 
 class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
+  private lateinit var systemWidgetHostManager: SystemWidgetHostManager
+  private var systemWidgetView by mutableStateOf<AppWidgetHostView?>(null)
 
   // Screen State receiver to lock the launcher screen when phone goes to sleep or wakes
   private val screenStateReceiver = object : BroadcastReceiver() {
@@ -119,6 +123,10 @@ class MainActivity : ComponentActivity() {
       registerReceiver(screenStateReceiver, filter)
     }
 
+    systemWidgetHostManager = SystemWidgetHostManager(this) { view ->
+      runOnUiThread { systemWidgetView = view }
+    }
+
     setContent {
       val settings by viewModel.settings.collectAsStateWithLifecycle()
       MyApplicationTheme(themeMode = settings.themeMode) {
@@ -132,6 +140,8 @@ class MainActivity : ComponentActivity() {
             viewModel = viewModel,
             settings = settings,
             onDismissKeyguard = { dismissSystemKeyguard() },
+            systemWidgetView = systemWidgetView,
+            onAddSystemWidget = { systemWidgetHostManager.startPicker() },
             modifier = Modifier.fillMaxSize()
           )
         }
@@ -141,6 +151,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onResume() {
     super.onResume()
+    if (::systemWidgetHostManager.isInitialized) systemWidgetHostManager.onResume()
     val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
     val isDeviceLocked = keyguardManager?.isKeyguardLocked == true
     if (isDeviceLocked && viewModel.settings.value.lockScreen.isLockScreenEnabled) {
@@ -155,6 +166,16 @@ class MainActivity : ComponentActivity() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       keyguardManager?.requestDismissKeyguard(this, null)
     }
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    if (::systemWidgetHostManager.isInitialized && systemWidgetHostManager.handleActivityResult(requestCode, resultCode, data)) return
+    super.onActivityResult(requestCode, resultCode, data)
+  }
+
+  override fun onPause() {
+    if (::systemWidgetHostManager.isInitialized) systemWidgetHostManager.onPause()
+    super.onPause()
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -175,6 +196,7 @@ class MainActivity : ComponentActivity() {
   }
 
   override fun onDestroy() {
+    if (::systemWidgetHostManager.isInitialized) systemWidgetHostManager.destroy()
     super.onDestroy()
     try {
       unregisterReceiver(screenStateReceiver)
