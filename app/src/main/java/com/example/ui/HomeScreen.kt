@@ -273,11 +273,6 @@ fun HomeScreen(
       settings = settings,
       isLockScreen = false,
       accentColor = accentColor,
-      onDoubleTap = onDoubleTap,
-      onLongPress = {
-        com.example.util.VibrationHelper.vibrateTouch(context)
-        isBarsVisible = true
-      }
     )
 
     // Scrollable Home Screen Body (Widgets, Folders, Pinned Apps - Edge-to-Edge without clipping!)
