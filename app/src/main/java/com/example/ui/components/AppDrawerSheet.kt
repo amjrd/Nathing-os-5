@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.BasicTextField
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -78,6 +81,12 @@ fun AppDrawerSheet(
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
 ) {
+  val context = LocalContext.current
+  val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+    if (!spoken.isNullOrBlank()) onSearchChange(spoken)
+  }
+
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
@@ -254,6 +263,23 @@ fun AppDrawerSheet(
           )
         }
       }
+      IconButton(
+        onClick = {
+          val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+          }
+          runCatching { voiceLauncher.launch(intent) }
+        },
+        modifier = Modifier.size(36.dp).testTag("drawer_search_mic")
+      ) {
+        Icon(
+          imageVector = Icons.Default.Mic,
+          contentDescription = "Voice search",
+          tint = secondaryText,
+          modifier = Modifier.size(20.dp)
+        )
+      }
+
 
       IconButton(
         onClick = onOpenSettings,
@@ -355,59 +381,40 @@ private fun DrawerCategoryCard(
 
     AnimatedVisibility(
       visible = expanded,
-      enter = scaleIn(initialScale = 0.72f, animationSpec = tween(220)) ,
+      enter = scaleIn(initialScale = 0.72f, animationSpec = tween(220)),
       exit = scaleOut(targetScale = 0.72f, animationSpec = tween(180)),
       modifier = Modifier.align(Alignment.Center)
     ) {
       Column(
         modifier = Modifier
-          .width(138.dp)
+          .width(148.dp)
+          .height(148.dp)
           .clip(RoundedCornerShape(20.dp))
-          .background(Color(0xFF101012).copy(alpha = 0.94f))
+          .background(Color(0xFF101012).copy(alpha = 0.62f))
           .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
+          .verticalScroll(rememberScrollState())
           .padding(8.dp)
       ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          categoryApps.take(4).forEach { app ->
-            DrawerAppIcon(
-              app = app,
-              iconSize = 38.dp,
-              onClick = { onAppClick(app) },
-              onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin,
-              onToggleDock = onToggleDock,
-              iconPack = iconPack,
-              accentColor = accentColor
-            )
-          }
-        }
-
-        categoryApps.drop(4).take(4).let { rowApps ->
-          if (rowApps.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceEvenly,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              rowApps.forEach { app ->
-                DrawerAppIcon(
-                  app = app,
-                  iconSize = 32.dp,
-                  onClick = { onAppClick(app) },
-                  onOpenAppInfo = onOpenAppInfo,
-                  onTogglePin = onTogglePin,
-                  onToggleDock = onToggleDock,
-                  iconPack = iconPack,
-                  accentColor = accentColor
-                )
-              }
+        categoryApps.chunked(4).forEach { rowApps ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            rowApps.forEach { app ->
+              DrawerAppIcon(
+                app = app,
+                iconSize = 32.dp,
+                onClick = { onAppClick(app) },
+                onOpenAppInfo = onOpenAppInfo,
+                onTogglePin = onTogglePin,
+                onToggleDock = onToggleDock,
+                iconPack = iconPack,
+                accentColor = accentColor
+              )
             }
           }
+          Spacer(modifier = Modifier.height(6.dp))
         }
       }
     }
