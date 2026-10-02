@@ -115,14 +115,7 @@ fun AppDrawerSheet(
     }
   }
 
-  // Top suggested / recent apps for the upper tray (Screenshot 2)
-  val suggestedApps = remember(apps) {
-    apps.filter {
-      it.label in listOf("Play Store", "Telegram X", "Amazon", "Calendar", "Chrome", "Camera", "Messages", "Nothing X")
-    }.take(4).ifEmpty { apps.take(4) }
-  }
-
-  // Available Alphabet headers for fast scroll
+  // Real app-drawer index: no artificial Favorites/Recents row.
   val alphabetLetters = remember(apps) {
     apps.mapNotNull { it.label.firstOrNull()?.uppercaseChar() }
       .filter { it in 'A'..'Z' }
@@ -130,7 +123,18 @@ fun AppDrawerSheet(
       .sorted()
   }
 
-  val drawerBg = if (theme.isDark) Color(0xF20F0F11) else Color(0xF4F6F7F9)
+  val drawerBg = if (theme.isDark) Color(0xF70B0C0E) else Color(0xF7F7F8FA)
+  val headerBg = if (theme.isDark) Color(0xE9141518) else Color(0xEAFDFDFE)
+
+  fun scrollToLetter(letter: Char) {
+    val targetIdx = filteredApps.indexOfFirst {
+      it.label.firstOrNull()?.uppercaseChar() == letter
+    }
+    if (targetIdx >= 0) {
+      com.example.util.VibrationHelper.vibrateTouch(context)
+      scope.launch { gridState.animateScrollToItem(targetIdx) }
+    }
+  }
 
   Box(
     modifier = modifier
@@ -143,13 +147,13 @@ fun AppDrawerSheet(
         .fillMaxSize()
         .statusBarsPadding()
         .navigationBarsPadding()
-        .padding(start = 16.dp, end = 16.dp)
+        .padding(horizontal = 14.dp)
     ) {
       // Top Pull-Down Handle Pill (Authentic Nothing OS Bottom Drawer Handle)
       Box(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(top = 10.dp, bottom = 8.dp)
+          .padding(top = 9.dp, bottom = 9.dp)
           .pointerInput(Unit) {
             var pullDownDist = 0f
             detectVerticalDragGestures(
@@ -170,8 +174,8 @@ fun AppDrawerSheet(
       ) {
         Box(
           modifier = Modifier
-            .width(42.dp)
-            .height(4.5.dp)
+            .width(46.dp)
+            .height(5.dp)
             .clip(CircleShape)
             .background(theme.textSecondary.copy(alpha = 0.45f))
         )
@@ -200,8 +204,8 @@ fun AppDrawerSheet(
             .weight(1f)
             .height(48.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(theme.surface)
-            .border(1.dp, theme.border, RoundedCornerShape(24.dp))
+            .background(headerBg)
+            .border(1.dp, theme.border.copy(alpha = 0.7f), RoundedCornerShape(24.dp))
             .padding(horizontal = 14.dp),
           verticalAlignment = Alignment.CenterVertically
         ) {
@@ -217,9 +221,10 @@ fun AppDrawerSheet(
           Box(modifier = Modifier.weight(1f)) {
             if (searchQuery.isEmpty()) {
               Text(
-                text = "SEARCH APPS...",
+                text = "SEARCH APPS",
                 fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
                 color = theme.textSecondary,
                 letterSpacing = 1.sp
               )
@@ -403,49 +408,31 @@ fun AppDrawerSheet(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Upper Tray: Recents/Favorites row separated by a subtle divider (Screenshot 2)
-      if (searchQuery.isEmpty() && suggestedApps.isNotEmpty()) {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-          horizontalArrangement = Arrangement.SpaceAround,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          suggestedApps.forEach { app ->
-            AppIconItem(
-              app = app,
-              onClick = { onAppClick(app) },
-              onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin,
-              onToggleDock = onToggleDock,
-              iconSize = currentIconSize,
-              showLabel = true,
-              iconPack = iconPack,
-              accentColor = accentColor,
-              modifier = Modifier.weight(1f)
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Subtle divider separating recents from the alphabetized app list (Screenshot 2)
-        Box(
-          modifier = Modifier.fillMaxWidth(),
-          contentAlignment = Alignment.Center
-        ) {
-          HorizontalDivider(
-            modifier = Modifier.width(60.dp),
-            thickness = 2.dp,
-            color = theme.border.copy(alpha = 0.5f)
-          )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
+      // Compact drawer status row. This replaces the old Favorites/Recents tray.
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(start = 6.dp, end = 6.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text(
+          text = if (searchQuery.isBlank()) "ALL APPS" else "RESULTS",
+          fontFamily = FontFamily.Monospace,
+          fontSize = 11.sp,
+          fontWeight = FontWeight.Bold,
+          letterSpacing = 1.6.sp,
+          color = theme.textPrimary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+          text = "\${filteredApps.size}",
+          fontFamily = FontFamily.Monospace,
+          fontSize = 10.sp,
+          color = accentColor
+        )
       }
 
-      // Drawer Content: Grid + Fast-Scroll Alphabet Sidebar
+      // Main drawer: four-column grid + active alphabet rail.
       Row(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
           columns = GridCells.Fixed(4),
@@ -476,8 +463,12 @@ fun AppDrawerSheet(
         if (searchQuery.isEmpty() && alphabetLetters.isNotEmpty()) {
           Column(
             modifier = Modifier
-              .width(20.dp)
-              .padding(vertical = 4.dp),
+              .width(25.dp)
+              .fillMaxSize()
+              .clip(RoundedCornerShape(13.dp))
+              .background(theme.surface.copy(alpha = 0.72f))
+              .border(1.dp, theme.border.copy(alpha = 0.55f), RoundedCornerShape(13.dp))
+              .padding(vertical = 7.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
           ) {
@@ -498,7 +489,8 @@ fun AppDrawerSheet(
                       scope.launch { gridState.animateScrollToItem(targetIdx) }
                     }
                   }
-                  .padding(vertical = 1.dp)
+                  .padding(vertical = 1.dp, horizontal = 3.dp)
+                  .testTag("alphabet_$letter")
               )
             }
           }
