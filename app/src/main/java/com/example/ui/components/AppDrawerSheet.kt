@@ -351,7 +351,7 @@ private fun DrawerCategoryCard(
               modifier = Modifier.weight(1f)
             )
             Text(
-              text = "\${categoryApps.size}",
+              text = "${categoryApps.size}",
               color = secondaryText,
               fontSize = 13.sp
             )
