@@ -869,7 +869,10 @@ private fun EcgPulseWaveCanvas(
 @Composable
 fun NosWidgetPortSheet(
   activeWidgets: List<NosWidgetPortType>,
+  hasSystemWidget: Boolean = false,
   onToggleWidget: (NosWidgetPortType) -> Unit,
+  onAddSystemWidget: () -> Unit = {},
+  onRemoveSystemWidget: () -> Unit = {},
   onDismiss: () -> Unit,
   accentColor: Color = NothingRed
 ) {
@@ -937,6 +940,16 @@ fun NosWidgetPortSheet(
 
       Text(
         text = "ACTIVE WIDGETS ON HOME SCREEN",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        color = theme.textSecondary,
+        letterSpacing = 1.sp
+      )
+
+      // Launcher widgets
+      Text(
+        text = "LAUNCHER WIDGETS",
         fontFamily = FontFamily.Monospace,
         fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
@@ -1040,6 +1053,71 @@ fun NosWidgetPortSheet(
         accentColor = accentColor,
         onCheckedChange = { onToggleWidget(NosWidgetPortType.NOTHING_X_EARBUDS) }
       )
+
+      Spacer(modifier = Modifier.height(10.dp))
+
+      Text(
+        text = "SYSTEM WIDGETS",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        color = theme.textSecondary,
+        letterSpacing = 1.sp
+      )
+
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(12.dp))
+          .background(theme.surface)
+          .border(1.dp, theme.border, RoundedCornerShape(12.dp))
+          .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        Column(modifier = Modifier.weight(1f)) {
+          Text(
+            text = "ANDROID SYSTEM WIDGET",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            color = theme.textPrimary
+          )
+          Text(
+            text = if (hasSystemWidget) "ACTIVE ON HOME SCREEN" else "NOT ADDED",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 9.sp,
+            color = theme.textSecondary
+          )
+        }
+
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          Button(
+            onClick = {
+              if (hasSystemWidget) {
+                onRemoveSystemWidget()
+              } else {
+                onAddSystemWidget()
+              }
+            },
+            colors = ButtonDefaults.buttonColors(
+              containerColor = if (hasSystemWidget) theme.elevated else accentColor,
+              contentColor = if (hasSystemWidget && accentColor == Color.White) Color.Black else Color.White
+            ),
+            shape = RoundedCornerShape(10.dp)
+          ) {
+            Text(
+              text = if (hasSystemWidget) "REMOVE" else "ADD",
+              fontFamily = FontFamily.Monospace,
+              fontSize = 10.sp,
+              fontWeight = FontWeight.Bold
+            )
+          }
+        }
+      }
 
       Spacer(modifier = Modifier.height(24.dp))
     }
