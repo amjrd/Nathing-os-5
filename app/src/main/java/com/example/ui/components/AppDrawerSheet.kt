@@ -390,7 +390,6 @@ private fun ExpandedDrawerCategoryPanel(
         Spacer(Modifier.height(10.dp))
       }
     }
-    }
   }
 }
 
