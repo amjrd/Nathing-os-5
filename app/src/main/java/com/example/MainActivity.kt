@@ -346,7 +346,7 @@ fun NothingLauncherApp(
               onHorizontalDrag = { _, amount ->
                 totalRight += amount
                 // Require a deliberate horizontal gesture before launching Google.
-                if (totalRight > 110f) {
+                if (totalRight > 150f) {
                   com.example.service.SystemPortHelper.launchGoogleFeed(context)
                   totalRight = 0f
                 }
@@ -370,7 +370,7 @@ fun NothingLauncherApp(
               onDragCancel = { totalUp = 0f },
               onVerticalDrag = { _, amount ->
                 totalUp += amount
-                if (totalUp < -70f) {
+                if (totalUp < -120f) {
                   viewModel.setScreen(LauncherScreen.APP_DRAWER)
                   totalUp = 0f
                 }
