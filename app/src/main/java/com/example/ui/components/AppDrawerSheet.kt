@@ -267,7 +267,7 @@ private fun DrawerCategoryCard(
     2 -> 194.dp
     else -> 180.dp
   }
-  val categoryApps = category.apps
+  val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
   Box(
     modifier = Modifier
@@ -308,7 +308,7 @@ private fun DrawerCategoryCard(
         categoryApps.take(4).forEach { app ->
           DrawerAppIcon(
             app = app,
-            iconSize = 42.dp,
+            iconSize = 32.dp,
             onClick = { onAppClick(app) },
             onOpenAppInfo = onOpenAppInfo,
             onTogglePin = onTogglePin,
