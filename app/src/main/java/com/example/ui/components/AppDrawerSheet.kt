@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -233,7 +234,7 @@ private fun DrawerCategoryCard(
 ) {
   val cardWidth = when (cardSizeLevel) {
     0 -> 150.dp
-    2 -> 158.dp
+    2 -> 170.dp
     else -> 158.dp
   }
   val cardHeight = when (cardSizeLevel) {
@@ -314,40 +315,100 @@ private fun DrawerCategoryCard(
 
     AnimatedVisibility(
       visible = expanded,
-      enter = scaleIn(initialScale = 0.72f, animationSpec = tween(220)),
-      exit = scaleOut(targetScale = 0.72f, animationSpec = tween(180)),
-      modifier = Modifier.align(Alignment.Center)
+      enter = scaleIn(initialScale = 0.68f, animationSpec = tween(260)),
+      exit = scaleOut(targetScale = 0.68f, animationSpec = tween(190)),
+      modifier = Modifier
+        .align(Alignment.Center)
+        .zIndex(20f)
     ) {
-      Column(
+      val innerScrollState = rememberScrollState()
+      val popupWidth = if (cardSizeLevel == 2) 304.dp else 292.dp
+      val popupHeight = if (cardSizeLevel == 2) 360.dp else 336.dp
+
+      Box(
         modifier = Modifier
-          .width(cardWidth - 8.dp)
-          .height(cardHeight - 8.dp)
-          .clip(RoundedCornerShape(20.dp))
-          .background(Color(0xFF0E0E10).copy(alpha = 0.94f))
-          .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
-          .verticalScroll(rememberScrollState())
-          .padding(8.dp)
+          .width(popupWidth)
+          .height(popupHeight)
+          .clip(RoundedCornerShape(28.dp))
+          .background(Color(0xFF121214).copy(alpha = 0.97f))
+          .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(28.dp))
       ) {
-        categoryApps.chunked(4).forEach { rowApps ->
+        Column(
+          modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(innerScrollState)
+            .padding(start = 14.dp, top = 14.dp, end = 24.dp, bottom = 14.dp)
+        ) {
           Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
           ) {
-            rowApps.forEach { app ->
-              DrawerAppIcon(
-                app = app,
-                iconSize = 32.dp,
-                onClick = { onAppClick(app) },
-                onOpenAppInfo = onOpenAppInfo,
-                onTogglePin = onTogglePin,
-                onToggleDock = onToggleDock,
-                iconPack = iconPack,
-                accentColor = accentColor
-              )
-            }
+            Text(
+              text = category.title,
+              color = primaryText,
+              fontSize = 18.sp,
+              fontWeight = FontWeight.SemiBold,
+              modifier = Modifier.weight(1f)
+            )
+            Text(
+              text = "\${categoryApps.size}",
+              color = secondaryText,
+              fontSize = 13.sp
+            )
           }
-          Spacer(modifier = Modifier.height(6.dp))
+          Spacer(Modifier.height(12.dp))
+
+          categoryApps.chunked(4).forEach { rowApps ->
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceEvenly,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              rowApps.forEach { app ->
+                DrawerAppIcon(
+                  app = app,
+                  iconSize = 44.dp,
+                  onClick = { onAppClick(app) },
+                  onOpenAppInfo = onOpenAppInfo,
+                  onTogglePin = onTogglePin,
+                  onToggleDock = onToggleDock,
+                  iconPack = iconPack,
+                  accentColor = accentColor
+                )
+              }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+          }
+        }
+
+        if (innerScrollState.maxValue > 0) {
+          Canvas(
+            modifier = Modifier
+              .align(Alignment.CenterEnd)
+              .width(8.dp)
+              .height(popupHeight - 36.dp)
+              .padding(vertical = 4.dp)
+          ) {
+            val viewport = size.height
+            val content = viewport + innerScrollState.maxValue
+            val thumbHeight = (viewport * viewport / content).coerceAtLeast(34.dp.toPx())
+            val travel = viewport - thumbHeight
+            val progress = innerScrollState.value.toFloat() / innerScrollState.maxValue.toFloat()
+            val thumbTop = travel * progress
+
+            drawRoundRect(
+              color = Color.White.copy(alpha = 0.18f),
+              topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+              size = androidx.compose.ui.geometry.Size(size.width, viewport),
+              cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
+            )
+            drawRoundRect(
+              color = Color.White.copy(alpha = 0.72f),
+              topLeft = androidx.compose.ui.geometry.Offset(0f, thumbTop),
+              size = androidx.compose.ui.geometry.Size(size.width, thumbHeight),
+              cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
+            )
+          }
         }
       }
     }
