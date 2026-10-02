@@ -88,13 +88,15 @@ fun AppDrawerSheet(
     ).mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
   }
 
-  val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle") }
+  val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle", "Other") }
 
   val categories = remember(apps, searchQuery) {
+    val query = searchQuery.trim()
     categoryNames.mapNotNull { title ->
       val categoryApps = apps
+        .distinctBy { it.packageName }
         .filter { app -> classifyDrawerCategory(app) == title }
-        .filter { app -> searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true) }
+        .filter { app -> query.isBlank() || app.label.contains(query, ignoreCase = true) }
         .sortedBy { it.label.lowercase() }
       if (categoryApps.isNotEmpty()) DrawerCategory(title, categoryApps) else null
     }
@@ -108,8 +110,8 @@ fun AppDrawerSheet(
     Box(
       modifier = Modifier
         .fillMaxSize()
-        .blur(14.dp)
-        .background(backgroundColor.copy(alpha = 0.88f))
+        .blur(24.dp)
+        .background(backgroundColor.copy(alpha = 0.82f))
     )
     Column(
       modifier = Modifier
@@ -157,7 +159,7 @@ fun AppDrawerSheet(
           ) {
             val left = categories[rowIndex * 2]
             DrawerCategoryCard(
-              category = left, apps = apps, searchQuery = searchQuery,
+              category = left,
               onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin, onToggleDock = onToggleDock,
               iconPack = iconPack, accentColor = accentColor,
@@ -168,7 +170,7 @@ fun AppDrawerSheet(
             if (rightIndex < categories.size) {
               val right = categories[rightIndex]
               DrawerCategoryCard(
-                category = right, apps = apps, searchQuery = searchQuery,
+                category = right,
                 onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin, onToggleDock = onToggleDock,
                 iconPack = iconPack, accentColor = accentColor,
@@ -253,8 +255,6 @@ fun AppDrawerSheet(
 @Composable
 private fun DrawerCategoryCard(
   category: DrawerCategory,
-  apps: List<AppItem>,
-  searchQuery: String,
   onAppClick: (AppItem) -> Unit,
   onOpenAppInfo: (AppItem) -> Unit,
   onTogglePin: (AppItem) -> Unit,
@@ -266,9 +266,7 @@ private fun DrawerCategoryCard(
 ) {
   val categoryApps = category.apps
   var expanded by remember(category.title) { mutableStateOf(false) }
-
-  val largeApps = categoryApps.take(2)
-  val miniApps = categoryApps.drop(2).take(4)
+  val previewApps = categoryApps.take(6)
 
   Column(
     modifier = Modifier
@@ -298,45 +296,26 @@ private fun DrawerCategoryCard(
       )
     }
 
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      largeApps.forEach { app ->
-        DrawerAppIcon(
-          app = app, iconSize = 48.dp,
-          onClick = { onAppClick(app) },
-          onOpenAppInfo = onOpenAppInfo,
-          onTogglePin = onTogglePin,
-          onToggleDock = onToggleDock,
-          iconPack = iconPack, accentColor = accentColor
-        )
-      }
-    }
-
-    Spacer(modifier = Modifier.height(6.dp))
-
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      for (row in 0..1) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-          for (column in 0..1) {
-            val index = row * 2 + column
-            if (index < miniApps.size) {
-              val app = miniApps[index]
-              DrawerAppIcon(
-                app = app, iconSize = 24.dp,
-                onClick = { onAppClick(app) },
-                onOpenAppInfo = onOpenAppInfo,
-                onTogglePin = onTogglePin,
-                onToggleDock = onToggleDock,
-                iconPack = iconPack, accentColor = accentColor
-              )
-            } else {
-              Spacer(modifier = Modifier.size(24.dp))
-            }
-          }
+    // Real apps are always visible in the compact card preview.
+    previewApps.chunked(3).take(2).forEach { rowApps ->
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        rowApps.forEach { app ->
+          DrawerAppIcon(
+            app = app,
+            iconSize = 40.dp,
+            onClick = { onAppClick(app) },
+            onOpenAppInfo = onOpenAppInfo,
+            onTogglePin = onTogglePin,
+            onToggleDock = onToggleDock,
+            iconPack = iconPack,
+            accentColor = accentColor
+          )
         }
+        repeat(3 - rowApps.size) { Spacer(modifier = Modifier.weight(1f)) }
       }
     }
 
@@ -411,15 +390,18 @@ private fun DrawerAppIcon(
 private fun classifyDrawerCategory(app: AppItem): String {
   val label = app.label.lowercase()
   val pkg = app.packageName.lowercase()
-  fun hasAny(vararg values: String) = values.any { label.contains(it) || pkg.contains(it) }
+  val declared = app.category.lowercase()
+  fun hasAny(vararg values: String) = values.any {
+    label.contains(it) || pkg.contains(it) || declared.contains(it)
+  }
   return when {
     hasAny("youtube", "spotify", "netflix", "podcast", "pocket cast", "music", "video", "vlc", "anime", "gallery", "photos", "camera") -> "Media"
-    hasAny("whatsapp", "instagram", "facebook", "messenger", "reddit", "telegram", "discord", "twitter", "tiktok", "snapchat", "social") -> "Social"
-    hasAny("calculator", "clock", "calendar", "chrome", "brave", "recorder", "settings", "files", "file manager", "contacts", "phone", "maps", "google app", "tool", "utility") -> "Tools"
+    hasAny("whatsapp", "instagram", "facebook", "messenger", "reddit", "telegram", "discord", "twitter", "tiktok", "snapchat", "threads", "social") -> "Social"
+    hasAny("calculator", "clock", "calendar", "chrome", "brave", "browser", "recorder", "settings", "files", "file manager", "contacts", "phone", "dialer", "maps", "google app", "tool", "utility", "security") -> "Tools"
     hasAny("chatgpt", "gemini", "drive", "docs", "document", "scanner", "office", "notion", "keep", "gmail", "outlook", "tasks", "todo", "productivity") -> "Productivity"
     hasAny("gpay", "google pay", "paypal", "bank", "banking", "wallet", "finance", "money", "revolut", "wise", "slice") -> "Finance"
-    hasAny("pinterest", "tracker", "health", "fitness", "shopping", "amazon", "ebay", "lifestyle", "weather") -> "Lifestyle"
-    else -> "Tools"
+    hasAny("pinterest", "tracker", "health", "fitness", "shopping", "amazon", "ebay", "lifestyle", "weather", "food", "travel") -> "Lifestyle"
+    else -> "Other"
   }
 }
 
