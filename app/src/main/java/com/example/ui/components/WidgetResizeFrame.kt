@@ -8,7 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitLongPressOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,12 +84,14 @@ fun WidgetResizeFrame(
     modifier = modifier
       .scale(animatedScale)
       .pointerInput(isSelected) {
-        detectTapGestures(
-          onLongPress = {
+        awaitEachGesture {
+          val down = awaitFirstDown(requireUnconsumed = false)
+          val longPress = awaitLongPressOrCancellation(down.id)
+          if (longPress != null) {
             VibrationHelper.vibrateTouch(context, isHeavy = true)
             onSelect()
           }
-        )
+        }
       }
   ) {
     // Inner Widget Content
