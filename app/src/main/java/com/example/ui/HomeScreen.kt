@@ -190,6 +190,11 @@ fun HomeScreen(
   }
 
   var showWidgetSheet by remember { mutableStateOf(false) }
+  LaunchedEffect(systemWidgetView) {
+    if (systemWidgetView != null && showWidgetSheet) {
+      showWidgetSheet = false
+    }
+  }
   var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(false) }
