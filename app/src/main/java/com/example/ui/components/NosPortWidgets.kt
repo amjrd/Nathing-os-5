@@ -1057,7 +1057,7 @@ fun NosWidgetPortSheet(
       Spacer(modifier = Modifier.height(10.dp))
 
       Text(
-        text = "SYSTEM WIDGETS",
+        text = "SYSTEM WIDGETS  •  ADD / REMOVE",
         fontFamily = FontFamily.Monospace,
         fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
@@ -1110,7 +1110,7 @@ fun NosWidgetPortSheet(
             shape = RoundedCornerShape(10.dp)
           ) {
             Text(
-              text = if (hasSystemWidget) "REMOVE" else "ADD",
+              text = if (hasSystemWidget) "REMOVE WIDGET" else "ADD WIDGET",
               fontFamily = FontFamily.Monospace,
               fontSize = 10.sp,
               fontWeight = FontWeight.Bold
