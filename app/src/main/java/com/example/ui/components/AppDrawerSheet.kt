@@ -28,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -46,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -194,7 +192,9 @@ fun AppDrawerSheet(
               onTogglePin = onTogglePin, onToggleDock = onToggleDock,
               iconPack = iconPack, accentColor = accentColor,
               primaryText = primaryText, secondaryText = secondaryText,
-              cardSizeLevel = drawerCardSizeLevel
+              cardSizeLevel = drawerCardSizeLevel,
+              isExpanded = false,
+              onExpand = { }
             )
 
             val rightIndex = rowIndex * 2 + 1
@@ -232,7 +232,9 @@ private fun DrawerCategoryCard(
   accentColor: Color,
   primaryText: Color,
   secondaryText: Color,
-  cardSizeLevel: Int
+  cardSizeLevel: Int,
+  isExpanded: Boolean,
+  onExpand: () -> Unit
 ) {
   val cardWidth = when (cardSizeLevel) {
     0 -> 150.dp
@@ -245,14 +247,13 @@ private fun DrawerCategoryCard(
     else -> 180.dp
   }
   val categoryApps = category.apps
-  var expanded by remember(category.title) { mutableStateOf(false) }
   val previewApps = categoryApps.take(4)
 
   Box(
     modifier = Modifier
       .width(cardWidth)
       .height(cardHeight)
-      .zIndex(if (expanded) 10f else 0f)
+      .zIndex(if (isExpanded) 10f else 0f)
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
     // Base card stays fixed in place. The expanded panel pops over it instead
@@ -263,7 +264,7 @@ private fun DrawerCategoryCard(
         .clip(RoundedCornerShape(24.dp))
         .background(Color(0xFF202023).copy(alpha = 0.70f))
         .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
-        .clickable { expanded = true }
+        .clickable { onExpand() }
         .padding(12.dp)
     ) {
       Text(
@@ -282,7 +283,7 @@ private fun DrawerCategoryCard(
         previewApps.take(3).forEach { app ->
           DrawerAppIcon(
             app = app,
-            iconSize = 48.dp,
+            iconSize = 44.dp,
             onClick = { onAppClick(app) },
             onOpenAppInfo = onOpenAppInfo,
             onTogglePin = onTogglePin,
@@ -303,7 +304,7 @@ private fun DrawerCategoryCard(
         previewApps.drop(3).take(3).forEach { app ->
           DrawerAppIcon(
             app = app,
-            iconSize = 40.dp,
+            iconSize = 44.dp,
             onClick = { onAppClick(app) },
             onOpenAppInfo = onOpenAppInfo,
             onTogglePin = onTogglePin,
@@ -315,19 +316,8 @@ private fun DrawerCategoryCard(
       }
     }
 
-    if (expanded) {
-      Box(
-        modifier = Modifier
-          .fillMaxSize()
-          .zIndex(15f)
-          .pointerInput(category.title) {
-            detectTapGestures { expanded = false }
-          }
-      )
-    }
-
     AnimatedVisibility(
-      visible = expanded,
+      visible = isExpanded,
       enter = scaleIn(initialScale = 0.68f, animationSpec = tween(260)),
       exit = scaleOut(targetScale = 0.68f, animationSpec = tween(190)),
       modifier = Modifier
