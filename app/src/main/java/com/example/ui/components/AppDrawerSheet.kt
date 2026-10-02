@@ -361,7 +361,6 @@ private fun ExpandedDrawerCategoryPopup(
 }
 
 @Composable
-private fun DrawerAppIcon@Composable
 private fun DrawerAppIcon(
   app: AppItem,
   iconSize: Dp,
