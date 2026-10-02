@@ -268,7 +268,6 @@ private fun DrawerCategoryCard(
     else -> 180.dp
   }
   val categoryApps = category.apps
-  val previewApps = categoryApps.take(4)
 
   Box(
     modifier = Modifier
@@ -291,49 +290,27 @@ private fun DrawerCategoryCard(
       Text(
         text = category.title,
         color = primaryText,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(bottom = 8.dp)
+        fontSize = 19.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(bottom = 4.dp)
       )
-
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        previewApps.take(3).forEach { app ->
-          DrawerAppIcon(
-            app = app,
-            iconSize = 44.dp,
-            onClick = { onAppClick(app) },
-            onOpenAppInfo = onOpenAppInfo,
-            onTogglePin = onTogglePin,
-            onToggleDock = onToggleDock,
-            iconPack = iconPack,
-            accentColor = accentColor
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(7.dp))
-
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        previewApps.drop(3).take(3).forEach { app ->
-          DrawerAppIcon(
-            app = app,
-            iconSize = 44.dp,
-            onClick = { onAppClick(app) },
-            onOpenAppInfo = onOpenAppInfo,
-            onTogglePin = onTogglePin,
-            onToggleDock = onToggleDock,
-            iconPack = iconPack,
-            accentColor = accentColor
-          )
-        }
+      Text(
+        text = categoryApps.size.toString() + " apps",
+        color = secondaryText,
+        fontSize = 11.sp
+      )
+      Spacer(modifier = Modifier.height(10.dp))
+      if (categoryApps.isNotEmpty()) {
+        DrawerAppIcon(
+          app = categoryApps.first(),
+          iconSize = 60.dp,
+          onClick = { onExpand() },
+          onOpenAppInfo = onOpenAppInfo,
+          onTogglePin = onTogglePin,
+          onToggleDock = onToggleDock,
+          iconPack = iconPack,
+          accentColor = accentColor
+        )
       }
     }
 
