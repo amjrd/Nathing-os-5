@@ -155,6 +155,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   }
 
   // Battery receiver
+  private val packageReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+      when (intent?.action) {
+        Intent.ACTION_PACKAGE_ADDED,
+        Intent.ACTION_PACKAGE_REMOVED,
+        Intent.ACTION_PACKAGE_CHANGED -> loadInstalledApps()
+      }
+    }
+  }
+
   private val batteryReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
       intent?.let { updateBatteryFromIntent(it) }
@@ -162,11 +172,30 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   }
 
   init {
+    registerPackageReceiver()
     loadInstalledApps()
     startClockUpdates()
+    startWeatherUpdates()
     registerBatteryReceiver()
     checkSystemStorage()
     observeNotificationCounts()
+  }
+
+  private fun registerPackageReceiver() {
+    try {
+      val filter = IntentFilter().apply {
+        addAction(Intent.ACTION_PACKAGE_ADDED)
+        addAction(Intent.ACTION_PACKAGE_REMOVED)
+        addAction(Intent.ACTION_PACKAGE_CHANGED)
+        addDataScheme("package")
+      }
+      androidx.core.content.ContextCompat.registerReceiver(
+        context,
+        packageReceiver,
+        filter,
+        androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+      )
+    } catch (_: Exception) {}
   }
 
   private fun observeNotificationCounts() {
@@ -669,8 +698,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
         _dockApps.value = dockList
 
-        // Set default Pinned Apps on Home
-        val pinned = allApps.filterNot { it in dockList }.take(6)
+        // Preserve existing pinned apps when the installed-app list refreshes.
+        val previousPinnedPkgs = _pinnedApps.value.map { it.packageName }.toSet()
+        val pinned = if (previousPinnedPkgs.isNotEmpty()) {
+          allApps.filter { it.packageName in previousPinnedPkgs && it.packageName !in dockList.map { a -> a.packageName } }
+        } else {
+          allApps.filterNot { it in dockList }.take(6)
+        }
         _pinnedApps.value = pinned
 
         // Create default Nothing OS signature folders with saved enlarged state
@@ -720,6 +754,27 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     AppItem("com.openai.chatgpt", "", "ChatGPT", null, category = "Tools"),
     AppItem("com.discord", "", "Discord", null, category = "Communication")
   )
+
+  private fun startWeatherUpdates() {
+    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+      while (true) {
+        try {
+          val city = SystemLocationHelper.getAutoDetectedCity(context)
+          val updated = SystemLocationHelper.getEstimatedWeatherForLocation(city)
+          _weather.update {
+            it.copy(
+              city = city,
+              tempC = updated.tempC,
+              condition = updated.condition,
+              highC = updated.highC,
+              lowC = updated.lowC
+            )
+          }
+        } catch (_: Exception) {}
+        delay(30 * 60 * 1000L)
+      }
+    }
+  }
 
   private fun startClockUpdates() {
     viewModelScope.launch {
@@ -776,6 +831,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
   override fun onCleared() {
     super.onCleared()
+    try {
+      context.unregisterReceiver(packageReceiver)
+    } catch (_: Exception) {}
     try {
       context.unregisterReceiver(batteryReceiver)
     } catch (_: Exception) {}
