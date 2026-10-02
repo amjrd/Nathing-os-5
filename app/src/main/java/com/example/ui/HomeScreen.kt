@@ -155,8 +155,9 @@ fun HomeScreen(
   pinnedApps: List<AppItem>,
   dockApps: List<AppItem>,
   settings: LauncherSettings,
-  systemWidgetViews: List<AppWidgetHostView> = emptyList(),
-  onAddSystemWidget: () -> Unit = {},  onAppClick: (AppItem) -> Unit,
+  systemWidgetView: AppWidgetHostView? = null,
+  onAddSystemWidget: () -> Unit = {},
+  onAppClick: (AppItem) -> Unit,
   onOpenFolder: (FolderItem) -> Unit,
   onToggleFolderEnlarged: (String) -> Unit,
   onToggleTorch: () -> Unit,
@@ -253,6 +254,31 @@ fun HomeScreen(
       ),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Real Android system widget supplied by AppWidgetHost.
+        // This replaces the old non-functional placeholder hook and renders the
+        // provider view supplied by Android itself.
+        systemWidgetView?.let { hostView ->
+          item {
+            WidgetResizeFrame(
+              isSelected = false,
+              sizeMode = settings.widgetSizeLevel,
+              onSelect = { },
+              onCycleSize = { },
+              onRemove = { onAddSystemWidget() },
+              onDismiss = { },
+              accentColor = accentColor
+            ) {
+              AndroidView(
+                factory = { hostView },
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(20.dp))
+                  .background(theme.surface)
+              )
+            }
+          }
+        }
+
         // 1. Calendar & Digital Time Widget (Screenshot 2: JUL TUESDAY 07H 10M)
         if (settings.activeWidgets.contains(NosWidgetPortType.CALENDAR_DIGITAL_TIME)) {
           item {
@@ -801,6 +827,22 @@ fun HomeScreen(
             Icon(
               imageVector = Icons.Default.AspectRatio,
               contentDescription = "Resize Icons",
+              tint = accentColor,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+
+          // Real Android System Widget picker
+          IconButton(
+            onClick = {
+              com.example.util.VibrationHelper.vibrateTouch(context)
+              onAddSystemWidget()
+            },
+            modifier = Modifier.size(36.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.Widgets,
+              contentDescription = "Add System Widget",
               tint = accentColor,
               modifier = Modifier.size(18.dp)
             )
