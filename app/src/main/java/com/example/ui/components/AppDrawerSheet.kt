@@ -284,7 +284,7 @@ private fun DrawerCategoryCard(
 
   Column(
     modifier = Modifier
-      .weight(1f)
+      .width(158.dp)
       .animateContentSize(animationSpec = tween(260))
       .clip(RoundedCornerShape(24.dp))
       .background(Color(0xFF1C1C1E).copy(alpha = 0.90f))
