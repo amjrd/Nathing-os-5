@@ -3,6 +3,8 @@ package com.example.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -280,44 +283,61 @@ private fun DrawerCategoryCard(
 ) {
   val categoryApps = category.apps
   var expanded by remember(category.title) { mutableStateOf(false) }
-  val previewApps = categoryApps.take(6)
+  val previewApps = categoryApps.take(4)
 
-  Column(
+  Box(
     modifier = Modifier
       .width(158.dp)
-      .animateContentSize(animationSpec = tween(260))
-      .clip(RoundedCornerShape(24.dp))
-      .background(Color(0xFF1C1C1E).copy(alpha = 0.90f))
-      .clickable { expanded = !expanded }
-      .padding(12.dp)
+      .height(180.dp)
+      .zIndex(if (expanded) 10f else 0f)
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
-    Row(
-      modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween
+    // Base card stays fixed in place. The expanded panel pops over it instead
+    // of pushing the row downward.
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .clip(RoundedCornerShape(24.dp))
+        .background(Color(0xFF1C1C1E).copy(alpha = 0.72f))
+        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+        .clickable { expanded = !expanded }
+        .padding(12.dp)
     ) {
       Text(
         text = category.title,
         color = primaryText,
         fontSize = 14.sp,
-        fontWeight = FontWeight.Medium
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(bottom = 8.dp)
       )
-      Text(
-        text = if (expanded) "⌃" else "⌄",
-        color = secondaryText,
-        fontSize = 16.sp
-      )
-    }
 
-    // Real apps are always visible in the compact card preview.
-    previewApps.chunked(3).take(2).forEach { rowApps ->
       Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        rowApps.forEach { app ->
+        previewApps.take(2).forEach { app ->
+          DrawerAppIcon(
+            app = app,
+            iconSize = 48.dp,
+            onClick = { onAppClick(app) },
+            onOpenAppInfo = onOpenAppInfo,
+            onTogglePin = onTogglePin,
+            onToggleDock = onToggleDock,
+            iconPack = iconPack,
+            accentColor = accentColor
+          )
+        }
+      }
+
+      Spacer(modifier = Modifier.height(8.dp))
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        previewApps.drop(2).take(2).forEach { app ->
           DrawerAppIcon(
             app = app,
             iconSize = 40.dp,
@@ -329,50 +349,67 @@ private fun DrawerCategoryCard(
             accentColor = accentColor
           )
         }
-        repeat(3 - rowApps.size) { Spacer(modifier = Modifier.width(40.dp)) }
       }
     }
 
-    AnimatedVisibility(visible = expanded) {
+    AnimatedVisibility(
+      visible = expanded,
+      enter = scaleIn(initialScale = 0.72f, animationSpec = tween(220)) ,
+      exit = scaleOut(targetScale = 0.72f, animationSpec = tween(180)),
+      modifier = Modifier.align(Alignment.Center)
+    ) {
       Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        modifier = Modifier
+          .width(138.dp)
+          .clip(RoundedCornerShape(20.dp))
+          .background(Color(0xFF101012).copy(alpha = 0.94f))
+          .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
+          .padding(8.dp)
       ) {
-        categoryApps.chunked(4).forEach { rowApps ->
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            rowApps.forEach { app ->
-              Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally
-              ) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceEvenly,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          categoryApps.take(4).forEach { app ->
+            DrawerAppIcon(
+              app = app,
+              iconSize = 38.dp,
+              onClick = { onAppClick(app) },
+              onOpenAppInfo = onOpenAppInfo,
+              onTogglePin = onTogglePin,
+              onToggleDock = onToggleDock,
+              iconPack = iconPack,
+              accentColor = accentColor
+            )
+          }
+        }
+
+        categoryApps.drop(4).take(4).let { rowApps ->
+          if (rowApps.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceEvenly,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              rowApps.forEach { app ->
                 DrawerAppIcon(
-                  app = app, iconSize = 36.dp,
+                  app = app,
+                  iconSize = 32.dp,
                   onClick = { onAppClick(app) },
                   onOpenAppInfo = onOpenAppInfo,
                   onTogglePin = onTogglePin,
                   onToggleDock = onToggleDock,
-                  iconPack = iconPack, accentColor = accentColor
-                )
-                Text(
-                  text = app.label,
-                  color = secondaryText,
-                  fontSize = 9.sp,
-                  maxLines = 1,
-                  textAlign = TextAlign.Center,
-                  modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                  iconPack = iconPack,
+                  accentColor = accentColor
                 )
               }
             }
-            repeat(4 - rowApps.size) { Spacer(modifier = Modifier.width(40.dp)) }
           }
         }
       }
     }
-
   }
 }
 
