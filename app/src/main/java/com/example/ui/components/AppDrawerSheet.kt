@@ -254,7 +254,7 @@ private fun DrawerCategoryCard(
 ) {
   val cardWidth = when (cardSizeLevel) {
     0 -> 150.dp
-    2 -> 170.dp
+    2 -> 158.dp
     else -> 158.dp
   }
   val cardHeight = when (cardSizeLevel) {
