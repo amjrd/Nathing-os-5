@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
@@ -330,7 +329,7 @@ private fun DrawerCategoryCard(
             accentColor = accentColor
           )
         }
-        repeat(3 - rowApps.size) { Spacer(modifier = Modifier.weight(1f)) }
+        repeat(3 - rowApps.size) { Spacer(modifier = Modifier.width(40.dp)) }
       }
     }
 
@@ -368,7 +367,7 @@ private fun DrawerCategoryCard(
                 )
               }
             }
-            repeat(4 - rowApps.size) { Spacer(modifier = Modifier.weight(1f)) }
+            repeat(4 - rowApps.size) { Spacer(modifier = Modifier.width(40.dp)) }
           }
         }
       }
