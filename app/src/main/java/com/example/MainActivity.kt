@@ -181,6 +181,8 @@ class MainActivity : ComponentActivity() {
           NothingLauncherApp(
             viewModel = viewModel,
             settings = settings,
+            systemWidgetViews = systemWidgetViews,
+            onAddSystemWidget = { launchSystemWidgetPicker() },
             onDismissKeyguard = { dismissSystemKeyguard() },
             modifier = Modifier.fillMaxSize()
           )
@@ -294,6 +296,8 @@ class MainActivity : ComponentActivity() {
 fun NothingLauncherApp(
   viewModel: LauncherViewModel,
   settings: LauncherSettings,
+  systemWidgetViews: List<AppWidgetHostView> = emptyList(),
+  onAddSystemWidget: () -> Unit = {},
   onDismissKeyguard: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
@@ -433,7 +437,6 @@ fun NothingLauncherApp(
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
-      onAddSystemWidget = { launchSystemWidgetPicker() },
       modifier = Modifier
         .fillMaxSize()
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
