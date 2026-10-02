@@ -208,7 +208,9 @@ fun AppDrawerSheet(
                 onTogglePin = onTogglePin, onToggleDock = onToggleDock,
                 iconPack = iconPack, accentColor = accentColor,
                 primaryText = primaryText, secondaryText = secondaryText,
-                cardSizeLevel = drawerCardSizeLevel
+                cardSizeLevel = drawerCardSizeLevel,
+                isExpanded = expandedCategory == right.title,
+                onExpand = { expandedCategory = right.title }
               )
             } else {
               Spacer(modifier = Modifier.weight(1f))
