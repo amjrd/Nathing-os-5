@@ -434,6 +434,7 @@ fun NothingLauncherApp(
         iconPack = settings.iconPack,
         accentColor = accentColor,
         iconSizeLevel = settings.iconSizeLevel,
+        drawerCardSizeLevel = settings.drawerCardSizeLevel,
         onToggleThemeMode = {
           val newTheme = when (settings.themeMode) {
             LauncherThemeMode.ORIGINAL -> LauncherThemeMode.MONOCHROME_STUDIO
