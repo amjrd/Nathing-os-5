@@ -363,7 +363,7 @@ fun NothingLauncherApp(
       dockApps = dockApps,
       settings = settings,
       systemWidgetViews = systemWidgetViews,
-      onAddSystemWidget = { launchSystemWidgetPicker() },
+      onAddSystemWidget = onAddSystemWidget,
       onAppClick = { app -> viewModel.launchApp(app) },
       onOpenFolder = { folder -> viewModel.openFolder(folder) },
       onToggleFolderEnlarged = { folderId -> viewModel.toggleFolderEnlarged(folderId) },
