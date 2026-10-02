@@ -170,7 +170,8 @@ fun AppIconItem(
   showLabel: Boolean = true,
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   accentColor: Color = NothingRed,
-  onCycleIconSize: (() -> Unit)? = null
+  onCycleIconSize: (() -> Unit)? = null,
+  drawerStyle: Boolean = false
 ) {
   val theme = LocalLauncherTheme.current
   val isDark = theme.isDark
@@ -251,7 +252,26 @@ fun AppIconItem(
         modifier = Modifier.size(iconSize),
         contentAlignment = Alignment.Center
       ) {
-      when (iconPack) {
+      if (drawerStyle) {
+        // Drawer-only Pixel-style rendering: use the real adaptive/app icon directly.
+        if (app.icon != null) {
+          val bitmap = remember(app.icon) {
+            drawableToBitmap(app.icon, applyGrayscale = false, isDark = isDark)
+          }
+          Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = app.label,
+            modifier = Modifier.size(iconSize * 0.88f)
+          )
+        } else {
+          Icon(
+            imageVector = getIconVectorForApp(app.label),
+            contentDescription = app.label,
+            tint = theme.textPrimary,
+            modifier = Modifier.size(iconSize * 0.72f)
+          )
+        }
+      } else when (iconPack) {
         // 1. COLOUR PACK (Screenshot 4: 12-lobed Scalloped Flower Badge)
         IconPackStyle.COLOUR -> {
           val flowerShape = remember { ScallopedFlowerShape(lobes = 12) }
@@ -403,9 +423,9 @@ fun AppIconItem(
       Text(
         text = app.label,
         color = theme.textPrimary,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.Medium,
-        fontFamily = FontFamily.Monospace,
+        fontSize = if (drawerStyle) 12.sp else 11.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = if (drawerStyle) FontFamily.Default else FontFamily.Monospace,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center
