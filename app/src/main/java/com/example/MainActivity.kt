@@ -512,10 +512,7 @@ fun NothingLauncherApp(
         onSelectIconPack = { pack ->
           viewModel.updateSettings(settings.copy(iconPack = pack))
         },
-        onOpenSettings = { isSettingsOpen = true },
-        systemWidgetView = systemWidgetView,
-        onAddSystemWidget = onAddSystemWidget,
-        onRemoveSystemWidget = onRemoveSystemWidget
+        onOpenSettings = { isSettingsOpen = true }
       )
     }
 
