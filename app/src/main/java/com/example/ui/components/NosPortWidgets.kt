@@ -1093,32 +1093,26 @@ fun NosWidgetPortSheet(
 
         Row(
           verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(6.dp)
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          Button(
+          IconButton(
             onClick = {
-              if (hasSystemWidget) {
-                onRemoveSystemWidget()
-              } else {
-                onAddSystemWidget()
-              }
+              if (hasSystemWidget) onRemoveSystemWidget() else onAddSystemWidget()
             },
-            colors = ButtonDefaults.buttonColors(
-              containerColor = if (hasSystemWidget) theme.elevated else accentColor,
-              contentColor = if (hasSystemWidget && accentColor == Color.White) Color.Black else Color.White
-            ),
-            shape = RoundedCornerShape(10.dp)
+            modifier = Modifier
+              .size(48.dp)
+              .clip(CircleShape)
+              .background(if (hasSystemWidget) theme.elevated else accentColor)
           ) {
-            Text(
-              text = if (hasSystemWidget) "REMOVE WIDGET" else "ADD WIDGET",
-              fontFamily = FontFamily.Monospace,
-              fontSize = 10.sp,
-              fontWeight = FontWeight.Bold
+            Icon(
+              imageVector = if (hasSystemWidget) Icons.Default.Check else Icons.Default.Add,
+              contentDescription = if (hasSystemWidget) "Remove system widget" else "Add system widget",
+              tint = if (hasSystemWidget && accentColor == Color.White) Color.Black else Color.White,
+              modifier = Modifier.size(24.dp)
             )
           }
         }
       }
-
       Spacer(modifier = Modifier.height(24.dp))
     }
   }
