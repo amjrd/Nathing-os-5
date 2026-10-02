@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -31,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -98,9 +103,14 @@ fun AppDrawerSheet(
   Box(
     modifier = modifier
       .fillMaxSize()
-      .background(backgroundColor.copy(alpha = 0.94f))
       .testTag("app_drawer_container")
   ) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .blur(14.dp)
+        .background(backgroundColor.copy(alpha = 0.88f))
+    )
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -255,26 +265,38 @@ private fun DrawerCategoryCard(
   secondaryText: Color
 ) {
   val categoryApps = category.apps
+  var expanded by remember(category.title) { mutableStateOf(false) }
 
   val largeApps = categoryApps.take(2)
   val miniApps = categoryApps.drop(2).take(4)
 
   Column(
     modifier = Modifier
-      .width(158.dp)
-      .height(180.dp)
+      .fillMaxWidth()
+      .animateContentSize(animationSpec = tween(260))
       .clip(RoundedCornerShape(24.dp))
-      .background(Color(0xFF1C1C1E).copy(alpha = 0.88f))
+      .background(Color(0xFF1C1C1E).copy(alpha = 0.90f))
+      .clickable { expanded = !expanded }
       .padding(12.dp)
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
-    Text(
-      text = category.title,
-      color = primaryText,
-      fontSize = 14.sp,
-      fontWeight = FontWeight.Medium,
-      modifier = Modifier.padding(bottom = 10.dp)
-    )
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+      Text(
+        text = category.title,
+        color = primaryText,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium
+      )
+      Text(
+        text = if (expanded) "⌃" else "⌄",
+        color = secondaryText,
+        fontSize = 16.sp
+      )
+    }
 
     Row(
       modifier = Modifier.fillMaxWidth(),
@@ -313,6 +335,46 @@ private fun DrawerCategoryCard(
             } else {
               Spacer(modifier = Modifier.size(24.dp))
             }
+          }
+        }
+      }
+    }
+
+    AnimatedVisibility(visible = expanded) {
+      Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        categoryApps.chunked(4).forEach { rowApps ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            rowApps.forEach { app ->
+              Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+              ) {
+                DrawerAppIcon(
+                  app = app, iconSize = 36.dp,
+                  onClick = { onAppClick(app) },
+                  onOpenAppInfo = onOpenAppInfo,
+                  onTogglePin = onTogglePin,
+                  onToggleDock = onToggleDock,
+                  iconPack = iconPack, accentColor = accentColor
+                )
+                Text(
+                  text = app.label,
+                  color = secondaryText,
+                  fontSize = 9.sp,
+                  maxLines = 1,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                )
+              }
+            }
+            repeat(4 - rowApps.size) { Spacer(modifier = Modifier.weight(1f)) }
           }
         }
       }
