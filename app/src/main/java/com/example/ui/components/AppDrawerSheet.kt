@@ -443,6 +443,7 @@ fun AppDrawerSheet(
               iconSize = currentIconSize,
               showLabel = true,
               iconPack = iconPack,
+              drawerStyle = true,
               accentColor = accentColor
             )
           }
