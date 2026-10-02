@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -43,10 +45,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -77,6 +79,7 @@ fun AppDrawerSheet(
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   accentColor: Color = NothingRed,
   iconSizeLevel: Int = 1,
+  drawerCardSizeLevel: Int = 1,
   onToggleThemeMode: () -> Unit = {},
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
@@ -87,20 +90,19 @@ fun AppDrawerSheet(
     if (!spoken.isNullOrBlank()) onSearchChange(spoken)
   }
 
+  val context = LocalContext.current
+  val voiceLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+  ) { result ->
+    val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+    if (!spoken.isNullOrBlank()) onSearchChange(spoken)
+  }
+
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
   val primaryText = Color(0xFFFFFFFF)
   val secondaryText = Color(0xFFA1A1A6)
-
-  val quickLaunch = remember(apps) {
-    listOf(
-      listOf("Google Keep", "Keep"),
-      listOf("Pocket Casts", "Pocket Cast"),
-      listOf("Google Play", "Play Store", "Google Play Store"),
-      listOf("Voice Recorder", "Recorder")
-    ).mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
-  }
 
   val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle", "Other") }
 
@@ -122,12 +124,6 @@ fun AppDrawerSheet(
       .fillMaxSize()
       .testTag("app_drawer_container")
   ) {
-    Box(
-      modifier = Modifier
-        .fillMaxSize()
-        .blur(24.dp)
-        .background(backgroundColor.copy(alpha = 0.82f))
-    )
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -135,37 +131,13 @@ fun AppDrawerSheet(
         .navigationBarsPadding()
         .padding(horizontal = 16.dp)
     ) {
-      Spacer(modifier = Modifier.height(12.dp))
-
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(68.dp)
-          .testTag("drawer_quick_launch"),
-        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        quickLaunch.take(4).forEach { app ->
-          DrawerAppIcon(
-            app = app, iconSize = 52.dp,
-            onClick = { onAppClick(app) },
-            onOpenAppInfo = onOpenAppInfo,
-            onTogglePin = onTogglePin,
-            onToggleDock = onToggleDock,
-            iconPack = iconPack, accentColor = accentColor
-          )
-        }
-      }
-
-      Spacer(modifier = Modifier.height(12.dp))
-
       LazyColumn(
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
           .testTag("drawer_category_scroll"),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 12.dp)
+        contentPadding = PaddingValues(bottom = 18.dp)
       ) {
         items((categories.size + 1) / 2) { rowIndex ->
           Row(
@@ -178,7 +150,8 @@ fun AppDrawerSheet(
               onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
               onTogglePin = onTogglePin, onToggleDock = onToggleDock,
               iconPack = iconPack, accentColor = accentColor,
-              primaryText = primaryText, secondaryText = secondaryText
+              primaryText = primaryText, secondaryText = secondaryText,
+              cardSizeLevel = drawerCardSizeLevel
             )
 
             val rightIndex = rowIndex * 2 + 1
@@ -189,10 +162,11 @@ fun AppDrawerSheet(
                 onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin, onToggleDock = onToggleDock,
                 iconPack = iconPack, accentColor = accentColor,
-                primaryText = primaryText, secondaryText = secondaryText
+                primaryText = primaryText, secondaryText = secondaryText,
+                cardSizeLevel = drawerCardSizeLevel
               )
             } else {
-              Spacer(modifier = Modifier.size(158.dp, 180.dp))
+              Spacer(modifier = Modifier.width(cardWidth).height(cardHeight))
             }
           }
         }
@@ -306,16 +280,27 @@ private fun DrawerCategoryCard(
   iconPack: IconPackStyle,
   accentColor: Color,
   primaryText: Color,
-  secondaryText: Color
+  secondaryText: Color,
+  cardSizeLevel: Int
 ) {
+  val cardWidth = when (cardSizeLevel) {
+    0 -> 150.dp
+    2 -> 170.dp
+    else -> 158.dp
+  }
+  val cardHeight = when (cardSizeLevel) {
+    0 -> 168.dp
+    2 -> 194.dp
+    else -> 180.dp
+  }
   val categoryApps = category.apps
   var expanded by remember(category.title) { mutableStateOf(false) }
   val previewApps = categoryApps.take(4)
 
   Box(
     modifier = Modifier
-      .width(158.dp)
-      .height(180.dp)
+      .width(cardWidth)
+      .height(cardHeight)
       .zIndex(if (expanded) 10f else 0f)
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
@@ -325,9 +310,9 @@ private fun DrawerCategoryCard(
       modifier = Modifier
         .fillMaxSize()
         .clip(RoundedCornerShape(24.dp))
-        .background(Color(0xFF1C1C1E).copy(alpha = 0.72f))
+        .background(Color(0xFF202023).copy(alpha = 0.70f))
         .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
-        .clickable { expanded = !expanded }
+        .clickable { expanded = true }
         .padding(12.dp)
     ) {
       Text(
@@ -343,7 +328,7 @@ private fun DrawerCategoryCard(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        previewApps.take(2).forEach { app ->
+        previewApps.take(3).forEach { app ->
           DrawerAppIcon(
             app = app,
             iconSize = 48.dp,
@@ -357,14 +342,14 @@ private fun DrawerCategoryCard(
         }
       }
 
-      Spacer(modifier = Modifier.height(8.dp))
+      Spacer(modifier = Modifier.height(7.dp))
 
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        previewApps.drop(2).take(2).forEach { app ->
+        previewApps.drop(3).take(3).forEach { app ->
           DrawerAppIcon(
             app = app,
             iconSize = 40.dp,
@@ -387,10 +372,10 @@ private fun DrawerCategoryCard(
     ) {
       Column(
         modifier = Modifier
-          .width(148.dp)
-          .height(148.dp)
+          .width(cardWidth - 8.dp)
+          .height(cardHeight - 8.dp)
           .clip(RoundedCornerShape(20.dp))
-          .background(Color(0xFF101012).copy(alpha = 0.62f))
+          .background(Color(0xFF0E0E10).copy(alpha = 0.94f))
           .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(20.dp))
           .verticalScroll(rememberScrollState())
           .padding(8.dp)
