@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -147,7 +148,6 @@ fun AppDrawerSheet(
               Icon(Icons.Default.Clear, "Clear search", tint = secondaryText, modifier = Modifier.size(19.dp))
             }
           }
-}
         }
         Spacer(Modifier.width(8.dp))
         IconButton(
