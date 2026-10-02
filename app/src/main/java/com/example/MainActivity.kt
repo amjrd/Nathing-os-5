@@ -137,7 +137,6 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-    restoreSystemWidgets()
 
     // Allow Nothing OS lock screen to show over system lock when active and turn screen on
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
