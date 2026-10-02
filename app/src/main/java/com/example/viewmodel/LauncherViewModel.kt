@@ -44,7 +44,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private val context: Context get() = getApplication<Application>().applicationContext
 
   // Pre-load saved user customizations from disk
-  private val _initialSettings = LauncherPreferencesManager.loadSettings(application.applicationContext)
+  private val _initialSettings = LauncherPreferencesManager.loadSettings(application.applicationContext).let { loaded ->
+    if (loaded.activeWidgets.isEmpty()) loaded.copy(
+      activeWidgets = listOf(
+        NosWidgetPortType.CALENDAR_DIGITAL_TIME,
+        NosWidgetPortType.MINI_CLUSTER_2X2,
+        NosWidgetPortType.CLOCK_MAIN,
+        NosWidgetPortType.WEATHER_MAIN
+      )
+    ) else loaded
+  }
 
   // Screen navigation - Default to Home Screen; Lock Screen activates on screen off / lock
   private val _currentScreen = MutableStateFlow(LauncherScreen.HOME)
