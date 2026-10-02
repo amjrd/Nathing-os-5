@@ -210,6 +210,9 @@ fun NothingLauncherApp(
   viewModel: LauncherViewModel,
   settings: LauncherSettings,
   onDismissKeyguard: () -> Unit = {},
+  systemWidgetView: AppWidgetHostView? = null,
+  onAddSystemWidget: () -> Unit = {},
+  onRemoveSystemWidget: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
@@ -274,8 +277,8 @@ fun NothingLauncherApp(
       dockApps = dockApps,
       settings = settings,
       systemWidgetView = systemWidgetView,
-      onAddSystemWidget = { systemWidgetHostManager.startPicker() },
-      onRemoveSystemWidget = { systemWidgetHostManager.removeWidget() },
+      onAddSystemWidget = onAddSystemWidget,
+      onRemoveSystemWidget = onRemoveSystemWidget,
       onAppClick = { app -> viewModel.launchApp(app) },
       onOpenFolder = { folder -> viewModel.openFolder(folder) },
       onToggleFolderEnlarged = { folderId -> viewModel.toggleFolderEnlarged(folderId) },
