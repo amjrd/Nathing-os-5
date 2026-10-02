@@ -47,7 +47,7 @@ import com.example.ui.theme.NothingRed
 
 private data class DrawerCategory(
   val title: String,
-  val apps: List<List<String>>
+  val apps: List<AppItem>
 )
 
 @Composable
@@ -83,38 +83,22 @@ fun AppDrawerSheet(
     ).mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
   }
 
-  val categories = remember {
-    listOf(
-      DrawerCategory("Utilities", listOf(
-        listOf("Brave"), listOf("Calculator"), listOf("Chrome"),
-        listOf("Calendar"), listOf("Clock"), listOf("Google", "Google App")
-      )),
-      DrawerCategory("Social", listOf(
-        listOf("Reddit"), listOf("WhatsApp"), listOf("Phone"),
-        listOf("Gmail"), listOf("Messages"), listOf("X", "Twitter")
-      )),
-      DrawerCategory("Entertainment", listOf(
-        listOf("YouTube"), listOf("Netflix"),
-        listOf("MyAnimeList", "MyAnimeList: Anime"), listOf("Spotify")
-      )),
-      DrawerCategory("Lifestyle", listOf(
-        listOf("Custom Tracker"), listOf("Pinterest")
-      )),
-      DrawerCategory("Finance", listOf(
-        listOf("PayPal"), listOf("Slice"), listOf("GPay", "Google Pay"),
-        listOf("Banking")
-      )),
-      DrawerCategory("Productivity", listOf(
-        listOf("ChatGPT"), listOf("Google Drive", "Drive"),
-        listOf("Gemini"), listOf("Doc Scanner", "Document Scanner")
-      ))
-    )
+  val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle") }
+
+  val categories = remember(apps, searchQuery) {
+    categoryNames.mapNotNull { title ->
+      val categoryApps = apps
+        .filter { app -> classifyDrawerCategory(app) == title }
+        .filter { app -> searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true) }
+        .sortedBy { it.label.lowercase() }
+      if (categoryApps.isNotEmpty()) DrawerCategory(title, categoryApps) else null
+    }
   }
 
   Box(
     modifier = modifier
       .fillMaxSize()
-      .background(backgroundColor)
+      .background(backgroundColor.copy(alpha = 0.94f))
       .testTag("app_drawer_container")
   ) {
     Column(
@@ -186,102 +170,7 @@ fun AppDrawerSheet(
           }
         }
 
-        // Full installed-app list: categories stay at the top, then every installed
-        // application is available here. This keeps the drawer useful even when an
-        // app is not assigned to one of the visual categories above.
-        item {
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(top = 4.dp, start = 2.dp, end = 2.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text(
-              text = if (searchQuery.isBlank()) "ALL APPS" else "RESULTS",
-              color = primaryText,
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Medium,
-              letterSpacing = 1.2.sp
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = apps.count { app ->
-                searchQuery.isBlank() ||
-                  app.label.contains(searchQuery.trim(), ignoreCase = true)
-              }.toString(),
-              color = accentColor,
-              fontSize = 11.sp,
-              fontWeight = FontWeight.Medium
-            )
-          }
-        }
 
-        val filteredAllApps = apps
-          .asSequence()
-          .filter { app ->
-            searchQuery.isBlank() ||
-              app.label.contains(searchQuery.trim(), ignoreCase = true)
-          }
-          .sortedBy { it.label.lowercase() }
-          .toList()
-
-        items((filteredAllApps.size + 3) / 4) { rowIndex ->
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.Top
-          ) {
-            for (column in 0..3) {
-              val index = rowIndex * 4 + column
-              if (index < filteredAllApps.size) {
-                val app = filteredAllApps[index]
-                Column(
-                  modifier = Modifier.width(72.dp),
-                  horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                  AppIconItem(
-                    app = app,
-                    onClick = { onAppClick(app) },
-                    onOpenAppInfo = onOpenAppInfo,
-                    onTogglePin = onTogglePin,
-                    onToggleDock = onToggleDock,
-                    iconSize = 48.dp,
-                    showLabel = false,
-                    iconPack = iconPack,
-                    accentColor = accentColor
-                  )
-                  Spacer(modifier = Modifier.height(4.dp))
-                  Text(
-                    text = app.label,
-                    color = primaryText,
-                    fontSize = 10.sp,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                  )
-                }
-              } else {
-                Spacer(modifier = Modifier.width(72.dp))
-              }
-            }
-          }
-        }
-
-        if (filteredAllApps.isEmpty()) {
-          item {
-            Text(
-              text = "NO APPS FOUND",
-              color = secondaryText,
-              fontSize = 12.sp,
-              fontWeight = FontWeight.Medium,
-              modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-              textAlign = TextAlign.Center
-            )
-          }
-        }
       }
     }
 
@@ -365,15 +254,7 @@ private fun DrawerCategoryCard(
   primaryText: Color,
   secondaryText: Color
 ) {
-  val categoryApps = remember(category.title, apps, searchQuery) {
-    category.apps
-      .mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
-      .filter { app ->
-        searchQuery.isBlank() ||
-          app.label.contains(searchQuery.trim(), ignoreCase = true)
-      }
-      .distinctBy { it.packageName }
-  }
+  val categoryApps = category.apps
 
   val largeApps = categoryApps.take(2)
   val miniApps = categoryApps.drop(2).take(4)
@@ -383,7 +264,7 @@ private fun DrawerCategoryCard(
       .width(158.dp)
       .height(180.dp)
       .clip(RoundedCornerShape(24.dp))
-      .background(Color(0xFF1C1C1E))
+      .background(Color(0xFF1C1C1E).copy(alpha = 0.88f))
       .padding(12.dp)
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
@@ -437,13 +318,6 @@ private fun DrawerCategoryCard(
       }
     }
 
-    if (categoryApps.isEmpty()) {
-      Text(
-        text = if (searchQuery.isBlank()) "—" else "No match",
-        color = secondaryText,
-        fontSize = 10.sp,
-        modifier = Modifier.padding(top = 4.dp)
-      )
     }
   }
 }
@@ -471,6 +345,21 @@ private fun DrawerAppIcon(
     accentColor = accentColor,
     modifier = Modifier.size(iconSize + 8.dp)
   )
+}
+
+private fun classifyDrawerCategory(app: AppItem): String {
+  val label = app.label.lowercase()
+  val pkg = app.packageName.lowercase()
+  fun hasAny(vararg values: String) = values.any { label.contains(it) || pkg.contains(it) }
+  return when {
+    hasAny("youtube", "spotify", "netflix", "podcast", "pocket cast", "music", "video", "vlc", "anime", "gallery", "photos", "camera") -> "Media"
+    hasAny("whatsapp", "instagram", "facebook", "messenger", "reddit", "telegram", "discord", "twitter", "tiktok", "snapchat", "social") -> "Social"
+    hasAny("calculator", "clock", "calendar", "chrome", "brave", "recorder", "settings", "files", "file manager", "contacts", "phone", "maps", "google app", "tool", "utility") -> "Tools"
+    hasAny("chatgpt", "gemini", "drive", "docs", "document", "scanner", "office", "notion", "keep", "gmail", "outlook", "tasks", "todo", "productivity") -> "Productivity"
+    hasAny("gpay", "google pay", "paypal", "bank", "banking", "wallet", "finance", "money", "revolut", "wise", "slice") -> "Finance"
+    hasAny("pinterest", "tracker", "health", "fitness", "shopping", "amazon", "ebay", "lifestyle", "weather") -> "Lifestyle"
+    else -> "Tools"
+  }
 }
 
 private fun resolveDrawerApp(
