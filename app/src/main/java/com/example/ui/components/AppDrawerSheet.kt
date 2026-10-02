@@ -1,7 +1,11 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -21,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +46,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -52,7 +54,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,14 +91,6 @@ fun AppDrawerSheet(
     if (!spoken.isNullOrBlank()) onSearchChange(spoken)
   }
 
-  val context = LocalContext.current
-  val voiceLauncher = rememberLauncherForActivityResult(
-    ActivityResultContracts.StartActivityForResult()
-  ) { result ->
-    val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-    if (!spoken.isNullOrBlank()) onSearchChange(spoken)
-  }
-
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
@@ -131,6 +124,74 @@ fun AppDrawerSheet(
         .navigationBarsPadding()
         .padding(horizontal = 16.dp)
     ) {
+      Spacer(Modifier.height(10.dp))
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Row(
+          modifier = Modifier
+            .weight(1f)
+            .height(52.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(Color(0xFF2C2C2E).copy(alpha = 0.92f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(26.dp))
+            .padding(horizontal = 12.dp),
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Icon(Icons.Default.Search, "Search apps", tint = secondaryText, modifier = Modifier.size(20.dp))
+          Spacer(Modifier.width(9.dp))
+          Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (searchQuery.isEmpty()) Text("Search", color = secondaryText, fontSize = 15.sp)
+            BasicTextField(
+              value = searchQuery,
+              onValueChange = onSearchChange,
+              singleLine = true,
+              textStyle = TextStyle(color = primaryText, fontSize = 15.sp),
+              cursorBrush = SolidColor(accentColor),
+              modifier = Modifier.fillMaxWidth().testTag("app_search_input")
+            )
+          }
+          if (searchQuery.isNotEmpty()) {
+            IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(32.dp)) {
+              Icon(Icons.Default.Clear, "Clear search", tint = secondaryText, modifier = Modifier.size(19.dp))
+            }
+          }
+          IconButton(
+            onClick = {
+              val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+              }
+              runCatching { voiceLauncher.launch(intent) }
+            },
+            modifier = Modifier.size(34.dp).testTag("drawer_search_mic")
+          ) {
+            Icon(Icons.Default.Mic, "Voice search", tint = secondaryText, modifier = Modifier.size(19.dp))
+          }
+        }
+        Spacer(Modifier.width(8.dp))
+        IconButton(
+          onClick = onOpenSettings,
+          modifier = Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFF2C2C2E).copy(alpha = 0.82f))
+            .testTag("drawer_launcher_settings")
+        ) {
+          Icon(Icons.Default.Settings, "Launcher Settings", tint = primaryText, modifier = Modifier.size(20.dp))
+        }
+      }
+
+      Spacer(Modifier.height(14.dp))
+      Text(
+        text = if (searchQuery.isBlank()) "APP LIBRARY" else "RESULTS",
+        color = primaryText,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(start = 2.dp, bottom = 10.dp)
+      )
+
       LazyColumn(
         modifier = Modifier
           .weight(1f)
@@ -166,7 +227,7 @@ fun AppDrawerSheet(
                 cardSizeLevel = drawerCardSizeLevel
               )
             } else {
-              Spacer(modifier = Modifier.width(cardWidth).height(cardHeight))
+              Spacer(modifier = Modifier.weight(1f))
             }
           }
         }
@@ -175,98 +236,6 @@ fun AppDrawerSheet(
       }
     }
 
-    Row(
-      modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .padding(horizontal = 16.dp, vertical = 16.dp)
-        .fillMaxWidth()
-        .height(52.dp)
-        .clip(RoundedCornerShape(26.dp))
-        .background(searchColor.copy(alpha = 0.96f))
-        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(26.dp))
-        .padding(horizontal = 12.dp)
-        .testTag("drawer_bottom_search"),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Icon(
-        imageVector = Icons.Default.Search,
-        contentDescription = "Search apps",
-        tint = secondaryText,
-        modifier = Modifier.size(20.dp)
-      )
-
-      Spacer(modifier = Modifier.width(10.dp))
-
-      Box(
-        modifier = Modifier.weight(1f),
-        contentAlignment = Alignment.CenterStart
-      ) {
-        if (searchQuery.isEmpty()) {
-          Text(
-            text = "Search apps",
-            color = secondaryText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-          )
-        }
-
-        BasicTextField(
-          value = searchQuery,
-          onValueChange = onSearchChange,
-          singleLine = true,
-          textStyle = TextStyle(
-            color = primaryText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-          ),
-          cursorBrush = SolidColor(accentColor),
-          modifier = Modifier.fillMaxWidth().testTag("app_search_input")
-        )
-      }
-
-      if (searchQuery.isNotEmpty()) {
-        IconButton(
-          onClick = { onSearchChange("") },
-          modifier = Modifier.size(32.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.Clear,
-            contentDescription = "Clear search",
-            tint = secondaryText,
-            modifier = Modifier.size(20.dp)
-          )
-        }
-      }
-      IconButton(
-        onClick = {
-          val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-          }
-          runCatching { voiceLauncher.launch(intent) }
-        },
-        modifier = Modifier.size(36.dp).testTag("drawer_search_mic")
-      ) {
-        Icon(
-          imageVector = Icons.Default.Mic,
-          contentDescription = "Voice search",
-          tint = secondaryText,
-          modifier = Modifier.size(20.dp)
-        )
-      }
-
-
-      IconButton(
-        onClick = onOpenSettings,
-        modifier = Modifier.size(36.dp).testTag("drawer_launcher_settings")
-      ) {
-        Icon(
-          imageVector = Icons.Default.Settings,
-          contentDescription = "Launcher Settings",
-          tint = secondaryText,
-          modifier = Modifier.size(20.dp)
-        )
-      }
-    }
   }
 }
 
@@ -454,17 +423,3 @@ private fun classifyDrawerCategory(app: AppItem): String {
   }
 }
 
-private fun resolveDrawerApp(
-  apps: List<AppItem>,
-  aliases: List<String>
-): AppItem? {
-  return aliases.asSequence()
-    .mapNotNull { alias ->
-      apps.firstOrNull { app ->
-        app.label.equals(alias, ignoreCase = true)
-      } ?: apps.firstOrNull { app ->
-        app.label.contains(alias, ignoreCase = true)
-      }
-    }
-    .firstOrNull()
-}
