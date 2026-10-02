@@ -1,10 +1,7 @@
 package com.example.ui.components
 
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.window.Popup
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -320,106 +318,104 @@ private fun DrawerCategoryCard(
       }
     }
 
-    AnimatedVisibility(
-      visible = isExpanded,
-      enter = scaleIn(initialScale = 0.68f, animationSpec = tween(260)),
-      exit = scaleOut(targetScale = 0.68f, animationSpec = tween(190)),
-      modifier = Modifier
-        .align(Alignment.Center)
-        .zIndex(20f)
-    ) {
-      val innerScrollState = rememberScrollState()
-      val popupWidth = if (cardSizeLevel == 2) 304.dp else 292.dp
-      val popupHeight = if (cardSizeLevel == 2) 360.dp else 336.dp
-
-      Box(
-        modifier = Modifier
-          .width(popupWidth)
-          .height(popupHeight)
-          .clip(RoundedCornerShape(28.dp))
-          .background(Color(0xFF121214).copy(alpha = 0.97f))
-          .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(28.dp))
+    if (isExpanded) {
+      // Popup removes the expanded card from the small LazyColumn cell,
+      // so the full card can grow freely and its own scroll remains usable.
+      Popup(
+        alignment = Alignment.Center,
+        onDismissRequest = {}
       ) {
-        Column(
-          modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(innerScrollState)
-            .padding(start = 14.dp, top = 14.dp, end = 24.dp, bottom = 14.dp)
-        ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text(
-              text = category.title,
-              color = primaryText,
-              fontSize = 18.sp,
-              fontWeight = FontWeight.SemiBold,
-              modifier = Modifier.weight(1f)
-            )
-            Text(
-              text = "${categoryApps.size}",
-              color = secondaryText,
-              fontSize = 13.sp
-            )
-          }
-          Spacer(Modifier.height(12.dp))
+        val innerScrollState = rememberScrollState()
+        val popupWidth = if (cardSizeLevel == 2) 304.dp else 292.dp
+        val popupHeight = if (cardSizeLevel == 2) 360.dp else 336.dp
 
-          categoryApps.chunked(4).forEach { rowApps ->
+        Box(
+          modifier = Modifier
+            .width(popupWidth)
+            .height(popupHeight)
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color(0xFF121214).copy(alpha = 0.97f))
+            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(28.dp))
+        ) {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(innerScrollState)
+              .padding(start = 14.dp, top = 14.dp, end = 24.dp, bottom = 14.dp)
+          ) {
             Row(
               modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceEvenly,
               verticalAlignment = Alignment.CenterVertically
             ) {
-              rowApps.forEach { app ->
-                DrawerAppIcon(
-                  app = app,
-                  iconSize = 44.dp,
-                  onClick = { onAppClick(app) },
-                  onOpenAppInfo = onOpenAppInfo,
-                  onTogglePin = onTogglePin,
-                  onToggleDock = onToggleDock,
-                  iconPack = iconPack,
-                  accentColor = accentColor
-                )
-              }
+              Text(
+                text = category.title,
+                color = primaryText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+              )
+              Text(
+                text = "${categoryApps.size}",
+                color = secondaryText,
+                fontSize = 13.sp
+              )
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
+
+            categoryApps.chunked(4).forEach { rowApps ->
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                rowApps.forEach { app ->
+                  DrawerAppIcon(
+                    app = app,
+                    iconSize = 44.dp,
+                    onClick = { onAppClick(app) },
+                    onOpenAppInfo = onOpenAppInfo,
+                    onTogglePin = onTogglePin,
+                    onToggleDock = onToggleDock,
+                    iconPack = iconPack,
+                    accentColor = accentColor
+                  )
+                }
+              }
+              Spacer(modifier = Modifier.height(10.dp))
+            }
           }
-        }
 
-        if (innerScrollState.maxValue > 0) {
-          Canvas(
-            modifier = Modifier
-              .align(Alignment.CenterEnd)
-              .width(8.dp)
-              .height(popupHeight - 36.dp)
-              .padding(vertical = 4.dp)
-          ) {
-            val viewport = size.height
-            val content = viewport + innerScrollState.maxValue
-            val thumbHeight = (viewport * viewport / content).coerceAtLeast(34.dp.toPx())
-            val travel = viewport - thumbHeight
-            val progress = innerScrollState.value.toFloat() / innerScrollState.maxValue.toFloat()
-            val thumbTop = travel * progress
-
-            drawRoundRect(
-              color = Color.White.copy(alpha = 0.18f),
-              topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
-              size = androidx.compose.ui.geometry.Size(size.width, viewport),
-              cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
-            )
-            drawRoundRect(
-              color = Color.White.copy(alpha = 0.72f),
-              topLeft = androidx.compose.ui.geometry.Offset(0f, thumbTop),
-              size = androidx.compose.ui.geometry.Size(size.width, thumbHeight),
-              cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
-            )
+          if (innerScrollState.maxValue > 0) {
+            Canvas(
+              modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .width(8.dp)
+                .height(popupHeight - 36.dp)
+                .padding(vertical = 4.dp)
+            ) {
+              val viewport = size.height
+              val content = viewport + innerScrollState.maxValue
+              val thumbHeight = (viewport * viewport / content).coerceAtLeast(34.dp.toPx())
+              val travel = viewport - thumbHeight
+              val progress = innerScrollState.value.toFloat() / innerScrollState.maxValue.toFloat()
+              val thumbTop = travel * progress
+              drawRoundRect(
+                color = Color.White.copy(alpha = 0.18f),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+                size = androidx.compose.ui.geometry.Size(size.width, viewport),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
+              )
+              drawRoundRect(
+                color = Color.White.copy(alpha = 0.72f),
+                topLeft = androidx.compose.ui.geometry.Offset(0f, thumbTop),
+                size = androidx.compose.ui.geometry.Size(size.width, thumbHeight),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width)
+              )
+            }
           }
         }
       }
-    }
-  }
+    }  }
 }
 
 @Composable
