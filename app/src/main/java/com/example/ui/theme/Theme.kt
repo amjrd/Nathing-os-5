@@ -123,18 +123,18 @@ fun MyApplicationTheme(
     }
     LauncherThemeMode.MONOCHROME_STUDIO -> {
       LauncherThemeColors(
-        isDark = false,
-        background = Color(0xFFF4F5F8),
-        surface = Color(0xFFFFFFFF),
-        elevated = Color(0xFFF8F9FA),
-        border = Color(0xFFE2E4E8),
-        textPrimary = Color(0xFF111115),
-        textSecondary = Color(0xFF6B7280),
-        unlitDot = Color(0xFFD1D5DB),
-        dockBg = Color(0xEEFFFFFF),
-        dockButtonBg = Color(0xFFF0F2F5),
-        dockIconTint = Color(0xFF111111),
-        searchPillBg = Color(0xFFFFFFFF)
+        isDark = true,
+        background = Color(0xFF000000),
+        surface = Color(0xFF0B0B0C),
+        elevated = Color(0xFF151517),
+        border = Color(0xFF29292C),
+        textPrimary = Color(0xFFFFFFFF),
+        textSecondary = Color(0xFFB7B7BC),
+        unlitDot = Color(0xFF252527),
+        dockBg = Color(0xF5000000),
+        dockButtonBg = Color(0xFF151517),
+        dockIconTint = Color(0xFFFFFFFF),
+        searchPillBg = Color(0xFF0F0F10)
       )
     }
     LauncherThemeMode.ATMOSPHERE_PASTEL -> {
