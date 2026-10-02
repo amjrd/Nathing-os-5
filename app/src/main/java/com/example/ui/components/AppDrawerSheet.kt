@@ -163,27 +163,19 @@ fun AppDrawerSheet(
         }
       }
 
-      Spacer(Modifier.height(14.dp))
-      Text(
-        text = if (searchQuery.isBlank()) "APP LIBRARY" else "RESULTS",
-        color = primaryText,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier.padding(start = 2.dp, bottom = 10.dp)
-      )
-
+      Spacer(Modifier.height(8.dp))
       LazyColumn(
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
           .testTag("drawer_category_scroll"),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 18.dp)
       ) {
         items((categories.size + 1) / 2) { rowIndex ->
           Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
           ) {
             val left = categories[rowIndex * 2]
             DrawerCategoryCard(
