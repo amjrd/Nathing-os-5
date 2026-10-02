@@ -40,6 +40,7 @@ object LauncherPreferencesManager {
   private const val KEY_CUSTOM_LOCK_WALLPAPER_URI = "custom_lock_wallpaper_uri"
   private const val KEY_WALLPAPER_DIM_PCT = "wallpaper_dim_pct"
   private const val KEY_ICON_SIZE_LEVEL = "icon_size_level"
+  private const val KEY_DRAWER_CARD_SIZE_LEVEL = "drawer_card_size_level"
   private const val KEY_WIDGET_SIZE_LEVEL = "widget_size_level"
   private const val KEY_ACTIVE_WIDGETS = "active_widgets"
 
@@ -87,6 +88,7 @@ object LauncherPreferencesManager {
       putString(KEY_CUSTOM_LOCK_WALLPAPER_URI, settings.customLockScreenWallpaperUri)
       putInt(KEY_WALLPAPER_DIM_PCT, settings.wallpaperDimPct)
       putInt(KEY_ICON_SIZE_LEVEL, settings.iconSizeLevel)
+      putInt(KEY_DRAWER_CARD_SIZE_LEVEL, settings.drawerCardSizeLevel)
       putInt(KEY_WIDGET_SIZE_LEVEL, settings.widgetSizeLevel)
       putString(KEY_ACTIVE_WIDGETS, widgetsString)
 
@@ -192,6 +194,7 @@ object LauncherPreferencesManager {
       wallpaperDimPct = prefs.getInt(KEY_WALLPAPER_DIM_PCT, defaults.wallpaperDimPct),
       lockScreen = loadedLockScreen,
       iconSizeLevel = prefs.getInt(KEY_ICON_SIZE_LEVEL, defaults.iconSizeLevel),
+      drawerCardSizeLevel = prefs.getInt(KEY_DRAWER_CARD_SIZE_LEVEL, defaults.drawerCardSizeLevel),
       widgetSizeLevel = prefs.getInt(KEY_WIDGET_SIZE_LEVEL, defaults.widgetSizeLevel),
       activeWidgets = activeWidgets
     )
