@@ -410,6 +410,53 @@ fun LauncherSettingsDialog(
             }
           }
 
+          Spacer(modifier = Modifier.height(16.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column {
+              Text(
+                text = "APP DRAWER CARDS",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = theme.textPrimary
+              )
+              Text(
+                text = when (settings.drawerCardSizeLevel) {
+                  0 -> "Compact"
+                  1 -> "Standard"
+                  else -> "Large"
+                },
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                color = theme.textSecondary
+              )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+              listOf(0 to "S", 1 to "M", 2 to "L").forEach { (level, label) ->
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (settings.drawerCardSizeLevel == level) accentColor else NothingElevated)
+                    .clickable { onUpdateSettings(settings.copy(drawerCardSizeLevel = level)) }
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                  Text(
+                    text = label,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = if (settings.drawerCardSizeLevel == level) (if (accentColor == NothingWhite) Color.Black else Color.White) else theme.textPrimary
+                  )
+                }
+              }
+            }
+          }
+
           // 2. Widget Scale (Échelle des widgets)
           Spacer(modifier = Modifier.height(16.dp))
           Row(
