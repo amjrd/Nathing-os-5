@@ -15,6 +15,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,6 +78,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
@@ -88,6 +91,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
+import android.os.SystemClock
 import com.example.model.AppItem
 import com.example.model.AudioState
 import com.example.model.FitnessStats
@@ -214,6 +218,40 @@ fun HomeScreen(
               }
             }
           )
+        }
+      }
+      .pointerInput(settings.doubleTapToSleep) {
+        var lastTapTime = 0L
+        var lastTapPosition = Offset.Unspecified
+        awaitEachGesture {
+          val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+          var moved = false
+          var currentPosition = down.position
+          while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Final)
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            currentPosition = change.position
+            if ((change.position - down.position).getDistance() > 32.dp.toPx()) {
+              moved = true
+            }
+            if (!change.pressed) break
+          }
+          if (!moved && !down.isConsumed && settings.doubleTapToSleep) {
+            val now = SystemClock.uptimeMillis()
+            val closeToLast = lastTapPosition != Offset.Unspecified &&
+              (currentPosition - lastTapPosition).getDistance() < 48.dp.toPx()
+            if (now - lastTapTime in 1..350 && closeToLast) {
+              onDoubleTap()
+              lastTapTime = 0L
+              lastTapPosition = Offset.Unspecified
+            } else {
+              lastTapTime = now
+              lastTapPosition = currentPosition
+            }
+          } else {
+            lastTapTime = 0L
+            lastTapPosition = Offset.Unspecified
+          }
         }
       }
       .testTag("home_screen_container")
