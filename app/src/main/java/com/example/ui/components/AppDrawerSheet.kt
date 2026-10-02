@@ -308,7 +308,7 @@ private fun DrawerCategoryCard(
         categoryApps.take(4).forEach { app ->
           DrawerAppIcon(
             app = app,
-            iconSize = 36.dp,
+            iconSize = 40.dp,
             onClick = { onAppClick(app) },
             onOpenAppInfo = onOpenAppInfo,
             onTogglePin = onTogglePin,
