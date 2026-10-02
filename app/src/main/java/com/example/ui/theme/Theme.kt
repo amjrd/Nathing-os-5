@@ -126,16 +126,16 @@ fun MyApplicationTheme(
       LauncherThemeColors(
         isDark = false,
         background = Color(0xFFF4F5F8),
-        surface = Color(0xFFFFFFFF),
-        elevated = Color(0xFFF0F0F2),
-        border = Color(0xFFD0D0D3),
+        surface = Color.White,
+        elevated = Color(0xFFEAEAEA),
+        border = Color(0xFFB8B8BC),
         textPrimary = Color(0xFF000000),
-        textSecondary = Color(0xFF55555A),
-        unlitDot = Color(0xFFD2D2D5),
-        dockBg = Color(0xF2FFFFFF),
-        dockButtonBg = Color(0xFFE8E8EA),
+        textSecondary = Color(0xFF4A4A4F),
+        unlitDot = Color(0xFFD0D0D4),
+        dockBg = Color(0xF5FFFFFF),
+        dockButtonBg = Color(0xFFEAEAEA),
         dockIconTint = Color(0xFF000000),
-        searchPillBg = Color(0xFFE8E8EA)
+        searchPillBg = Color(0xFFF0F0F0)
       )
     }
     LauncherThemeMode.ATMOSPHERE_PASTEL -> {
