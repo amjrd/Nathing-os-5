@@ -1,9 +1,5 @@
 package com.example.ui.components
 
-import android.content.Intent
-import android.speech.RecognizerIntent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -50,7 +46,6 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -85,12 +80,6 @@ fun AppDrawerSheet(
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
 ) {
-  val context = LocalContext.current
-  val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-    val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
-    if (!spoken.isNullOrBlank()) onSearchChange(spoken)
-  }
-
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
@@ -158,17 +147,7 @@ fun AppDrawerSheet(
               Icon(Icons.Default.Clear, "Clear search", tint = secondaryText, modifier = Modifier.size(19.dp))
             }
           }
-          IconButton(
-            onClick = {
-              val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-              }
-              runCatching { voiceLauncher.launch(intent) }
-            },
-            modifier = Modifier.size(34.dp).testTag("drawer_search_mic")
-          ) {
-            Icon(Icons.Default.Mic, "Voice search", tint = secondaryText, modifier = Modifier.size(19.dp))
-          }
+}
         }
         Spacer(Modifier.width(8.dp))
         IconButton(
