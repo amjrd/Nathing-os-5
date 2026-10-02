@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -95,6 +96,7 @@ fun AppDrawerSheet(
     categoryNames.mapNotNull { title ->
       val categoryApps = apps
         .distinctBy { it.packageName }
+        .filter { app -> !isSystemSettingsApp(app) }
         .filter { app -> classifyDrawerCategory(app) == title }
         .filter { app -> query.isBlank() || app.label.contains(query, ignoreCase = true) }
         .sortedBy { it.label.lowercase() }
@@ -248,6 +250,18 @@ fun AppDrawerSheet(
           )
         }
       }
+
+      IconButton(
+        onClick = onOpenSettings,
+        modifier = Modifier.size(36.dp).testTag("drawer_launcher_settings")
+      ) {
+        Icon(
+          imageVector = Icons.Default.Settings,
+          contentDescription = "Launcher Settings",
+          tint = secondaryText,
+          modifier = Modifier.size(20.dp)
+        )
+      }
     }
   }
 }
@@ -387,6 +401,11 @@ private fun DrawerAppIcon(
   )
 }
 
+private fun isSystemSettingsApp(app: AppItem): Boolean {
+  val pkg = app.packageName.lowercase()
+  return pkg == "com.android.settings" || pkg == "com.google.android.settings"
+}
+
 private fun classifyDrawerCategory(app: AppItem): String {
   val label = app.label.lowercase()
   val pkg = app.packageName.lowercase()
@@ -397,7 +416,7 @@ private fun classifyDrawerCategory(app: AppItem): String {
   return when {
     hasAny("youtube", "spotify", "netflix", "podcast", "pocket cast", "music", "video", "vlc", "anime", "gallery", "photos", "camera") -> "Media"
     hasAny("whatsapp", "instagram", "facebook", "messenger", "reddit", "telegram", "discord", "twitter", "tiktok", "snapchat", "threads", "social") -> "Social"
-    hasAny("calculator", "clock", "calendar", "chrome", "brave", "browser", "recorder", "settings", "files", "file manager", "contacts", "phone", "dialer", "maps", "google app", "tool", "utility", "security") -> "Tools"
+    hasAny("calculator", "clock", "calendar", "chrome", "brave", "browser", "recorder", "files", "file manager", "contacts", "phone", "dialer", "maps", "google app", "tool", "utility", "security") -> "Tools"
     hasAny("chatgpt", "gemini", "drive", "docs", "document", "scanner", "office", "notion", "keep", "gmail", "outlook", "tasks", "todo", "productivity") -> "Productivity"
     hasAny("gpay", "google pay", "paypal", "bank", "banking", "wallet", "finance", "money", "revolut", "wise", "slice") -> "Finance"
     hasAny("pinterest", "tracker", "health", "fitness", "shopping", "amazon", "ebay", "lifestyle", "weather", "food", "travel") -> "Lifestyle"
