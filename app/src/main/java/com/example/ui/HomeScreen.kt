@@ -222,8 +222,9 @@ fun HomeScreen(
           override suspend fun onPostFling(
             consumed: androidx.compose.ui.unit.Velocity,
             available: androidx.compose.ui.unit.Velocity
-          ) {
+          ): androidx.compose.ui.unit.Velocity {
             downDistance = 0f
+            return androidx.compose.ui.unit.Velocity.Zero
           }
         }
       })
