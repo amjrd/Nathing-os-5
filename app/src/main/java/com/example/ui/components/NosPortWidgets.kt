@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Schedule
@@ -1105,7 +1106,7 @@ fun NosWidgetPortSheet(
               .background(if (hasSystemWidget) theme.elevated else accentColor)
           ) {
             Icon(
-              imageVector = if (hasSystemWidget) Icons.Default.Check else Icons.Default.Add,
+              imageVector = if (hasSystemWidget) Icons.Default.Remove else Icons.Default.Add,
               contentDescription = if (hasSystemWidget) "Remove system widget" else "Add system widget",
               tint = if (hasSystemWidget && accentColor == Color.White) Color.Black else Color.White,
               modifier = Modifier.size(24.dp)
