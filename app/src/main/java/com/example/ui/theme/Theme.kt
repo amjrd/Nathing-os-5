@@ -32,24 +32,25 @@ private val NothingDarkColorScheme = darkColorScheme(
 )
 
 // Theme Jour (Light - Image 3)
-private val NothingLightColorScheme = lightColorScheme(
-  primary = NothingRed,
-  onPrimary = NothingWhite,
-  primaryContainer = NothingLightElevated,
-  onPrimaryContainer = NothingLightTextPrimary,
-  secondary = NothingLightTextPrimary,
-  onSecondary = NothingLightSurface,
-  secondaryContainer = NothingLightSurface,
-  onSecondaryContainer = NothingLightTextPrimary,
-  tertiary = NothingGreenAccent,
-  background = NothingLightBackground,
-  onBackground = NothingLightTextPrimary,
-  surface = NothingLightSurface,
-  onSurface = NothingLightTextPrimary,
-  surfaceVariant = NothingLightElevated,
-  onSurfaceVariant = NothingLightTextSecondary,
-  outline = NothingLightBorder,
-  outlineVariant = NothingLightUnlitDot
+private val NothingLightColorScheme = darkColorScheme(
+  primary = NothingWhite,
+  onPrimary = NothingBlack,
+  primaryContainer = NothingElevated,
+  onPrimaryContainer = NothingWhite,
+  secondary = NothingDimWhite,
+  onSecondary = NothingBlack,
+  secondaryContainer = NothingDarkSurface,
+  onSecondaryContainer = NothingWhite,
+  tertiary = NothingRed,
+  onTertiary = NothingWhite,
+  background = NothingBlack,
+  onBackground = NothingWhite,
+  surface = NothingMatteBlack,
+  onSurface = NothingWhite,
+  surfaceVariant = NothingDarkSurface,
+  onSurfaceVariant = NothingDimWhite,
+  outline = NothingBorder,
+  outlineVariant = NothingUnlitDot
 )
 
 // Theme Retro Pastel (Image 3 & 5: Retro Car & Soft Sage/Mint aesthetic)
