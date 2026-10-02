@@ -837,7 +837,7 @@ fun HomeScreen(
           IconButton(
             onClick = {
               com.example.util.VibrationHelper.vibrateTouch(context)
-              onAddSystemWidget()
+              showWidgetSheet = true
             },
             modifier = Modifier.size(36.dp)
           ) {
@@ -919,7 +919,14 @@ fun HomeScreen(
     if (showWidgetSheet) {
       NosWidgetPortSheet(
         activeWidgets = settings.activeWidgets,
+        hasSystemWidget = systemWidgetView != null,
         onToggleWidget = onToggleWidget,
+        onAddSystemWidget = {
+          onAddSystemWidget()
+        },
+        onRemoveSystemWidget = {
+          onRemoveSystemWidget()
+        },
         onDismiss = { showWidgetSheet = false },
         accentColor = accentColor
       )
