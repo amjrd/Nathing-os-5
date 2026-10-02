@@ -1,9 +1,6 @@
 package com.example
 
 import android.app.KeyguardManager
-import android.appwidget.AppWidgetHost
-import android.appwidget.AppWidgetHostView
-import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,7 +13,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -35,7 +31,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,51 +63,7 @@ class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
 
-  // Android system widget host: keeps real system widgets managed by this launcher.
-  private val appWidgetHost = AppWidgetHost(this, 0x4E4F53)
-  private val systemWidgetViews = mutableStateListOf<AppWidgetHostView>()
-  private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-
-  private val widgetConfigLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-      val id = pendingWidgetId
-      pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-      if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return@registerForActivityResult
-      if (result.resultCode == RESULT_OK) addSystemWidgetView(id)
-      else appWidgetHost.deleteAppWidgetId(id)
-    }
-
-  private val widgetPickerLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-      val id = result.data?.getIntExtra(
-        AppWidgetManager.EXTRA_APPWIDGET_ID,
-        AppWidgetManager.INVALID_APPWIDGET_ID
-      ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-
-      if (result.resultCode != RESULT_OK || id == AppWidgetManager.INVALID_APPWIDGET_ID) {
-        if (id != AppWidgetManager.INVALID_APPWIDGET_ID) appWidgetHost.deleteAppWidgetId(id)
-        return@registerForActivityResult
-      }
-
-      val info = AppWidgetManager.getInstance(this).getAppWidgetInfo(id)
-      if (info?.configure != null) {
-        pendingWidgetId = id
-        try {
-          widgetConfigLauncher.launch(
-            Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE).apply {
-              component = info.configure
-              putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
-            }
-          )
-        } catch (_: Exception) {
-          pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-          appWidgetHost.deleteAppWidgetId(id)
-        }
-      } else {
-        addSystemWidgetView(id)
-      }
-    }
-
+  // Screen State receiver to lock the launcher screen when phone goes to sleep or wakes
   private val screenStateReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
       when (intent?.action) {
@@ -180,24 +131,12 @@ class MainActivity : ComponentActivity() {
           NothingLauncherApp(
             viewModel = viewModel,
             settings = settings,
-            systemWidgetViews = systemWidgetViews,
-            onAddSystemWidget = { launchSystemWidgetPicker() },
             onDismissKeyguard = { dismissSystemKeyguard() },
             modifier = Modifier.fillMaxSize()
           )
         }
       }
     }
-  }
-
-  override fun onStart() {
-    super.onStart()
-    try { appWidgetHost.startListening() } catch (_: Exception) {}
-  }
-
-  override fun onStop() {
-    try { appWidgetHost.stopListening() } catch (_: Exception) {}
-    super.onStop()
   }
 
   override fun onResume() {
@@ -235,54 +174,6 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  private fun addSystemWidgetView(appWidgetId: Int) {
-    val manager = AppWidgetManager.getInstance(this)
-    val info = manager.getAppWidgetInfo(appWidgetId) ?: run {
-      appWidgetHost.deleteAppWidgetId(appWidgetId)
-      return
-    }
-    try {
-      val view = appWidgetHost.createView(this, appWidgetId, info)
-      view.setAppWidget(appWidgetId, info)
-      systemWidgetViews.removeAll { it.appWidgetId == appWidgetId }
-      systemWidgetViews.add(view)
-      persistSystemWidgetIds()
-    } catch (_: Exception) {
-      appWidgetHost.deleteAppWidgetId(appWidgetId)
-    }
-  }
-
-  private fun restoreSystemWidgets() {
-    val ids = getSharedPreferences("system_widgets", MODE_PRIVATE)
-      .getStringSet("ids", emptySet()).orEmpty()
-      .mapNotNull { it.toIntOrNull() }
-    ids.forEach { id ->
-      if (AppWidgetManager.getInstance(this).getAppWidgetInfo(id) != null) {
-        addSystemWidgetView(id)
-      }
-    }
-  }
-
-  private fun persistSystemWidgetIds() {
-    getSharedPreferences("system_widgets", MODE_PRIVATE)
-      .edit()
-      .putStringSet("ids", systemWidgetViews.map { it.appWidgetId.toString() }.toSet())
-      .apply()
-  }
-
-  private fun launchSystemWidgetPicker() {
-    val id = appWidgetHost.allocateAppWidgetId()
-    try {
-      widgetPickerLauncher.launch(
-        Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply {
-          putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
-        }
-      )
-    } catch (_: Exception) {
-      appWidgetHost.deleteAppWidgetId(id)
-    }
-  }
-
   override fun onDestroy() {
     super.onDestroy()
     try {
@@ -295,8 +186,6 @@ class MainActivity : ComponentActivity() {
 fun NothingLauncherApp(
   viewModel: LauncherViewModel,
   settings: LauncherSettings,
-  systemWidgetViews: List<AppWidgetHostView> = emptyList(),
-  onAddSystemWidget: () -> Unit = {},
   onDismissKeyguard: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
@@ -361,8 +250,6 @@ fun NothingLauncherApp(
       pinnedApps = pinnedApps,
       dockApps = dockApps,
       settings = settings,
-      systemWidgetViews = systemWidgetViews,
-      onAddSystemWidget = onAddSystemWidget,
       onAppClick = { app -> viewModel.launchApp(app) },
       onOpenFolder = { folder -> viewModel.openFolder(folder) },
       onToggleFolderEnlarged = { folderId -> viewModel.toggleFolderEnlarged(folderId) },
@@ -468,6 +355,29 @@ fun NothingLauncherApp(
           }
       )
 
+      // Dedicated lower touch zone for opening the App Drawer.
+      // This zone is intentionally separate from the Google Feed gesture.
+      Box(
+        modifier = Modifier
+          .align(androidx.compose.ui.Alignment.BottomCenter)
+          .fillMaxWidth()
+          .height(220.dp)
+          .pointerInput(Unit) {
+            var totalUp = 0f
+            detectVerticalDragGestures(
+              onDragStart = { totalUp = 0f },
+              onDragEnd = { totalUp = 0f },
+              onDragCancel = { totalUp = 0f },
+              onVerticalDrag = { _, amount ->
+                totalUp += amount
+                if (totalUp < -120f) {
+                  viewModel.setScreen(LauncherScreen.APP_DRAWER)
+                  totalUp = 0f
+                }
+              }
+            )
+          }
+      )
     }
 
     // 1.5. Signature Nothing OS 5 Lock Screen
