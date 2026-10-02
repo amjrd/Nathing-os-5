@@ -308,7 +308,7 @@ private fun DrawerCategoryCard(
         categoryApps.take(4).forEach { app ->
           DrawerAppIcon(
             app = app,
-            iconSize = 32.dp,
+            iconSize = 36.dp,
             onClick = { onAppClick(app) },
             onOpenAppInfo = onOpenAppInfo,
             onTogglePin = onTogglePin,
@@ -409,7 +409,7 @@ private fun DrawerAppIcon(
   showLabel: Boolean = false
 ) {
   Column(
-    modifier = Modifier.width(if (showLabel) 68.dp else iconSize + 8.dp),
+    modifier = Modifier.width(if (showLabel) 68.dp else iconSize),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
   AppIconItem(
@@ -422,7 +422,7 @@ private fun DrawerAppIcon(
     showLabel = showLabel,
     iconPack = iconPack,
     accentColor = accentColor,
-      modifier = Modifier.size(iconSize + 8.dp)
+      modifier = Modifier.size(iconSize)
     )
     if (showLabel) {
       Text(
