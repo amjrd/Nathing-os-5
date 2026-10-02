@@ -2,9 +2,6 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,61 +15,39 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.AppItem
 import com.example.model.IconPackStyle
-import com.example.ui.theme.LocalLauncherTheme
-import com.example.ui.theme.NothingBlack
 import com.example.ui.theme.NothingRed
-import com.example.ui.theme.NothingWhite
-import kotlinx.coroutines.launch
-import java.util.Locale
+
+private data class DrawerCategory(
+  val title: String,
+  val apps: List<List<String>>
+)
 
 @Composable
 fun AppDrawerSheet(
@@ -92,54 +67,53 @@ fun AppDrawerSheet(
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {}
 ) {
-  val context = androidx.compose.ui.platform.LocalContext.current
-  val theme = LocalLauncherTheme.current
-  val isDark = theme.isDark
-  val currentIconSize = when (iconSizeLevel) {
-    0 -> 44.dp
-    2 -> 60.dp
-    3 -> 68.dp
-    else -> 52.dp
-  }
-  var showOverflowMenu by remember { mutableStateOf(false) }
-  val gridState = rememberLazyGridState()
-  val scope = rememberCoroutineScope()
+  val backgroundColor = Color(0xFF0B0B0C)
+  val cardColor = Color(0xFF1C1C1E)
+  val searchColor = Color(0xFF2C2C2E)
+  val primaryText = Color(0xFFFFFFFF)
+  val secondaryText = Color(0xFFA1A1A6)
 
-  val filteredApps by remember(apps, searchQuery) {
-    derivedStateOf {
-      if (searchQuery.isBlank()) {
-        apps
-      } else {
-        apps.filter { it.label.contains(searchQuery.trim(), ignoreCase = true) }
-      }
-    }
+  val quickLaunch = remember(apps) {
+    listOf(
+      listOf("Google Keep", "Keep"),
+      listOf("Pocket Casts", "Pocket Cast"),
+      listOf("Google Play", "Play Store", "Google Play Store"),
+      listOf("Voice Recorder", "Recorder")
+    ).mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
   }
 
-  // Real app-drawer index: no artificial Favorites/Recents row.
-  val alphabetLetters = remember(apps) {
-    apps.mapNotNull { it.label.firstOrNull()?.uppercaseChar() }
-      .filter { it in 'A'..'Z' }
-      .distinct()
-      .sorted()
-  }
-
-  val drawerBg = if (theme.isDark) Color(0xF70B0C0E) else Color(0xF7F7F8FA)
-  val headerBg = if (theme.isDark) Color(0xE9141518) else Color(0xEAFDFDFE)
-
-  fun scrollToLetter(letter: Char) {
-    val targetIdx = filteredApps.indexOfFirst {
-      it.label.firstOrNull()?.uppercaseChar() == letter
-    }
-    if (targetIdx >= 0) {
-      com.example.util.VibrationHelper.vibrateTouch(context)
-      scope.launch { gridState.animateScrollToItem(targetIdx) }
-    }
+  val categories = remember {
+    listOf(
+      DrawerCategory("Utilities", listOf(
+        listOf("Brave"), listOf("Calculator"), listOf("Chrome"),
+        listOf("Calendar"), listOf("Clock"), listOf("Google", "Google App")
+      )),
+      DrawerCategory("Social", listOf(
+        listOf("Reddit"), listOf("WhatsApp"), listOf("Phone"),
+        listOf("Gmail"), listOf("Messages"), listOf("X", "Twitter")
+      )),
+      DrawerCategory("Entertainment", listOf(
+        listOf("YouTube"), listOf("Netflix"),
+        listOf("MyAnimeList", "MyAnimeList: Anime"), listOf("Spotify")
+      )),
+      DrawerCategory("Lifestyle", listOf(
+        listOf("Custom Tracker"), listOf("Pinterest")
+      )),
+      DrawerCategory("Finance", listOf(
+        listOf("PayPal"), listOf("Slice"), listOf("GPay", "Google Pay"),
+        listOf("Banking")
+      )),
+      DrawerCategory("Productivity", listOf(
+        listOf("ChatGPT"), listOf("Google Drive", "Drive"),
+        listOf("Gemini"), listOf("Doc Scanner", "Document Scanner")
+      ))
+    )
   }
 
   Box(
     modifier = modifier
       .fillMaxSize()
-      .background(drawerBg)
+      .background(backgroundColor)
       .testTag("app_drawer_container")
   ) {
     Column(
@@ -147,355 +121,289 @@ fun AppDrawerSheet(
         .fillMaxSize()
         .statusBarsPadding()
         .navigationBarsPadding()
-        .padding(horizontal = 14.dp)
+        .padding(horizontal = 16.dp)
     ) {
-      // Top Pull-Down Handle Pill (Authentic Nothing OS Bottom Drawer Handle)
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .padding(top = 9.dp, bottom = 9.dp)
-          .pointerInput(Unit) {
-            var pullDownDist = 0f
-            detectVerticalDragGestures(
-              onDragStart = { pullDownDist = 0f },
-              onDragEnd = { pullDownDist = 0f },
-              onDragCancel = { pullDownDist = 0f },
-              onVerticalDrag = { _, dragAmount ->
-                pullDownDist += dragAmount
-                // Reduced touch sensitivity (requires deliberate drag > 110f to close)
-                if (pullDownDist > 110f) {
-                  onClose()
-                  pullDownDist = 0f
-                }
-              }
-            )
-          },
-        contentAlignment = Alignment.Center
-      ) {
-        Box(
-          modifier = Modifier
-            .width(46.dp)
-            .height(5.dp)
-            .clip(CircleShape)
-            .background(theme.textSecondary.copy(alpha = 0.45f))
-        )
-      }
+      Spacer(modifier = Modifier.height(12.dp))
 
-      // Top Bar: Back button + Search Box + 3-Dot Overflow Menu (Screenshot 1 & 2)
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        IconButton(
-          onClick = onClose,
-          modifier = Modifier.testTag("close_drawer_button")
-        ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Back to Home",
-            tint = theme.textPrimary
-          )
-        }
-
-        // Nothing OS Search Pill (Matches Screenshot 1 in Dark & Screenshot 2 in Light)
-        Row(
-          modifier = Modifier
-            .weight(1f)
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(headerBg)
-            .border(1.dp, theme.border.copy(alpha = 0.7f), RoundedCornerShape(24.dp))
-            .padding(horizontal = 14.dp),
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = "Search",
-            tint = accentColor,
-            modifier = Modifier.size(18.dp)
-          )
-
-          Spacer(modifier = Modifier.width(10.dp))
-
-          Box(modifier = Modifier.weight(1f)) {
-            if (searchQuery.isEmpty()) {
-              Text(
-                text = "SEARCH APPS",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = theme.textSecondary,
-                letterSpacing = 1.sp
-              )
-            }
-            BasicTextField(
-              value = searchQuery,
-              onValueChange = onSearchChange,
-              textStyle = TextStyle(
-                color = theme.textPrimary,
-                fontSize = 13.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Medium
-              ),
-              cursorBrush = SolidColor(accentColor),
-              singleLine = true,
-              modifier = Modifier
-                .fillMaxWidth()
-                .testTag("app_search_input")
-            )
-          }
-
-          if (searchQuery.isNotEmpty()) {
-            IconButton(
-              onClick = { onSearchChange("") },
-              modifier = Modifier.size(24.dp)
-            ) {
-              Icon(
-                imageVector = Icons.Default.Clear,
-                contentDescription = "Clear",
-                tint = theme.textSecondary,
-                modifier = Modifier.size(16.dp)
-              )
-            }
-          }
-        }
-
-        // 3-Dots Overflow Menu (Matches Screenshot 1 & 2 top-right)
-        Box {
-          IconButton(
-            onClick = { showOverflowMenu = true },
-            modifier = Modifier.testTag("drawer_overflow_button")
-          ) {
-            Icon(
-              imageVector = Icons.Default.MoreVert,
-              contentDescription = "More Options",
-              tint = theme.textPrimary
-            )
-          }
-
-          DropdownMenu(
-            expanded = showOverflowMenu,
-            onDismissRequest = { showOverflowMenu = false },
-            modifier = Modifier
-              .background(theme.surface)
-              .border(1.dp, theme.border, RoundedCornerShape(8.dp))
-          ) {
-            // Theme Jour / Nuit Toggle
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = if (isDark) "SWITCH TO THEME JOUR (LIGHT)" else "SWITCH TO THEME NUIT (DARK)",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = theme.textPrimary
-                )
-              },
-              leadingIcon = {
-                Icon(
-                  imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                  contentDescription = null,
-                  tint = accentColor,
-                  modifier = Modifier.size(18.dp)
-                )
-              },
-              onClick = {
-                showOverflowMenu = false
-                onToggleThemeMode()
-              }
-            )
-
-            // Icon Pack: Nothing Monochrome
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = "ICON PACK: NOTHING (MONO)",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  color = if (iconPack == IconPackStyle.MONOCHROME) accentColor else theme.textPrimary
-                )
-              },
-              leadingIcon = {
-                Icon(
-                  imageVector = Icons.Default.Palette,
-                  contentDescription = null,
-                  tint = if (iconPack == IconPackStyle.MONOCHROME) accentColor else theme.textSecondary,
-                  modifier = Modifier.size(18.dp)
-                )
-              },
-              onClick = {
-                showOverflowMenu = false
-                onSelectIconPack(IconPackStyle.MONOCHROME)
-              }
-            )
-
-            // Icon Pack: Colour (Scalloped)
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = "ICON PACK: COLOUR (SCALLOPED)",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  color = if (iconPack == IconPackStyle.COLOUR) accentColor else theme.textPrimary
-                )
-              },
-              leadingIcon = {
-                Icon(
-                  imageVector = Icons.Default.Palette,
-                  contentDescription = null,
-                  tint = if (iconPack == IconPackStyle.COLOUR) accentColor else theme.textSecondary,
-                  modifier = Modifier.size(18.dp)
-                )
-              },
-              onClick = {
-                showOverflowMenu = false
-                onSelectIconPack(IconPackStyle.COLOUR)
-              }
-            )
-
-            // Icon Pack: Default (System)
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = "ICON PACK: DEFAULT (SYSTEM)",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  color = if (iconPack == IconPackStyle.SYSTEM_DEFAULT) accentColor else theme.textPrimary
-                )
-              },
-              leadingIcon = {
-                Icon(
-                  imageVector = Icons.Default.Palette,
-                  contentDescription = null,
-                  tint = if (iconPack == IconPackStyle.SYSTEM_DEFAULT) accentColor else theme.textSecondary,
-                  modifier = Modifier.size(18.dp)
-                )
-              },
-              onClick = {
-                showOverflowMenu = false
-                onSelectIconPack(IconPackStyle.SYSTEM_DEFAULT)
-              }
-            )
-
-            // Settings
-            DropdownMenuItem(
-              text = {
-                Text(
-                  text = "LAUNCHER SETTINGS",
-                  fontFamily = FontFamily.Monospace,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = theme.textPrimary
-                )
-              },
-              leadingIcon = {
-                Icon(
-                  imageVector = Icons.Default.Settings,
-                  contentDescription = null,
-                  tint = accentColor,
-                  modifier = Modifier.size(18.dp)
-                )
-              },
-              onClick = {
-                showOverflowMenu = false
-                onOpenSettings()
-              }
-            )
-          }
-        }
-      }
-
-      Spacer(modifier = Modifier.height(14.dp))
-
-      // Compact drawer status row. This replaces the old Favorites/Recents tray.
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(start = 6.dp, end = 6.dp, bottom = 8.dp),
+          .height(68.dp)
+          .testTag("drawer_quick_launch"),
+        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Text(
-          text = if (searchQuery.isBlank()) "ALL APPS" else "RESULTS",
-          fontFamily = FontFamily.Monospace,
-          fontSize = 11.sp,
-          fontWeight = FontWeight.Bold,
-          letterSpacing = 1.6.sp,
-          color = theme.textPrimary
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-          text = "\${filteredApps.size}",
-          fontFamily = FontFamily.Monospace,
-          fontSize = 10.sp,
-          color = accentColor
-        )
+        quickLaunch.take(4).forEach { app ->
+          DrawerAppIcon(
+            app = app, iconSize = 52.dp,
+            onClick = { onAppClick(app) },
+            onOpenAppInfo = onOpenAppInfo,
+            onTogglePin = onTogglePin,
+            onToggleDock = onToggleDock,
+            iconPack = iconPack, accentColor = accentColor
+          )
+        }
       }
 
-      // Main drawer: four-column grid + active alphabet rail.
-      Row(modifier = Modifier.fillMaxSize()) {
-        LazyVerticalGrid(
-          columns = GridCells.Fixed(4),
-          state = gridState,
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          modifier = Modifier
-            .weight(1f)
-            .fillMaxSize()
-            .testTag("app_drawer_grid")
-        ) {
-          items(filteredApps, key = { it.packageName }) { app ->
-            AppIconItem(
-              app = app,
-              onClick = { onAppClick(app) },
-              onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin,
-              onToggleDock = onToggleDock,
-              iconSize = currentIconSize,
-              showLabel = true,
-              iconPack = iconPack,
-              accentColor = accentColor
+      Spacer(modifier = Modifier.height(12.dp))
+
+      LazyColumn(
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxWidth()
+          .testTag("drawer_category_scroll"),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 12.dp)
+      ) {
+        items((categories.size + 1) / 2) { rowIndex ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            val left = categories[rowIndex * 2]
+            DrawerCategoryCard(
+              category = left, apps = apps, searchQuery = searchQuery,
+              onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
+              onTogglePin = onTogglePin, onToggleDock = onToggleDock,
+              iconPack = iconPack, accentColor = accentColor,
+              primaryText = primaryText, secondaryText = secondaryText
             )
+
+            val rightIndex = rowIndex * 2 + 1
+            if (rightIndex < categories.size) {
+              val right = categories[rightIndex]
+              DrawerCategoryCard(
+                category = right, apps = apps, searchQuery = searchQuery,
+                onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
+                onTogglePin = onTogglePin, onToggleDock = onToggleDock,
+                iconPack = iconPack, accentColor = accentColor,
+                primaryText = primaryText, secondaryText = secondaryText
+              )
+            } else {
+              Spacer(modifier = Modifier.size(158.dp, 180.dp))
+            }
           }
         }
 
-        // Fast Alphabet Scroller Rail
-        if (searchQuery.isEmpty() && alphabetLetters.isNotEmpty()) {
-          Column(
-            modifier = Modifier
-              .width(25.dp)
-              .fillMaxSize()
-              .clip(RoundedCornerShape(13.dp))
-              .background(theme.surface.copy(alpha = 0.72f))
-              .border(1.dp, theme.border.copy(alpha = 0.55f), RoundedCornerShape(13.dp))
-              .padding(vertical = 7.dp, horizontal = 2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-          ) {
-            alphabetLetters.forEach { letter ->
+        if (searchQuery.isNotBlank()) {
+          item {
+            val resultCount = apps.count { app ->
+              app.label.contains(searchQuery.trim(), ignoreCase = true)
+            }
+            if (resultCount == 0) {
               Text(
-                text = letter.toString(),
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                color = theme.textSecondary,
-                modifier = Modifier
-                  .clickable {
-                    com.example.util.VibrationHelper.vibrateTouch(context)
-                    val targetIdx = filteredApps.indexOfFirst {
-                      it.label.startsWith(letter, ignoreCase = true)
-                    }
-                    if (targetIdx >= 0) {
-                      scope.launch { gridState.animateScrollToItem(targetIdx) }
-                    }
-                  }
-                  .padding(vertical = 1.dp, horizontal = 3.dp)
-                  .testTag("alphabet_$letter")
+                text = "NO APPS FOUND",
+                color = secondaryText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                textAlign = TextAlign.Center
               )
             }
           }
         }
       }
     }
+
+    Row(
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .padding(horizontal = 16.dp, vertical = 16.dp)
+        .fillMaxWidth()
+        .height(52.dp)
+        .clip(RoundedCornerShape(26.dp))
+        .background(searchColor.copy(alpha = 0.96f))
+        .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(26.dp))
+        .padding(horizontal = 12.dp)
+        .testTag("drawer_bottom_search"),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Icon(
+        imageVector = Icons.Default.Search,
+        contentDescription = "Search apps",
+        tint = secondaryText,
+        modifier = Modifier.size(20.dp)
+      )
+
+      Spacer(modifier = Modifier.width(10.dp))
+
+      Box(
+        modifier = Modifier.weight(1f),
+        contentAlignment = Alignment.CenterStart
+      ) {
+        if (searchQuery.isEmpty()) {
+          Text(
+            text = "Search apps",
+            color = secondaryText,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+          )
+        }
+
+        BasicTextField(
+          value = searchQuery,
+          onValueChange = onSearchChange,
+          singleLine = true,
+          textStyle = TextStyle(
+            color = primaryText,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+          ),
+          cursorBrush = SolidColor(accentColor),
+          modifier = Modifier.fillMaxWidth().testTag("app_search_input")
+        )
+      }
+
+      if (searchQuery.isNotEmpty()) {
+        IconButton(
+          onClick = { onSearchChange("") },
+          modifier = Modifier.size(32.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Default.Clear,
+            contentDescription = "Clear search",
+            tint = secondaryText,
+            modifier = Modifier.size(20.dp)
+          )
+        }
+      }
+    }
   }
+}
+
+@Composable
+private fun DrawerCategoryCard(
+  category: DrawerCategory,
+  apps: List<AppItem>,
+  searchQuery: String,
+  onAppClick: (AppItem) -> Unit,
+  onOpenAppInfo: (AppItem) -> Unit,
+  onTogglePin: (AppItem) -> Unit,
+  onToggleDock: (AppItem) -> Unit,
+  iconPack: IconPackStyle,
+  accentColor: Color,
+  primaryText: Color,
+  secondaryText: Color
+) {
+  val categoryApps = remember(category.title, apps, searchQuery) {
+    category.apps
+      .mapNotNull { aliases -> resolveDrawerApp(apps, aliases) }
+      .filter { app ->
+        searchQuery.isBlank() ||
+          app.label.contains(searchQuery.trim(), ignoreCase = true)
+      }
+      .distinctBy { it.packageName }
+  }
+
+  val largeApps = categoryApps.take(2)
+  val miniApps = categoryApps.drop(2).take(4)
+
+  Column(
+    modifier = Modifier
+      .width(158.dp)
+      .height(180.dp)
+      .clip(RoundedCornerShape(24.dp))
+      .background(Color(0xFF1C1C1E))
+      .padding(12.dp)
+      .testTag("drawer_category_" + category.title.lowercase())
+  ) {
+    Text(
+      text = category.title,
+      color = primaryText,
+      fontSize = 14.sp,
+      fontWeight = FontWeight.Medium,
+      modifier = Modifier.padding(bottom = 10.dp)
+    )
+
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      largeApps.forEach { app ->
+        DrawerAppIcon(
+          app = app, iconSize = 48.dp,
+          onClick = { onAppClick(app) },
+          onOpenAppInfo = onOpenAppInfo,
+          onTogglePin = onTogglePin,
+          onToggleDock = onToggleDock,
+          iconPack = iconPack, accentColor = accentColor
+        )
+      }
+    }
+
+    Spacer(modifier = Modifier.height(6.dp))
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      for (row in 0..1) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+          for (column in 0..1) {
+            val index = row * 2 + column
+            if (index < miniApps.size) {
+              val app = miniApps[index]
+              DrawerAppIcon(
+                app = app, iconSize = 24.dp,
+                onClick = { onAppClick(app) },
+                onOpenAppInfo = onOpenAppInfo,
+                onTogglePin = onTogglePin,
+                onToggleDock = onToggleDock,
+                iconPack = iconPack, accentColor = accentColor
+              )
+            } else {
+              Spacer(modifier = Modifier.size(24.dp))
+            }
+          }
+        }
+      }
+    }
+
+    if (categoryApps.isEmpty()) {
+      Text(
+        text = if (searchQuery.isBlank()) "—" else "No match",
+        color = secondaryText,
+        fontSize = 10.sp,
+        modifier = Modifier.padding(top = 4.dp)
+      )
+    }
+  }
+}
+
+@Composable
+private fun DrawerAppIcon(
+  app: AppItem,
+  iconSize: Dp,
+  onClick: () -> Unit,
+  onOpenAppInfo: (AppItem) -> Unit,
+  onTogglePin: (AppItem) -> Unit,
+  onToggleDock: (AppItem) -> Unit,
+  iconPack: IconPackStyle,
+  accentColor: Color
+) {
+  AppIconItem(
+    app = app,
+    onClick = onClick,
+    onOpenAppInfo = onOpenAppInfo,
+    onTogglePin = onTogglePin,
+    onToggleDock = onToggleDock,
+    iconSize = iconSize,
+    showLabel = false,
+    iconPack = iconPack,
+    accentColor = accentColor,
+    modifier = Modifier.size(iconSize + 8.dp)
+  )
+}
+
+private fun resolveDrawerApp(
+  apps: List<AppItem>,
+  aliases: List<String>
+): AppItem? {
+  return aliases.asSequence()
+    .mapNotNull { alias ->
+      apps.firstOrNull { app ->
+        app.label.equals(alias, ignoreCase = true)
+      } ?: apps.firstOrNull { app ->
+        app.label.contains(alias, ignoreCase = true)
+      }
+    }
+    .firstOrNull()
 }
