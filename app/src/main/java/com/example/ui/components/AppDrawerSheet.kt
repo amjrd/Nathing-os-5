@@ -389,6 +389,7 @@ private fun ExpandedDrawerCategoryPanel(
               onToggleDock = onToggleDock,
               iconPack = iconPack,
               accentColor = accentColor,
+              primaryText = primaryText,
               showLabel = true
             )
           }
@@ -421,8 +422,13 @@ private fun DrawerAppIcon(
   onToggleDock: (AppItem) -> Unit,
   iconPack: IconPackStyle,
   accentColor: Color,
+  primaryText: Color = Color.White,
   showLabel: Boolean = false
 ) {
+  Column(
+    modifier = Modifier.width(if (showLabel) 68.dp else iconSize + 8.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
   AppIconItem(
     app = app,
     onClick = onClick,
@@ -433,8 +439,19 @@ private fun DrawerAppIcon(
     showLabel = showLabel,
     iconPack = iconPack,
     accentColor = accentColor,
-    modifier = Modifier.size(iconSize + 8.dp)
-  )
+      modifier = Modifier.size(iconSize + 8.dp)
+    )
+    if (showLabel) {
+      Text(
+        text = app.label,
+        color = primaryText,
+        fontSize = 10.sp,
+        maxLines = 1,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+        modifier = Modifier.width(68.dp)
+      )
+    }
+  }
 }
 
 private fun isSystemSettingsApp(app: AppItem): Boolean {
