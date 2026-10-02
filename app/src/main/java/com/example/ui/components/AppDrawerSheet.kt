@@ -300,22 +300,32 @@ private fun DrawerCategoryCard(
         fontSize = 11.sp
       )
       Spacer(modifier = Modifier.height(8.dp))
-      Row(
+      // Always fill the front of the card with four primary apps.
+      // Extra apps stay available inside the expanded card.
+      Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Top
+        verticalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        categoryApps.take(4).forEach { app ->
-          DrawerAppIcon(
-            app = app,
-            iconSize = 40.dp,
-            onClick = { onAppClick(app) },
-            onOpenAppInfo = onOpenAppInfo,
-            onTogglePin = onTogglePin,
-            onToggleDock = onToggleDock,
-            iconPack = iconPack,
-            accentColor = accentColor
-          )
+        categoryApps.take(4).chunked(2).forEach { rowApps ->
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            rowApps.forEach { app ->
+              DrawerAppIcon(
+                app = app,
+                iconSize = 46.dp,
+                onClick = { onAppClick(app) },
+                onOpenAppInfo = onOpenAppInfo,
+                onTogglePin = onTogglePin,
+                onToggleDock = onToggleDock,
+                iconPack = iconPack,
+                accentColor = accentColor
+              )
+            }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(46.dp)) }
+          }
         }
       }
     }
@@ -380,17 +390,6 @@ private fun ExpandedDrawerCategoryPanel(
         Spacer(Modifier.height(10.dp))
       }
     }
-    if (innerScrollState.maxValue > 0) {
-      Canvas(Modifier.align(Alignment.CenterEnd).width(8.dp).height(panelHeight - 36.dp).padding(vertical = 4.dp)) {
-        val viewport = size.height
-        val content = viewport + innerScrollState.maxValue
-        val thumbHeight = (viewport * viewport / content).coerceAtLeast(34.dp.toPx())
-        val travel = viewport - thumbHeight
-        val progress = innerScrollState.value.toFloat() / innerScrollState.maxValue.toFloat()
-        val thumbTop = travel * progress
-        drawRoundRect(Color.White.copy(alpha = .18f), androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Size(size.width, viewport), cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width))
-        drawRoundRect(Color.White.copy(alpha = .72f), androidx.compose.ui.geometry.Offset(0f, thumbTop), androidx.compose.ui.geometry.Size(size.width, thumbHeight), cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width, size.width))
-      }
     }
   }
 }
