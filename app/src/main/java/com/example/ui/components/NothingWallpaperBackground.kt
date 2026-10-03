@@ -101,6 +101,34 @@ fun NothingWallpaperBackground(
         )
       }
 
+      4 -> {
+        // THEME 4: GLYPH RED — graphite background with Nothing-style red glyph accents.
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF09090A))) {
+          Canvas(modifier = Modifier.fillMaxSize()) {
+            val red = Color(0xFFE50000)
+            val muted = Color(0xFF242428)
+            val cx = size.width * 0.72f
+            val cy = size.height * 0.34f
+            drawCircle(muted, size.minDimension * 0.24f, Offset(cx, cy))
+            drawCircle(red.copy(alpha = 0.18f), size.minDimension * 0.20f, Offset(cx, cy))
+            drawCircle(red, size.minDimension * 0.012f, Offset(cx, cy))
+            drawLine(red, Offset(cx - size.minDimension * 0.16f, cy), Offset(cx + size.minDimension * 0.16f, cy), 3f)
+            drawLine(red, Offset(cx, cy - size.minDimension * 0.16f), Offset(cx, cy + size.minDimension * 0.16f), 3f)
+            for (row in 0..7) {
+              for (col in 0..5) {
+                val x = size.width * 0.10f + col * size.width * 0.07f
+                val y = size.height * 0.70f + row * size.height * 0.035f
+                drawCircle(
+                  Color.White.copy(alpha = if ((row + col) % 3 == 0) 0.72f else 0.16f),
+                  size.minDimension * 0.0045f,
+                  Offset(x, y)
+                )
+              }
+            }
+          }
+        }
+      }
+
       3 -> {
         // CUSTOM PHOTO / GALLERY WALLPAPER
         if (!effectiveUri.isNullOrBlank()) {
