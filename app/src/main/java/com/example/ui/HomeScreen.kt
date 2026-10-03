@@ -12,6 +12,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -55,7 +56,6 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.VerticalAlignBottom
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -163,6 +163,7 @@ fun HomeScreen(
   var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(false) }
+  var isCustomWidgetPickerOpen by remember { mutableStateOf(false) }
   val currentIconSize = when (settings.iconSizeLevel) {
     0 -> 44.dp
     2 -> 60.dp
@@ -224,6 +225,34 @@ fun HomeScreen(
       ),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Custom widget area. Long-press opens our own picker.
+        item {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) 150.dp else 120.dp)
+              .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                  haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                  isCustomWidgetPickerOpen = true
+                },
+                onLongClickLabel = "Open widgets"
+              ),
+            contentAlignment = Alignment.Center
+          ) {
+            if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
+              CustomClockWidget(
+                currentTime = currentTime,
+                currentDate = currentDate,
+                style = settings.clockStyle,
+                accentColor = accentColor,
+                isDark = theme.isDark
+              )
+            }
+          }
+        }
+
         // 11. Signature Nothing OS 2x2 Enlarged Folders
         item {
           Row(
@@ -364,22 +393,6 @@ fun HomeScreen(
             )
           }
 
-          // Real Android System Widget picker
-          IconButton(
-            onClick = {
-              com.example.util.VibrationHelper.vibrateTouch(context)
-              showWidgetSheet = true
-            },
-            modifier = Modifier.size(36.dp)
-          ) {
-            Icon(
-              imageVector = Icons.Default.Widgets,
-              contentDescription = "Add System Widget",
-              tint = accentColor,
-              modifier = Modifier.size(18.dp)
-            )
-          }
-
           // Settings Access Button (طلب الإعدادات)
           IconButton(
             onClick = {
@@ -433,6 +446,19 @@ fun HomeScreen(
       )
     }
 
+    if (isCustomWidgetPickerOpen) {
+      CustomWidgetPicker(
+        activeWidgets = settings.activeWidgets,
+        accentColor = accentColor,
+        isDark = theme.isDark,
+        onToggle = { widgetType ->
+          onToggleWidget(widgetType)
+          isCustomWidgetPickerOpen = false
+        },
+        onDismiss = { isCustomWidgetPickerOpen = false }
+      )
+    }
+
     // Nothing OS 5 App Info & Diagnostics Sheet (Ensures App Info always displays)
     if (selectedAppForInfo != null) {
       NothingAppInfoSheet(
@@ -446,5 +472,63 @@ fun HomeScreen(
       )
     }
 
+  }
+}
+
+
+@Composable
+private fun CustomClockWidget(
+  currentTime: String,
+  currentDate: String,
+  style: LauncherClockStyle,
+  accentColor: Color,
+  isDark: Boolean
+) {
+  val surface = if (isDark) Color(0xCC111114) else Color(0xEFFFFFFF)
+  val primary = if (isDark) NothingWhite else NothingBlack
+  val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
+  Row(
+    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(surface)
+      .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(28.dp))
+      .padding(horizontal = 22.dp, vertical = 16.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Column(modifier = Modifier.weight(1f)) {
+      Text(text = currentTime, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
+        fontSize = if (style == LauncherClockStyle.DIGITAL) 42.sp else 38.sp, color = primary, letterSpacing = 1.sp)
+      Text(text = currentDate.uppercase(), fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+        color = secondary, letterSpacing = 1.5.sp)
+    }
+    Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(accentColor))
+  }
+}
+
+@Composable
+private fun CustomWidgetPicker(
+  activeWidgets: List<NosWidgetPortType>,
+  accentColor: Color,
+  isDark: Boolean,
+  onToggle: (NosWidgetPortType) -> Unit,
+  onDismiss: () -> Unit
+) {
+  val surface = if (isDark) Color(0xFF111114) else Color(0xFFF6F6F6)
+  val primary = if (isDark) NothingWhite else NothingBlack
+  val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
+  val clockActive = activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)
+  Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.48f)).clickable(onClick = onDismiss)
+    .padding(horizontal = 18.dp, vertical = 24.dp), contentAlignment = Alignment.BottomCenter) {
+    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(surface)
+      .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(30.dp)).padding(20.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Text(text = "CUSTOM WIDGETS", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
+        fontSize = 13.sp, color = secondary, letterSpacing = 2.sp)
+      Text(text = "Choose a widget for your Home Screen", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = primary)
+      Button(onClick = { onToggle(NosWidgetPortType.CLOCK_MAIN) }, modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = if (clockActive) accentColor else primary,
+          contentColor = if (clockActive) Color.Black else surface)) {
+        Text(if (clockActive) "REMOVE  •  CLOCK" else "ADD  •  CLOCK")
+      }
+      Text(text = "More custom widgets will be added here.", fontSize = 12.sp, color = secondary)
+    }
   }
 }
