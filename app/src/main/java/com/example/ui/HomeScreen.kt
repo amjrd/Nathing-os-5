@@ -536,6 +536,7 @@ private fun CustomWidgetPicker(
   onOpenSettings: () -> Unit,
   onDismiss: () -> Unit
 ) {
+  val context = LocalContext.current
   val surface = if (isDark) Color(0xFF111114) else Color(0xFFF6F6F6)
   val primary = if (isDark) NothingWhite else NothingBlack
   val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
@@ -557,7 +558,7 @@ private fun CustomWidgetPicker(
 
       Button(
         onClick = {
-          com.example.util.VibrationHelper.vibrateTouch(LocalContext.current)
+          com.example.util.VibrationHelper.vibrateTouch(context)
           onOpenSettings()
         },
         modifier = Modifier.fillMaxWidth(),
