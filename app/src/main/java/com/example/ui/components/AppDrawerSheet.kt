@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -88,6 +89,20 @@ fun AppDrawerSheet(
   val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle", "Other") }
 
   var expandedCategory by remember { mutableStateOf<String?>(null) }
+  var drawerMode by remember { mutableStateOf("Categories") }
+
+  val allApps = remember(apps, searchQuery) {
+    apps.distinctBy { it.packageName }
+      .filter { app -> !isSystemSettingsApp(app) }
+      .filter { app -> searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true) }
+      .sortedBy { it.label.lowercase() }
+  }
+  val recentApps = remember(apps) {
+    apps.distinctBy { it.packageName }
+      .filter { app -> !isSystemSettingsApp(app) }
+      .sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
+      .take(4)
+  }
 
   val categories = remember(apps, searchQuery) {
     val query = searchQuery.trim()
@@ -122,92 +137,191 @@ fun AppDrawerSheet(
       ) {
         Row(
           modifier = Modifier
-            .weight(1f)
             .height(52.dp)
             .clip(RoundedCornerShape(26.dp))
-            .background(Color(0xFF2C2C2E).copy(alpha = 0.92f))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(26.dp))
-            .padding(horizontal = 12.dp),
-          verticalAlignment = Alignment.CenterVertically
+            .background(Color(0xFF3A3A3E).copy(alpha = 0.92f))
+            .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
+            .padding(4.dp)
         ) {
-          Icon(Icons.Default.Search, "Search apps", tint = secondaryText, modifier = Modifier.size(20.dp))
-          Spacer(Modifier.width(9.dp))
-          Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-            if (searchQuery.isEmpty()) Text("Search", color = secondaryText, fontSize = 15.sp)
-            BasicTextField(
-              value = searchQuery,
-              onValueChange = onSearchChange,
-              singleLine = true,
-              textStyle = TextStyle(color = primaryText, fontSize = 15.sp),
-              cursorBrush = SolidColor(accentColor),
-              modifier = Modifier.fillMaxWidth().testTag("app_search_input")
-            )
-          }
-          if (searchQuery.isNotEmpty()) {
-            IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(32.dp)) {
-              Icon(Icons.Default.Clear, "Clear search", tint = secondaryText, modifier = Modifier.size(19.dp))
+          listOf("All", "Categories").forEach { mode ->
+            Box(
+              modifier = Modifier
+                .width(104.dp)
+                .height(44.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(if (drawerMode == mode) Color(0xFFE7E7E9) else Color.Transparent)
+                .clickable {
+                  drawerMode = mode
+                  expandedCategory = null
+                },
+              contentAlignment = Alignment.Center
+            ) {
+              Text(
+                text = mode,
+                color = if (drawerMode == mode) Color(0xFF111113) else primaryText,
+                fontSize = 16.sp,
+                fontWeight = if (drawerMode == mode) FontWeight.Medium else FontWeight.Normal
+              )
             }
           }
         }
-        Spacer(Modifier.width(8.dp))
+
+        Spacer(Modifier.weight(1f))
+
         IconButton(
           onClick = onOpenSettings,
           modifier = Modifier
             .size(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFF2C2C2E).copy(alpha = 0.82f))
             .testTag("drawer_launcher_settings")
         ) {
-          Icon(Icons.Default.Settings, "Launcher Settings", tint = primaryText, modifier = Modifier.size(20.dp))
+          Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(28.dp))
         }
       }
 
       Spacer(Modifier.height(8.dp))
+      if (drawerMode == "Categories" && recentApps.isNotEmpty()) {
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(112.dp)
+            .clip(RoundedCornerShape(56.dp))
+            .background(Color(0xFF202023).copy(alpha = 0.72f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(56.dp))
+            .padding(horizontal = 18.dp),
+          horizontalArrangement = Arrangement.SpaceEvenly,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          recentApps.forEach { app ->
+            DrawerAppIcon(
+              app = app,
+              iconSize = 64.dp,
+              onClick = { onAppClick(app) },
+              onOpenAppInfo = onOpenAppInfo,
+              onTogglePin = onTogglePin,
+              onToggleDock = onToggleDock,
+              iconPack = iconPack,
+              accentColor = accentColor
+            )
+          }
+        }
+
+        Text(
+          text = "Recently installed",
+          color = primaryText,
+          fontSize = 15.sp,
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 10.dp),
+          textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+      }
+
       LazyColumn(
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
           .testTag("drawer_category_scroll"),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 18.dp)
+        contentPadding = PaddingValues(top = 2.dp, bottom = 96.dp)
       ) {
-        items((categories.size + 1) / 2) { rowIndex ->
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-          ) {
-            val left = categories[rowIndex * 2]
-            DrawerCategoryCard(
-              category = left,
-              onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin, onToggleDock = onToggleDock,
-              iconPack = iconPack, accentColor = accentColor,
-              primaryText = primaryText, secondaryText = secondaryText,
-              cardSizeLevel = drawerCardSizeLevel,
-              isExpanded = expandedCategory == left.title,
-              onExpand = { expandedCategory = left.title }
-            )
-
-            val rightIndex = rowIndex * 2 + 1
-            if (rightIndex < categories.size) {
-              val right = categories[rightIndex]
+        if (drawerMode == "Categories") {
+          items((categories.size + 1) / 2) { rowIndex ->
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+              val left = categories[rowIndex * 2]
               DrawerCategoryCard(
-                category = right,
+                category = left,
                 onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin, onToggleDock = onToggleDock,
                 iconPack = iconPack, accentColor = accentColor,
                 primaryText = primaryText, secondaryText = secondaryText,
                 cardSizeLevel = drawerCardSizeLevel,
-                isExpanded = expandedCategory == right.title,
-                onExpand = { expandedCategory = right.title }
+                isExpanded = expandedCategory == left.title,
+                onExpand = { expandedCategory = left.title }
               )
-            } else {
-              Spacer(modifier = Modifier.weight(1f))
+
+              val rightIndex = rowIndex * 2 + 1
+              if (rightIndex < categories.size) {
+                val right = categories[rightIndex]
+                DrawerCategoryCard(
+                  category = right,
+                  onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
+                  onTogglePin = onTogglePin, onToggleDock = onToggleDock,
+                  iconPack = iconPack, accentColor = accentColor,
+                  primaryText = primaryText, secondaryText = secondaryText,
+                  cardSizeLevel = drawerCardSizeLevel,
+                  isExpanded = expandedCategory == right.title,
+                  onExpand = { expandedCategory = right.title }
+                )
+              } else {
+                Spacer(modifier = Modifier.weight(1f))
+              }
+            }
+          }
+        } else {
+          items((allApps.size + 3) / 4) { rowIndex ->
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceEvenly,
+              verticalAlignment = Alignment.Top
+            ) {
+              val start = rowIndex * 4
+              allApps.drop(start).take(4).forEach { app ->
+                DrawerAppIcon(
+                  app = app,
+                  iconSize = 58.dp,
+                  onClick = { onAppClick(app) },
+                  onOpenAppInfo = onOpenAppInfo,
+                  onTogglePin = onTogglePin,
+                  onToggleDock = onToggleDock,
+                  iconPack = iconPack,
+                  accentColor = accentColor,
+                  primaryText = primaryText,
+                  showLabel = true
+                )
+              }
             }
           }
         }
+      }
+    }
 
-
+    Row(
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .fillMaxWidth()
+        .padding(horizontal = 18.dp, bottom = 14.dp)
+        .height(58.dp)
+        .clip(RoundedCornerShape(29.dp))
+        .background(Color(0xFF5B5B61).copy(alpha = 0.56f))
+        .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(29.dp))
+        .padding(horizontal = 14.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Icon(Icons.Default.Search, "Search apps", tint = Color.White.copy(alpha = 0.78f), modifier = Modifier.size(28.dp))
+      Spacer(Modifier.width(10.dp))
+      BasicTextField(
+        value = searchQuery,
+        onValueChange = onSearchChange,
+        singleLine = true,
+        textStyle = TextStyle(color = primaryText, fontSize = 18.sp),
+        cursorBrush = SolidColor(accentColor),
+        modifier = Modifier.weight(1f).testTag("app_search_input"),
+        decorationBox = { innerTextField ->
+          Box(contentAlignment = Alignment.CenterStart) {
+            if (searchQuery.isEmpty()) {
+              Text("Search", color = Color.White.copy(alpha = 0.68f), fontSize = 18.sp)
+            }
+            innerTextField()
+          }
+        }
+      )
+      if (searchQuery.isNotEmpty()) {
+        IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(40.dp)) {
+          Icon(Icons.Default.Clear, "Clear search", tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(20.dp))
+        }
       }
     }
 
@@ -258,14 +372,14 @@ private fun DrawerCategoryCard(
   onExpand: () -> Unit
 ) {
   val cardWidth = when (cardSizeLevel) {
-    0 -> 150.dp
-    2 -> 170.dp
-    else -> 158.dp
+    0 -> 158.dp
+    2 -> 176.dp
+    else -> 168.dp
   }
   val cardHeight = when (cardSizeLevel) {
-    0 -> 168.dp
-    2 -> 194.dp
-    else -> 180.dp
+    0 -> 176.dp
+    2 -> 206.dp
+    else -> 190.dp
   }
   val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
@@ -290,7 +404,7 @@ private fun DrawerCategoryCard(
       Text(
         text = category.title,
         color = primaryText,
-        fontSize = 19.sp,
+        fontSize = 17.sp,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.padding(bottom = 4.dp)
       )
@@ -315,7 +429,7 @@ private fun DrawerCategoryCard(
             rowApps.forEach { app ->
               DrawerAppIcon(
                 app = app,
-                iconSize = 58.dp,
+                iconSize = 56.dp,
                 onClick = { onAppClick(app) },
                 onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin,
@@ -324,7 +438,7 @@ private fun DrawerCategoryCard(
                 accentColor = accentColor
               )
             }
-            repeat(2 - rowApps.size) { Spacer(Modifier.width(58.dp)) }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(56.dp)) }
           }
         }
       }
