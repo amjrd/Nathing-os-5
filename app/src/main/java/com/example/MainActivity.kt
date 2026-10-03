@@ -338,7 +338,7 @@ fun NothingLauncherApp(
           )
           LauncherThemeMode.GLYPH_RED -> settings.copy(
             themeMode = newTheme,
-            wallpaperIndex = 0,
+            wallpaperIndex = 4,
             accentColorIndex = 0,
             clockStyle = LauncherClockStyle.DIGITAL,
             iconPack = com.example.model.IconPackStyle.MONOCHROME,
