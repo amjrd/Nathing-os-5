@@ -167,6 +167,14 @@ fun HomeScreen(
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(false) }
   var isCustomWidgetPickerOpen by remember { mutableStateOf(false) }
+  // Widgets use the same App Info surface as apps. This gives the Home Screen
+  // a reliable App Info entry point without needing extra empty space.
+  val widgetInfoApp = remember(context.packageName) {
+    AppItem(
+      packageName = context.packageName,
+      label = "Nothing Launcher"
+    )
+  }
   val currentIconSize = when (settings.iconSizeLevel) {
     0 -> 44.dp
     2 -> 60.dp
@@ -234,7 +242,11 @@ fun HomeScreen(
             modifier = Modifier
               .fillMaxWidth()
               .combinedClickable(
-                onClick = {},
+                onClick = {
+                  if (settings.activeWidgets.isNotEmpty()) {
+                    onOpenAppInfo(widgetInfoApp)
+                  }
+                },
                 onLongClick = {
                   haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                   isCustomWidgetPickerOpen = true
