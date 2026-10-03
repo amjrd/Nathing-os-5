@@ -230,30 +230,64 @@ fun HomeScreen(
       ),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Custom widget area. Long-press opens our own picker.
+        // Home widgets: main surface driven by the active widget set.
         item {
-          Box(
+          Column(
             modifier = Modifier
               .fillMaxWidth()
-              .height(if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) 150.dp else 120.dp)
               .combinedClickable(
                 onClick = {},
                 onLongClick = {
                   haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                   isCustomWidgetPickerOpen = true
                 },
-                onLongClickLabel = "Open widgets"
-              ),
-            contentAlignment = Alignment.Center
-          ) {
-            if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
-              CustomClockWidget(
-                currentTime = currentTime,
-                currentDate = currentDate,
-                style = settings.clockStyle,
-                accentColor = accentColor,
-                isDark = theme.isDark
+                onLongClickLabel = "Open Home widgets"
               )
+              .testTag("home_widget_area"),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            val widgetScale = when (settings.widgetSizeLevel) {
+              0 -> 0.85f
+              2 -> 1.15f
+              else -> 1f
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
+              CustomClockWidget(currentTime, currentDate, settings.clockStyle, accentColor, theme.isDark, widgetScale)
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN) ||
+                settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)) {
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)) {
+                  CustomWeatherWidget(weather, toggles, accentColor, theme.isDark, widgetScale, Modifier.weight(1f))
+                }
+                if (settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)) {
+                  CustomPedometerWidget(fitness, ramPct, accentColor, theme.isDark, widgetScale, Modifier.weight(1f))
+                }
+              }
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)) {
+              CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
+            }
+
+            if (settings.activeWidgets.isEmpty()) {
+              Box(
+                modifier = Modifier.fillMaxWidth().height(110.dp),
+                contentAlignment = Alignment.Center
+              ) {
+                Text(
+                  "LONG-PRESS  •  ADD WIDGET",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 11.sp,
+                  letterSpacing = 1.5.sp,
+                  color = theme.textSecondary.copy(alpha = 0.65f)
+                )
+              }
             }
           }
         }
@@ -506,24 +540,111 @@ private fun CustomClockWidget(
   currentDate: String,
   style: LauncherClockStyle,
   accentColor: Color,
-  isDark: Boolean
+  isDark: Boolean,
+  scale: Float = 1f
 ) {
   val surface = if (isDark) Color(0xCC111114) else Color(0xEFFFFFFF)
   val primary = if (isDark) NothingWhite else NothingBlack
   val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
   Row(
-    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(surface)
+    modifier = Modifier.fillMaxWidth().scale(scale).clip(RoundedCornerShape(28.dp)).background(surface)
       .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(28.dp))
       .padding(horizontal = 22.dp, vertical = 16.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
     Column(modifier = Modifier.weight(1f)) {
-      Text(text = currentTime, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
+      Text(currentTime, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
         fontSize = if (style == LauncherClockStyle.DIGITAL) 42.sp else 38.sp, color = primary, letterSpacing = 1.sp)
-      Text(text = currentDate.uppercase(), fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+      Text(currentDate.uppercase(), fontFamily = FontFamily.Monospace, fontSize = 12.sp,
         color = secondary, letterSpacing = 1.5.sp)
     }
-    Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(accentColor))
+    Box(Modifier.size(12.dp).clip(CircleShape).background(accentColor))
+  }
+}
+
+@Composable
+private fun CustomWeatherWidget(
+  weather: WeatherInfo,
+  toggles: QuickToggleState,
+  accentColor: Color,
+  isDark: Boolean,
+  scale: Float,
+  modifier: Modifier = Modifier
+) {
+  val surface = if (isDark) Color(0xCC111114) else Color(0xEFFFFFFF)
+  val primary = if (isDark) NothingWhite else NothingBlack
+  val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
+  Column(
+    modifier = modifier.scale(scale).clip(RoundedCornerShape(24.dp)).background(surface)
+      .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(24.dp)).padding(16.dp)
+  ) {
+    Text("WEATHER", fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary, letterSpacing = 1.5.sp)
+    Row(verticalAlignment = Alignment.Bottom) {
+      Text(weather.tempC.toString() + "°", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = primary)
+      Spacer(Modifier.width(6.dp))
+      Text(weather.condition, fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary)
+    }
+    Text(weather.city.uppercase(), fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary)
+    Spacer(Modifier.height(8.dp))
+    Text("BAT " + toggles.batteryLevel + "%  •  WIFI " + if (toggles.wifiEnabled) "ON" else "OFF",
+      fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = secondary)
+  }
+}
+
+@Composable
+private fun CustomPedometerWidget(
+  fitness: FitnessStats,
+  ramPct: Int,
+  accentColor: Color,
+  isDark: Boolean,
+  scale: Float,
+  modifier: Modifier = Modifier
+) {
+  val surface = if (isDark) Color(0xCC111114) else Color(0xEFFFFFFF)
+  val primary = if (isDark) NothingWhite else NothingBlack
+  val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
+  val progress = (fitness.steps.toFloat() / fitness.goal.coerceAtLeast(1)).coerceIn(0f, 1f)
+  Column(
+    modifier = modifier.scale(scale).clip(RoundedCornerShape(24.dp)).background(surface)
+      .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(24.dp)).padding(16.dp)
+  ) {
+    Text("ACTIVITY", fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary, letterSpacing = 1.5.sp)
+    Text(fitness.steps.toString(), fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = primary)
+    Text("STEPS / " + fitness.goal, fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = secondary)
+    Spacer(Modifier.height(7.dp))
+    Row(Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)).background(secondary.copy(alpha = 0.18f))) {
+      Box(Modifier.fillMaxWidth(progress).fillMaxSize().background(accentColor))
+    }
+    Spacer(Modifier.height(6.dp))
+    Text(fitness.calories.toString() + " KCAL  •  RAM " + ramPct + "%", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = secondary)
+  }
+}
+
+@Composable
+private fun CustomCassetteWidget(
+  audio: AudioState,
+  accentColor: Color,
+  isDark: Boolean,
+  scale: Float
+) {
+  val surface = if (isDark) Color(0xCC111114) else Color(0xEFFFFFFF)
+  val primary = if (isDark) NothingWhite else NothingBlack
+  val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
+  Row(
+    modifier = Modifier.fillMaxWidth().scale(scale).clip(RoundedCornerShape(24.dp)).background(surface)
+      .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(24.dp)).padding(16.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Box(Modifier.size(58.dp).clip(RoundedCornerShape(12.dp)).background(primary.copy(alpha = 0.08f)), contentAlignment = Alignment.Center) {
+      Text("PLAY", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = accentColor, letterSpacing = 1.sp)
+    }
+    Spacer(Modifier.width(12.dp))
+    Column(Modifier.weight(1f)) {
+      Text("CASSETTE", fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary, letterSpacing = 1.5.sp)
+      Text(audio.title, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = primary, maxLines = 1)
+      Text(audio.artist, fontFamily = FontFamily.Monospace, fontSize = 10.sp, color = secondary, maxLines = 1)
+    }
+    Text(if (audio.isPlaying) "▶" else "Ⅱ", fontSize = 18.sp, color = accentColor)
   }
 }
 
@@ -541,6 +662,9 @@ private fun CustomWidgetPicker(
   val primary = if (isDark) NothingWhite else NothingBlack
   val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
   val clockActive = activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)
+  val weatherActive = activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)
+  val activityActive = activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)
+  val cassetteActive = activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)
   Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.48f)).clickable(onClick = onDismiss)
     .padding(horizontal = 18.dp, vertical = 24.dp), contentAlignment = Alignment.BottomCenter) {
     Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(surface)
@@ -549,12 +673,11 @@ private fun CustomWidgetPicker(
       Text(text = "CUSTOM WIDGETS", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
         fontSize = 13.sp, color = secondary, letterSpacing = 2.sp)
       Text(text = "Choose a widget for your Home Screen", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = primary)
-      Button(onClick = { onToggle(NosWidgetPortType.CLOCK_MAIN) }, modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(containerColor = if (clockActive) accentColor else primary,
-          contentColor = if (clockActive) Color.Black else surface)) {
-        Text(if (clockActive) "REMOVE  •  CLOCK" else "ADD  •  CLOCK")
-      }
-      Text(text = "More custom widgets will be added here.", fontSize = 12.sp, color = secondary)
+      WidgetToggleButton("CLOCK", clockActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.CLOCK_MAIN) }
+      WidgetToggleButton("WEATHER + BATTERY", weatherActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.WEATHER_MAIN) }
+      WidgetToggleButton("ACTIVITY + RAM", activityActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.PEDOMETER_GAUGE) }
+      WidgetToggleButton("CASSETTE PLAYER", cassetteActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.CASSETTE_PLAYER) }
+      Text("Widgets are placed automatically on the Home Screen. Size follows Home Settings.", fontSize = 12.sp, color = secondary)
 
       Button(
         onClick = {
@@ -570,5 +693,27 @@ private fun CustomWidgetPicker(
         Text("HOME SETTINGS  •  CUSTOMISE")
       }
     }
+  }
+}
+
+
+@Composable
+private fun WidgetToggleButton(
+  label: String,
+  active: Boolean,
+  accentColor: Color,
+  primary: Color,
+  surface: Color,
+  onClick: () -> Unit
+) {
+  Button(
+    onClick = onClick,
+    modifier = Modifier.fillMaxWidth(),
+    colors = ButtonDefaults.buttonColors(
+      containerColor = if (active) accentColor else primary,
+      contentColor = if (active) Color.Black else surface
+    )
+  ) {
+    Text(if (active) "REMOVE  •  " + label else "ADD  •  " + label)
   }
 }
