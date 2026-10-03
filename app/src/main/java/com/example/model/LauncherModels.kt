@@ -43,9 +43,10 @@ enum class WallpaperTarget {
 }
 
 enum class LauncherThemeMode {
-  ORIGINAL,          // Nothing OS الأصلي: أسود غير لامع كلاسيكي وشبكة نقطية
-  MONOCHROME_STUDIO, // الصورة 1: أبيض وأسود فوتوغرافي عالي التباين بودجات بيضاء دائرية
-  ATMOSPHERE_PASTEL  // الصورة 2: ثيم Nothing OS 5.0 نيو باستيل وأتموسفير
+  ORIGINAL,          // Signature: Nothing OS 2 black/white dot-matrix home
+  MONOCHROME_STUDIO, // Monochrome photographic studio
+  ATMOSPHERE_PASTEL, // Teal/blue atmospheric glass
+  GLYPH_RED          // Dark graphite with Nothing red glyph accents
 }
 
 enum class LauncherClockStyle {
