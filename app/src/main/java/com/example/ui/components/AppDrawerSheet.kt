@@ -369,7 +369,8 @@ private fun DrawerCategoryCard(
   secondaryText: Color,
   cardSizeLevel: Int,
   isExpanded: Boolean,
-  onExpand: () -> Unit
+  onExpand: () -> Unit,
+  modifier: Modifier = Modifier
 ) {
   val cardWidth = when (cardSizeLevel) {
     0 -> 158.dp
@@ -384,8 +385,8 @@ private fun DrawerCategoryCard(
   val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
   Box(
-    modifier = Modifier
-      .width(cardWidth)
+    modifier = modifier
+      .weight(1f)
       .height(cardHeight)
       .zIndex(if (isExpanded) 10f else 0f)
       .testTag("drawer_category_" + category.title.lowercase())
