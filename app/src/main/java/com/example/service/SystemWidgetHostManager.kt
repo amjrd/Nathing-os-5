@@ -7,14 +7,14 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.view.ViewGroup
+import android.util.TypedValue
 
 /**
  * Real Android AppWidget host for the launcher.
  *
- * The previous launcher had only an unused AppWidgetHostView hook in Compose.
- * This manager owns the real host lifecycle, widget picker/bind flow, persistence,
- * and creation of the provider's AppWidgetHostView.
+ * Owns the complete picker -> bind -> configure -> display lifecycle and
+ * persists the selected widget so it can be restored after restarting the launcher.
  */
 class SystemWidgetHostManager(
   private val activity: Activity,
@@ -41,15 +41,25 @@ class SystemWidgetHostManager(
   }
 
   fun startPicker() {
+    if (pendingWidgetId != INVALID_ID) {
+      host.deleteAppWidgetId(pendingWidgetId)
+    }
+
     pendingWidgetId = host.allocateAppWidgetId()
+
     val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply {
       putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, pendingWidgetId)
     }
+
     activity.startActivityForResult(intent, REQUEST_PICK)
   }
 
   fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-    if (requestCode != REQUEST_PICK && requestCode != REQUEST_BIND && requestCode != REQUEST_CONFIGURE) {
+    if (
+      requestCode != REQUEST_PICK &&
+      requestCode != REQUEST_BIND &&
+      requestCode != REQUEST_CONFIGURE
+    ) {
       return false
     }
 
@@ -59,9 +69,7 @@ class SystemWidgetHostManager(
     ) ?: pendingWidgetId
 
     if (resultCode != Activity.RESULT_OK) {
-      if (returnedId != INVALID_ID) {
-        host.deleteAppWidgetId(returnedId)
-      }
+      cleanupWidgetId(returnedId)
       pendingWidgetId = INVALID_ID
       return true
     }
@@ -72,9 +80,7 @@ class SystemWidgetHostManager(
       REQUEST_PICK -> {
         val info = appWidgetManager.getAppWidgetInfo(pendingWidgetId)
         if (info == null) {
-          host.deleteAppWidgetId(pendingWidgetId)
-          pendingWidgetId = INVALID_ID
-          onViewChanged(null)
+          failPendingWidget()
           return true
         }
 
@@ -92,16 +98,20 @@ class SystemWidgetHostManager(
       REQUEST_BIND -> {
         val info = appWidgetManager.getAppWidgetInfo(pendingWidgetId)
         if (info == null) {
-          host.deleteAppWidgetId(pendingWidgetId)
-          pendingWidgetId = INVALID_ID
-          onViewChanged(null)
+          failPendingWidget()
         } else {
           launchConfigurationIfNeeded(info)
         }
       }
 
       REQUEST_CONFIGURE -> {
-        persistAndDisplay(pendingWidgetId)
+        // Configuration activities normally return RESULT_OK only after the
+        // provider has finished configuring the allocated id.
+        if (appWidgetManager.getAppWidgetInfo(pendingWidgetId) == null) {
+          failPendingWidget()
+        } else {
+          persistAndDisplay(pendingWidgetId)
+        }
       }
     }
 
@@ -110,6 +120,7 @@ class SystemWidgetHostManager(
 
   private fun launchConfigurationIfNeeded(info: AppWidgetProviderInfo) {
     val configure = info.configure
+
     if (configure != null) {
       val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE).apply {
         component = configure
@@ -131,6 +142,7 @@ class SystemWidgetHostManager(
 
   private fun restoreWidget() {
     val widgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
+
     if (widgetId == INVALID_ID) {
       onViewChanged(null)
       return
@@ -151,26 +163,64 @@ class SystemWidgetHostManager(
     try {
       val info = appWidgetManager.getAppWidgetInfo(widgetId)
       if (info == null) {
-        onViewChanged(null)
+        failWidget(widgetId)
         return
       }
 
       val view = host.createView(activity, widgetId, info)
+
+      // Explicitly attach the provider metadata and give Compose a concrete
+      // minimum size. Some real Android widgets report WRAP_CONTENT/zero
+      // height until their host view receives layout parameters.
       view.setAppWidget(widgetId, info)
       view.setPadding(0, 0, 0, 0)
-      onViewChanged(view)
+      view.layoutParams = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+      )
+
+      val minHeightDp = info.minHeight.coerceAtLeast(96)
+      val minHeightPx = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        minHeightDp.toFloat(),
+        activity.resources.displayMetrics
+      ).toInt()
+      view.minimumHeight = minHeightPx
+
+      // Post the state change onto the Activity UI queue. This guarantees the
+      // Compose state is updated after AppWidgetHostView has been fully created.
+      activity.runOnUiThread {
+        onViewChanged(view)
+      }
     } catch (_: Exception) {
-      prefs.edit().remove(KEY_WIDGET_ID).apply()
-      host.deleteAppWidgetId(widgetId)
-      onViewChanged(null)
+      failWidget(widgetId)
+    }
+  }
+
+  private fun failPendingWidget() {
+    val id = pendingWidgetId
+    pendingWidgetId = INVALID_ID
+    cleanupWidgetId(id)
+    onViewChanged(null)
+  }
+
+  private fun failWidget(widgetId: Int) {
+    prefs.edit().remove(KEY_WIDGET_ID).apply()
+    cleanupWidgetId(widgetId)
+    onViewChanged(null)
+  }
+
+  private fun cleanupWidgetId(widgetId: Int) {
+    if (widgetId != INVALID_ID) {
+      try {
+        host.deleteAppWidgetId(widgetId)
+      } catch (_: Exception) {}
     }
   }
 
   fun removeWidget() {
     val widgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
-    if (widgetId != INVALID_ID) {
-      host.deleteAppWidgetId(widgetId)
-    }
+    cleanupWidgetId(widgetId)
     prefs.edit().remove(KEY_WIDGET_ID).apply()
     pendingWidgetId = INVALID_ID
     onViewChanged(null)
@@ -180,7 +230,9 @@ class SystemWidgetHostManager(
     try {
       host.startListening()
       val widgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
-      if (widgetId != INVALID_ID) displayWidget(widgetId)
+      if (widgetId != INVALID_ID) {
+        displayWidget(widgetId)
+      }
     } catch (_: Exception) {}
   }
 
