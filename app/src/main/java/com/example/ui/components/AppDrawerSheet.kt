@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
@@ -92,6 +94,8 @@ fun AppDrawerSheet(
 
   var expandedCategory by remember { mutableStateOf<String?>(null) }
   var drawerMode by remember { mutableStateOf("All") }
+  val drawerListState = rememberLazyListState()
+  val showDrawerScrollbar by remember { derivedStateOf { drawerListState.layoutInfo.totalItemsCount > 0 && drawerListState.layoutInfo.visibleItemsInfo.size < drawerListState.layoutInfo.totalItemsCount } }
 
   val allApps = remember(apps, searchQuery) {
     apps.distinctBy { it.packageName }
@@ -131,6 +135,7 @@ fun AppDrawerSheet(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Column(modifier = Modifier.weight(1f)) {
+          GlyphMatrixAccent(modifier = Modifier.padding(bottom = 6.dp))
           Text(
             text = "ALL APPS",
             color = primaryText,
@@ -194,6 +199,7 @@ fun AppDrawerSheet(
           .weight(1f)
           .fillMaxWidth()
           .testTag("drawer_category_scroll"),
+        state = drawerListState,
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 2.dp, bottom = 96.dp)
       ) {
@@ -261,6 +267,10 @@ fun AppDrawerSheet(
           }
         }
       }
+
+      if (showDrawerScrollbar) {
+        DrawerScrollbarIndicator(state = drawerListState, modifier = Modifier.align(Alignment.CenterEnd))
+      }
     }
 
     if (expandedCategory != null) {
@@ -291,6 +301,69 @@ fun AppDrawerSheet(
         }
       }
     }
+  }
+}
+
+@Composable
+private fun GlyphMatrixAccent(modifier: Modifier = Modifier) {
+  val pattern = arrayOf(
+    "11110", "10000", "10000", "10110", "10001", "10001", "11110"
+  )
+  Canvas(modifier = modifier.size(width = 58.dp, height = 34.dp)) {
+    val cols = 5
+    val rows = 7
+    val cell = minOf(size.width / cols, size.height / rows)
+    val dot = cell * 0.30f
+    for (y in 0 until rows) {
+      for (x in 0 until cols) {
+        if (pattern[y][x] == '1') {
+          drawCircle(
+            color = Color.White.copy(alpha = 0.82f),
+            radius = dot / 2f,
+            center = androidx.compose.ui.geometry.Offset(
+              x * cell + cell / 2f,
+              y * cell + cell / 2f
+            )
+          )
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun DrawerScrollbarIndicator(
+  state: androidx.compose.foundation.lazy.LazyListState,
+  modifier: Modifier = Modifier
+) {
+  val layout = state.layoutInfo
+  val total = layout.totalItemsCount
+  val visible = layout.visibleItemsInfo.size
+  if (total <= visible || visible == 0) return
+
+  val first = layout.visibleItemsInfo.firstOrNull()?.index ?: 0
+  val maxFirst = (total - visible).coerceAtLeast(1)
+  val progress = (first.toFloat() / maxFirst).coerceIn(0f, 1f)
+  val trackHeight = 96.dp
+  val thumbHeight = (trackHeight.value * (visible.toFloat() / total)).coerceIn(18f, trackHeight.value).dp
+
+  Box(
+    modifier = modifier
+      .padding(end = 3.dp, top = 8.dp, bottom = 104.dp)
+      .width(3.dp)
+      .height(trackHeight)
+      .clip(RoundedCornerShape(2.dp))
+      .background(Color.White.copy(alpha = 0.10f))
+  ) {
+    Box(
+      modifier = Modifier
+        .align(Alignment.TopCenter)
+        .padding(top = ((trackHeight.value - thumbHeight.value) * progress).dp)
+        .width(3.dp)
+        .height(thumbHeight)
+        .clip(RoundedCornerShape(2.dp))
+        .background(Color.White.copy(alpha = 0.72f))
+    )
   }
 }
 
