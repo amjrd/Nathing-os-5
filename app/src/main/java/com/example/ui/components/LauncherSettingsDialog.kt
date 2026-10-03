@@ -588,9 +588,10 @@ fun LauncherSettingsDialog(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
           ) {
             listOf(
-              Triple(LauncherThemeMode.ORIGINAL, "ORIGINAL", Icons.Default.DarkMode),
-              Triple(LauncherThemeMode.MONOCHROME_STUDIO, "MONO STUDIO", Icons.Default.Layers),
-              Triple(LauncherThemeMode.ATMOSPHERE_PASTEL, "ATMOSPHERE", Icons.Default.Palette)
+              Triple(LauncherThemeMode.ORIGINAL, "NOTHING 2", Icons.Default.DarkMode),
+              Triple(LauncherThemeMode.MONOCHROME_STUDIO, "MONO", Icons.Default.Layers),
+              Triple(LauncherThemeMode.ATMOSPHERE_PASTEL, "AURA", Icons.Default.Palette),
+              Triple(LauncherThemeMode.GLYPH_RED, "GLYPH", Icons.Default.Radio)
             ).forEach { (mode, label, icon) ->
               val isSelected = settings.themeMode == mode
               Box(
@@ -627,13 +628,25 @@ fun LauncherSettingsDialog(
                       LauncherThemeMode.ATMOSPHERE_PASTEL -> settings.copy(
                         themeMode = mode,
                         wallpaperIndex = 2,
-                        accentColorIndex = 0,
+                        accentColorIndex = 1,
                         clockStyle = LauncherClockStyle.ANALOG,
                         iconPack = IconPackStyle.SYSTEM_DEFAULT,
                         activeWidgets = listOf(
-                          NosWidgetPortType.STICKER_FOCUS_CLUSTER,
+                          NosWidgetPortType.MINI_CLUSTER_2X2,
                           NosWidgetPortType.CLOCK_MAIN,
                           NosWidgetPortType.WEATHER_MAIN
+                        )
+                      )
+                      LauncherThemeMode.GLYPH_RED -> settings.copy(
+                        themeMode = mode,
+                        wallpaperIndex = 0,
+                        accentColorIndex = 0,
+                        clockStyle = LauncherClockStyle.DIGITAL,
+                        iconPack = IconPackStyle.MONOCHROME,
+                        activeWidgets = listOf(
+                          NosWidgetPortType.CALENDAR_DIGITAL_TIME,
+                          NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
+                          NosWidgetPortType.CLOCK_MAIN
                         )
                       )
                     }
