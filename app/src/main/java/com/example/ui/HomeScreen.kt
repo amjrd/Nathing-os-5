@@ -107,7 +107,6 @@ import com.example.service.SystemPortHelper
 import com.example.ui.components.ACCENT_COLORS
 import com.example.ui.components.AppIconItem
 import com.example.ui.components.EnlargedFolderView
-import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.components.NothingDock
 import com.example.ui.components.NothingWallpaperBackground
 import com.example.ui.theme.LocalLauncherTheme
@@ -165,7 +164,6 @@ fun HomeScreen(
     ACCENT_COLORS.getOrElse(settings.accentColorIndex) { ACCENT_COLORS[0] }
   }
 
-  var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(false) }
   var isCustomWidgetPickerOpen by remember { mutableStateOf(false) }
@@ -374,10 +372,7 @@ fun HomeScreen(
         showSearchBar = settings.showSearchBarOnDock,
         iconSize = currentIconSize,
         onToggleDockApp = onToggleDockApp,
-        onOpenAppInfo = { appTarget ->
-          selectedAppForInfo = appTarget
-          onOpenAppInfo(appTarget)
-        },
+        onOpenAppInfo = onOpenAppInfo,
         onCycleIconSize = {
           val nextLevel = (settings.iconSizeLevel + 1) % 4
           onUpdateSettings(settings.copy(iconSizeLevel = nextLevel))
@@ -517,18 +512,6 @@ fun HomeScreen(
       )
     }
 
-    // Nothing OS 5 App Info & Diagnostics Sheet (Ensures App Info always displays)
-    if (selectedAppForInfo != null) {
-      NothingAppInfoSheet(
-        app = selectedAppForInfo!!,
-        onDismiss = { selectedAppForInfo = null },
-        onLaunchApp = {
-          onAppClick(selectedAppForInfo!!)
-          selectedAppForInfo = null
-        },
-        accentColor = accentColor
-      )
-    }
 
   }
 }
