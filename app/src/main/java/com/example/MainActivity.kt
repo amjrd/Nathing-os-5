@@ -140,9 +140,6 @@ class MainActivity : ComponentActivity() {
             viewModel = viewModel,
             settings = settings,
             onDismissKeyguard = { dismissSystemKeyguard() },
-            systemWidgetView = systemWidgetView,
-            onAddSystemWidget = { systemWidgetHostManager.startPicker() },
-            onRemoveSystemWidget = { systemWidgetHostManager.removeWidget() },
             modifier = Modifier.fillMaxSize()
           )
         }
