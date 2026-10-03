@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -106,6 +107,9 @@ import com.example.service.SystemPortHelper
 import com.example.ui.components.ACCENT_COLORS
 import com.example.ui.components.AppIconItem
 import com.example.ui.components.EnlargedFolderView
+import com.example.ui.components.NothingAppInfoSheet
+import com.example.ui.components.NothingDock
+import com.example.ui.components.NothingWallpaperBackground
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.NothingBlack
 import com.example.ui.theme.NothingBorder
@@ -114,6 +118,7 @@ import com.example.ui.theme.NothingElevated
 import com.example.ui.theme.NothingGrey
 import com.example.ui.theme.NothingWhite
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
   currentTime: String,
