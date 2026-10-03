@@ -241,14 +241,6 @@ fun HomeScreen(
           Column(
             modifier = Modifier
               .fillMaxWidth()
-              .combinedClickable(
-                onClick = {},
-                onLongClick = {
-                  haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                  isCustomWidgetPickerOpen = true
-                },
-                onLongClickLabel = "Open Home widgets"
-              )
               .testTag("home_widget_area"),
             verticalArrangement = Arrangement.spacedBy(12.dp)
           ) {
