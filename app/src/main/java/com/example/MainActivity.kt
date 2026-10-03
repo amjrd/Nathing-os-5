@@ -349,50 +349,9 @@ fun NothingLauncherApp(
         .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
     )
 
-    // Home gestures: keep Google Feed and App Drawer in separate touch zones.
-    // Google Feed is deliberately disabled in the lower 220dp so an upward
-    // swipe from the dock can NEVER be interpreted as a horizontal Google swipe.
+    // Home gestures: drawer swipe stays confined to the dock zone.
+    // Google Feed is handled by HomeScreen itself so widgets remain tappable.
     if (currentScreen == LauncherScreen.HOME) {
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .fillMaxSize()
-          .padding(bottom = 220.dp)
-          .pointerInput(Unit) {
-            // Do not consume a normal press/long-press. Only take the gesture
-            // after a deliberate horizontal movement, so HomeScreen widgets
-            // and customization long-presses receive the original touch.
-            awaitEachGesture {
-              val down = awaitFirstDown(requireUnconsumed = false)
-              var previousX = down.position.x
-              var totalRight = 0f
-              var handled = false
-
-              while (!handled) {
-                val event = awaitPointerEvent()
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) break
-
-                val deltaX = change.position.x - previousX
-                previousX = change.position.x
-
-                if (deltaX != 0f) {
-                  totalRight += deltaX
-                }
-
-                if (totalRight > 150f) {
-                  change.consume()
-                  com.example.service.SystemPortHelper.launchGoogleFeed(context)
-                  handled = true
-                }
-              }
-            }
-          }
-      )
-
-      // Keep the drawer swipe gesture confined to the dock zone.
-      // The rest of HomeScreen stays available for widget taps and long-press
-      // customization without an invisible gesture layer consuming the input.
       Box(
         modifier = Modifier
           .align(androidx.compose.ui.Alignment.BottomCenter)
