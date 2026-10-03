@@ -299,7 +299,7 @@ fun AppDrawerSheet(
       modifier = Modifier
         .align(Alignment.BottomCenter)
         .fillMaxWidth()
-        .padding(horizontal = 18.dp, bottom = 14.dp)
+        .padding(start = 18.dp, top = 0.dp, end = 18.dp, bottom = 14.dp)
         .height(58.dp)
         .clip(RoundedCornerShape(29.dp))
         .background(Color(0xFF5B5B61).copy(alpha = 0.56f))
