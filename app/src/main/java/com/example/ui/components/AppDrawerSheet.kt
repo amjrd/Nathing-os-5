@@ -91,7 +91,7 @@ fun AppDrawerSheet(
   val categoryNames = remember { listOf("Social", "Tools", "Photography", "Entertainment", "Shopping", "Games", "Communication") }
 
   var expandedCategory by remember { mutableStateOf<String?>(null) }
-  var drawerMode by remember { mutableStateOf("Categories") }
+  var drawerMode by remember { mutableStateOf("All") }
 
   val allApps = remember(apps, searchQuery) {
     apps.distinctBy { it.packageName }
