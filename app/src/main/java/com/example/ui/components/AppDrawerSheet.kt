@@ -46,6 +46,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +81,7 @@ fun AppDrawerSheet(
   onSelectIconPack: (IconPackStyle) -> Unit = {},
   onOpenSettings: () -> Unit = {},
 ) {
+  val context = LocalContext.current
   val backgroundColor = Color(0xFF0B0B0C)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
@@ -100,7 +102,11 @@ fun AppDrawerSheet(
   val recentApps = remember(apps) {
     apps.distinctBy { it.packageName }
       .filter { app -> !isSystemSettingsApp(app) }
-      .sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
+      .sortedByDescending { app ->
+        runCatching {
+          context.packageManager.getPackageInfo(app.packageName, 0).firstInstallTime
+        }.getOrDefault(0L)
+      }
       .take(4)
   }
 
