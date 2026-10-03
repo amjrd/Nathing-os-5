@@ -21,7 +21,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -358,20 +360,34 @@ fun NothingLauncherApp(
           .fillMaxSize()
           .padding(bottom = 220.dp)
           .pointerInput(Unit) {
-            var totalRight = 0f
-            detectHorizontalDragGestures(
-              onDragStart = { totalRight = 0f },
-              onDragEnd = { totalRight = 0f },
-              onDragCancel = { totalRight = 0f },
-              onHorizontalDrag = { _, amount ->
-                totalRight += amount
-                // Require a deliberate horizontal gesture before launching Google.
+            // Do not consume a normal press/long-press. Only take the gesture
+            // after a deliberate horizontal movement, so HomeScreen widgets
+            // and customization long-presses receive the original touch.
+            awaitEachGesture {
+              val down = awaitFirstDown(requireUnconsumed = false)
+              var previousX = down.position.x
+              var totalRight = 0f
+              var handled = false
+
+              while (!handled) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                if (!change.pressed) break
+
+                val deltaX = change.position.x - previousX
+                previousX = change.position.x
+
+                if (deltaX != 0f) {
+                  totalRight += deltaX
+                }
+
                 if (totalRight > 150f) {
+                  change.consume()
                   com.example.service.SystemPortHelper.launchGoogleFeed(context)
-                  totalRight = 0f
+                  handled = true
                 }
               }
-            )
+            }
           }
       )
 
