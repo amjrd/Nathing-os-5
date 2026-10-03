@@ -242,11 +242,7 @@ fun HomeScreen(
             modifier = Modifier
               .fillMaxWidth()
               .combinedClickable(
-                onClick = {
-                  if (settings.activeWidgets.isNotEmpty()) {
-                    onOpenAppInfo(widgetInfoApp)
-                  }
-                },
+                onClick = {},
                 onLongClick = {
                   haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                   isCustomWidgetPickerOpen = true
@@ -263,7 +259,20 @@ fun HomeScreen(
             }
 
             if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
-              CustomClockWidget(currentTime, currentDate, settings.clockStyle, accentColor, theme.isDark, widgetScale)
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
+              ) {
+                CustomClockWidget(currentTime, currentDate, settings.clockStyle, accentColor, theme.isDark, widgetScale)
+              }
             }
 
             if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN) ||
@@ -273,16 +282,55 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
               ) {
                 if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)) {
-                  CustomWeatherWidget(weather, toggles, accentColor, theme.isDark, widgetScale, Modifier.weight(1f))
+                  Box(
+                    modifier = Modifier
+                      .weight(1f)
+                      .combinedClickable(
+                        onClick = { onOpenAppInfo(widgetInfoApp) },
+                        onLongClick = {
+                          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                          isCustomWidgetPickerOpen = true
+                        },
+                        onLongClickLabel = "Open Home widgets"
+                      )
+                  ) {
+                    CustomWeatherWidget(weather, toggles, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
+                  }
                 }
                 if (settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)) {
-                  CustomPedometerWidget(fitness, ramPct, accentColor, theme.isDark, widgetScale, Modifier.weight(1f))
+                  Box(
+                    modifier = Modifier
+                      .weight(1f)
+                      .combinedClickable(
+                        onClick = { onOpenAppInfo(widgetInfoApp) },
+                        onLongClick = {
+                          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                          isCustomWidgetPickerOpen = true
+                        },
+                        onLongClickLabel = "Open Home widgets"
+                      )
+                  ) {
+                    CustomPedometerWidget(fitness, ramPct, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
+                  }
                 }
               }
             }
 
             if (settings.activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)) {
-              CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
+              ) {
+                CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
+              }
             }
 
             if (settings.activeWidgets.isEmpty()) {
