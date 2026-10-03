@@ -166,7 +166,7 @@ fun HomeScreen(
 
   val lazyListState = rememberLazyListState()
   var isBarsVisible by remember { mutableStateOf(false) }
-  var isCustomWidgetPickerOpen by remember { mutableStateOf(false) }
+  var isHomeCustomizationOpen by remember { mutableStateOf(false) }
   // Widgets use the same App Info surface as apps. This gives the Home Screen
   // a reliable App Info entry point without needing extra empty space.
   val widgetInfoApp = remember(context.packageName) {
@@ -280,7 +280,7 @@ fun HomeScreen(
                     onClick = { onOpenAppInfo(widgetInfoApp) },
                     onLongClick = {
                       haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
+                      isHomeCustomizationOpen = true
                     },
                     onLongClickLabel = "Open Home widgets"
                   )
@@ -303,7 +303,7 @@ fun HomeScreen(
                     onClick = { onOpenAppInfo(widgetInfoApp) },
                     onLongClick = {
                       haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
+                      isHomeCustomizationOpen = true
                     },
                     onLongClickLabel = "Open Home widgets"
                   )
@@ -319,7 +319,7 @@ fun HomeScreen(
                     onClick = { onOpenAppInfo(widgetInfoApp) },
                     onLongClick = {
                       haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
+                      isHomeCustomizationOpen = true
                     },
                     onLongClickLabel = "Open Home widgets"
                   )
@@ -338,7 +338,7 @@ fun HomeScreen(
                     onClick = { onOpenAppInfo(widgetInfoApp) },
                     onLongClick = {
                       haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
+                      isHomeCustomizationOpen = true
                     },
                     onLongClickLabel = "Open Home widgets"
                   )
@@ -395,7 +395,7 @@ fun HomeScreen(
                 onClick = {},
                 onLongClick = {
                   haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                  isCustomWidgetPickerOpen = true
+                  isHomeCustomizationOpen = true
                 },
                 onLongClickLabel = "Open Home customization"
               )
@@ -569,20 +569,23 @@ fun HomeScreen(
       )
     }
 
-    if (isCustomWidgetPickerOpen) {
-      CustomWidgetPicker(
-        activeWidgets = settings.activeWidgets,
+    if (isHomeCustomizationOpen) {
+      HomeCustomizationPanel(
+        settings = settings,
         accentColor = accentColor,
         isDark = theme.isDark,
         onToggle = { widgetType ->
           onToggleWidget(widgetType)
-          isCustomWidgetPickerOpen = false
+          isHomeCustomizationOpen = false
+        },
+        onUpdateSettings = { updatedSettings ->
+          onUpdateSettings(updatedSettings)
         },
         onOpenSettings = {
-          isCustomWidgetPickerOpen = false
+          isHomeCustomizationOpen = false
           onOpenSettings()
         },
-        onDismiss = { isCustomWidgetPickerOpen = false }
+        onDismiss = { isHomeCustomizationOpen = false }
       )
     }
 
@@ -706,11 +709,12 @@ private fun CustomCassetteWidget(
 }
 
 @Composable
-private fun CustomWidgetPicker(
-  activeWidgets: List<NosWidgetPortType>,
+private fun HomeCustomizationPanel(
+  settings: LauncherSettings,
   accentColor: Color,
   isDark: Boolean,
   onToggle: (NosWidgetPortType) -> Unit,
+  onUpdateSettings: (LauncherSettings) -> Unit,
   onOpenSettings: () -> Unit,
   onDismiss: () -> Unit
 ) {
@@ -718,41 +722,128 @@ private fun CustomWidgetPicker(
   val surface = if (isDark) Color(0xFF111114) else Color(0xFFF6F6F6)
   val primary = if (isDark) NothingWhite else NothingBlack
   val secondary = if (isDark) NothingGrey else Color(0xFF66666A)
-  val clockActive = activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)
-  val weatherActive = activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)
-  val activityActive = activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)
-  val cassetteActive = activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)
-  Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.48f)).clickable(onClick = onDismiss)
-    .padding(horizontal = 18.dp, vertical = 24.dp), contentAlignment = Alignment.BottomCenter) {
-    Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(surface)
-      .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(30.dp)).padding(20.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      Text(text = "CUSTOM WIDGETS", fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
-        fontSize = 13.sp, color = secondary, letterSpacing = 2.sp)
-      Text(text = "Choose a widget for your Home Screen", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = primary)
-      WidgetToggleButton("CLOCK", clockActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.CLOCK_MAIN) }
-      WidgetToggleButton("WEATHER + BATTERY", weatherActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.WEATHER_MAIN) }
-      WidgetToggleButton("ACTIVITY + RAM", activityActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.PEDOMETER_GAUGE) }
-      WidgetToggleButton("CASSETTE PLAYER", cassetteActive, accentColor, primary, surface) { onToggle(NosWidgetPortType.CASSETTE_PLAYER) }
-      Text("Widgets are placed automatically on the Home Screen. Size follows Home Settings.", fontSize = 12.sp, color = secondary)
+  val clockActive = settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)
+  val weatherActive = settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)
+  val activityActive = settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)
+  val cassetteActive = settings.activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)
 
-      Button(
-        onClick = {
-          com.example.util.VibrationHelper.vibrateTouch(context)
-          onOpenSettings()
-        },
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .background(Color.Black.copy(alpha = 0.48f))
+      .clickable(onClick = onDismiss)
+      .padding(horizontal = 18.dp, vertical = 24.dp),
+    contentAlignment = Alignment.BottomCenter
+  ) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .clip(RoundedCornerShape(30.dp))
+        .background(surface)
+        .border(1.dp, accentColor.copy(alpha = 0.28f), RoundedCornerShape(30.dp))
+        .padding(20.dp),
+      verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+      Text(
+        text = "HOME CUSTOMIZE",
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+        fontSize = 13.sp,
+        color = secondary,
+        letterSpacing = 2.sp
+      )
+      Text(
+        text = "Customize your Home Screen",
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = primary
+      )
+
+      Row(
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(
-          containerColor = primary,
-          contentColor = surface
-        )
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        Text("HOME SETTINGS  •  CUSTOMISE")
+        Button(
+          onClick = {
+            com.example.util.VibrationHelper.vibrateTouch(context)
+            val next = (settings.widgetSizeLevel + 1) % 3
+            onUpdateSettings(settings.copy(widgetSizeLevel = next))
+          },
+          modifier = Modifier.weight(1f),
+          colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = surface)
+        ) {
+          Text("WIDGET SIZE")
+        }
+        Button(
+          onClick = {
+            com.example.util.VibrationHelper.vibrateTouch(context)
+            val next = (settings.iconSizeLevel + 1) % 4
+            onUpdateSettings(settings.copy(iconSizeLevel = next))
+          },
+          modifier = Modifier.weight(1f),
+          colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = surface)
+        ) {
+          Text("ICON SIZE")
+        }
       }
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        Button(
+          onClick = {
+            com.example.util.VibrationHelper.vibrateTouch(context)
+            val next = if (settings.clockStyle == LauncherClockStyle.ANALOG)
+              LauncherClockStyle.DIGITAL else LauncherClockStyle.ANALOG
+            onUpdateSettings(settings.copy(clockStyle = next))
+          },
+          modifier = Modifier.weight(1f),
+          colors = ButtonDefaults.buttonColors(containerColor = primary, contentColor = surface)
+        ) {
+          Text("CLOCK: " + settings.clockStyle.name)
+        }
+        Button(
+          onClick = {
+            com.example.util.VibrationHelper.vibrateTouch(context)
+            onOpenSettings()
+          },
+          modifier = Modifier.weight(1f),
+          colors = ButtonDefaults.buttonColors(containerColor = accentColor, contentColor = Color.Black)
+        ) {
+          Text("MORE")
+        }
+      }
+
+      Text(
+        text = "WIDGETS",
+        fontFamily = FontFamily.Monospace,
+        fontSize = 10.sp,
+        color = secondary,
+        letterSpacing = 1.5.sp
+      )
+
+      WidgetToggleButton("CLOCK", clockActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.CLOCK_MAIN)
+      }
+      WidgetToggleButton("WEATHER + BATTERY", weatherActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.WEATHER_MAIN)
+      }
+      WidgetToggleButton("ACTIVITY + RAM", activityActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.PEDOMETER_GAUGE)
+      }
+      WidgetToggleButton("CASSETTE PLAYER", cassetteActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.CASSETTE_PLAYER)
+      }
+
+      Text(
+        text = "Add or remove Home widgets, change their size, adjust icon size and switch the clock style.",
+        fontSize = 12.sp,
+        color = secondary
+      )
     }
   }
 }
-
 
 @Composable
 private fun WidgetToggleButton(
