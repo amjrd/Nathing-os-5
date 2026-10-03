@@ -188,6 +188,28 @@ fun HomeScreen(
     modifier = modifier
       .fillMaxSize()
       .background(theme.background)
+      .pointerInput(Unit) {
+        // Google Feed gesture lives on HomeScreen so child widgets keep tap ownership.
+        awaitEachGesture {
+          val down = awaitFirstDown(requireUnconsumed = false)
+          var previousX = down.position.x
+          var totalRight = 0f
+          var handled = false
+          while (!handled) {
+            val event = awaitPointerEvent()
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            if (!change.pressed) break
+            val deltaX = change.position.x - previousX
+            previousX = change.position.x
+            if (deltaX != 0f) totalRight += deltaX
+            if (totalRight > 150f) {
+              change.consume()
+              SystemPortHelper.launchGoogleFeed(context)
+              handled = true
+            }
+          }
+        }
+      }
       .nestedScroll(remember {
         object : NestedScrollConnection {
           var downDistance = 0f
