@@ -88,7 +88,7 @@ fun AppDrawerSheet(
   val primaryText = Color(0xFFFFFFFF)
   val secondaryText = Color(0xFFA1A1A6)
 
-  val categoryNames = remember { listOf("Media", "Social", "Tools", "Productivity", "Finance", "Lifestyle", "Other") }
+  val categoryNames = remember { listOf("Social", "Tools", "Photography", "Entertainment", "Shopping", "Games") }
 
   var expandedCategory by remember { mutableStateOf<String?>(null) }
   var drawerMode by remember { mutableStateOf("Categories") }
@@ -245,7 +245,8 @@ fun AppDrawerSheet(
                 primaryText = primaryText, secondaryText = secondaryText,
                 cardSizeLevel = drawerCardSizeLevel,
                 isExpanded = expandedCategory == left.title,
-                onExpand = { expandedCategory = left.title }
+                onExpand = { expandedCategory = left.title },
+                modifier = Modifier.weight(1f)
               )
 
               val rightIndex = rowIndex * 2 + 1
@@ -379,15 +380,10 @@ private fun DrawerCategoryCard(
   onExpand: () -> Unit,
   modifier: Modifier = Modifier
 ) {
-  val cardWidth = when (cardSizeLevel) {
-    0 -> 158.dp
-    2 -> 176.dp
-    else -> 168.dp
-  }
   val cardHeight = when (cardSizeLevel) {
-    0 -> 176.dp
-    2 -> 206.dp
-    else -> 190.dp
+    0 -> 168.dp
+    2 -> 190.dp
+    else -> 180.dp
   }
   val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
@@ -406,7 +402,7 @@ private fun DrawerCategoryCard(
         .background(Color(0xFF202023).copy(alpha = 0.70f))
         .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
         .clickable { onExpand() }
-        .padding(12.dp)
+        .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
       Text(
         text = category.title,
@@ -427,7 +423,7 @@ private fun DrawerCategoryCard(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        categoryApps.take(4).chunked(2).forEach { rowApps ->
+        categoryApps.take(8).chunked(2).forEachIndexed { rowIndex, rowApps ->
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -436,7 +432,7 @@ private fun DrawerCategoryCard(
             rowApps.forEach { app ->
               DrawerAppIcon(
                 app = app,
-                iconSize = 56.dp,
+                iconSize = if (rowIndex == 0) 58.dp else 44.dp,
                 onClick = { onAppClick(app) },
                 onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin,
@@ -445,7 +441,7 @@ private fun DrawerCategoryCard(
                 accentColor = accentColor
               )
             }
-            repeat(2 - rowApps.size) { Spacer(Modifier.width(56.dp)) }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(if (rowIndex == 0) 58.dp else 44.dp)) }
           }
         }
       }
@@ -569,13 +565,13 @@ private fun classifyDrawerCategory(app: AppItem): String {
     label.contains(it) || pkg.contains(it) || declared.contains(it)
   }
   return when {
-    hasAny("youtube", "spotify", "netflix", "podcast", "pocket cast", "music", "video", "vlc", "anime", "gallery", "photos", "camera") -> "Media"
     hasAny("whatsapp", "instagram", "facebook", "messenger", "reddit", "telegram", "discord", "twitter", "tiktok", "snapchat", "threads", "social") -> "Social"
-    hasAny("calculator", "clock", "calendar", "chrome", "brave", "browser", "recorder", "files", "file manager", "contacts", "phone", "dialer", "maps", "google app", "tool", "utility", "security") -> "Tools"
-    hasAny("chatgpt", "gemini", "drive", "docs", "document", "scanner", "office", "notion", "keep", "gmail", "outlook", "tasks", "todo", "productivity") -> "Productivity"
-    hasAny("gpay", "google pay", "paypal", "bank", "banking", "wallet", "finance", "money", "revolut", "wise", "slice") -> "Finance"
-    hasAny("pinterest", "tracker", "health", "fitness", "shopping", "amazon", "ebay", "lifestyle", "weather", "food", "travel") -> "Lifestyle"
-    else -> "Other"
+    hasAny("calculator", "clock", "calendar", "chrome", "brave", "browser", "recorder", "files", "file manager", "contacts", "phone", "dialer", "maps", "google app", "tool", "utility", "security", "settings") -> "Tools"
+    hasAny("camera", "photos", "gallery", "lightroom", "picsart", "pinterest", "nomo", "photography", "snapseed") -> "Photography"
+    hasAny("youtube", "spotify", "netflix", "podcast", "music", "video", "vlc", "anime", "tiktok", "twitch", "capcut", "stream", "entertainment") -> "Entertainment"
+    hasAny("amazon", "ebay", "shein", "temu", "aliexpress", "shopping", "store", "oppo", "market", "shop") -> "Shopping"
+    hasAny("game", "gaming", "steam", "ea sports", "fc mobile", "pubg", "free fire", "minecraft", "roblox", "play games") -> "Games"
+    else -> "Tools"
   }
 }
 
