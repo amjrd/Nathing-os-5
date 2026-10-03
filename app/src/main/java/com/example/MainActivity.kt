@@ -375,13 +375,14 @@ fun NothingLauncherApp(
           }
       )
 
-      // Dedicated lower touch zone for opening the App Drawer.
-      // This zone is intentionally separate from the Google Feed gesture.
+      // Keep the drawer swipe gesture confined to the dock zone.
+      // The rest of HomeScreen stays available for widget taps and long-press
+      // customization without an invisible gesture layer consuming the input.
       Box(
         modifier = Modifier
           .align(androidx.compose.ui.Alignment.BottomCenter)
           .fillMaxWidth()
-          .height(220.dp)
+          .height(96.dp)
           .pointerInput(Unit) {
             var totalUp = 0f
             detectVerticalDragGestures(
