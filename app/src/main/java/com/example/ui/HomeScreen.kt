@@ -278,8 +278,23 @@ fun HomeScreen(
           }
         }
 
+        // Empty Home area: long-press opens the Nothing-style Home customization panel.
+        // Kept as a dedicated interaction zone so app/folder gestures remain untouched.
         item {
-          Spacer(modifier = Modifier.height(16.dp))
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(180.dp)
+              .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                  haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                  isCustomWidgetPickerOpen = true
+                },
+                onLongClickLabel = "Open Home customization"
+              )
+              .testTag("home_empty_customization_zone")
+          )
         }
       }
 
@@ -460,6 +475,10 @@ fun HomeScreen(
           onToggleWidget(widgetType)
           isCustomWidgetPickerOpen = false
         },
+        onOpenSettings = {
+          isCustomWidgetPickerOpen = false
+          onOpenSettings()
+        },
         onDismiss = { isCustomWidgetPickerOpen = false }
       )
     }
@@ -514,6 +533,7 @@ private fun CustomWidgetPicker(
   accentColor: Color,
   isDark: Boolean,
   onToggle: (NosWidgetPortType) -> Unit,
+  onOpenSettings: () -> Unit,
   onDismiss: () -> Unit
 ) {
   val surface = if (isDark) Color(0xFF111114) else Color(0xFFF6F6F6)
@@ -534,6 +554,20 @@ private fun CustomWidgetPicker(
         Text(if (clockActive) "REMOVE  •  CLOCK" else "ADD  •  CLOCK")
       }
       Text(text = "More custom widgets will be added here.", fontSize = 12.sp, color = secondary)
+
+      Button(
+        onClick = {
+          com.example.util.VibrationHelper.vibrateTouch(LocalContext.current)
+          onOpenSettings()
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+          containerColor = primary,
+          contentColor = surface
+        )
+      ) {
+        Text("HOME SETTINGS  •  CUSTOMISE")
+      }
     }
   }
 }
