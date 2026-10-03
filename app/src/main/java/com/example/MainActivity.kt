@@ -481,7 +481,8 @@ fun NothingLauncherApp(
           val newTheme = when (settings.themeMode) {
             LauncherThemeMode.ORIGINAL -> LauncherThemeMode.MONOCHROME_STUDIO
             LauncherThemeMode.MONOCHROME_STUDIO -> LauncherThemeMode.ATMOSPHERE_PASTEL
-            LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.ORIGINAL
+            LauncherThemeMode.ATMOSPHERE_PASTEL -> LauncherThemeMode.GLYPH_RED
+            LauncherThemeMode.GLYPH_RED -> LauncherThemeMode.ORIGINAL
           }
           val newSettings = when (newTheme) {
             LauncherThemeMode.ORIGINAL -> settings.copy(
@@ -517,6 +518,18 @@ fun NothingLauncherApp(
                 com.example.model.NosWidgetPortType.STICKER_FOCUS_CLUSTER,
                 com.example.model.NosWidgetPortType.CLOCK_MAIN,
                 com.example.model.NosWidgetPortType.WEATHER_MAIN
+              )
+            )
+            LauncherThemeMode.GLYPH_RED -> settings.copy(
+              themeMode = newTheme,
+              wallpaperIndex = 0,
+              accentColorIndex = 0,
+              clockStyle = LauncherClockStyle.DIGITAL,
+              iconPack = com.example.model.IconPackStyle.MONOCHROME,
+              activeWidgets = listOf(
+                com.example.model.NosWidgetPortType.CLOCK_MAIN,
+                com.example.model.NosWidgetPortType.WEATHER_MAIN,
+                com.example.model.NosWidgetPortType.MINI_CLUSTER_2X2
               )
             )
           }
