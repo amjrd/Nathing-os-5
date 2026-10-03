@@ -253,7 +253,8 @@ fun AppDrawerSheet(
                   primaryText = primaryText, secondaryText = secondaryText,
                   cardSizeLevel = drawerCardSizeLevel,
                   isExpanded = expandedCategory == right.title,
-                  onExpand = { expandedCategory = right.title }
+                  onExpand = { expandedCategory = right.title },
+                  modifier = Modifier.weight(1f)
                 )
               } else {
                 Spacer(modifier = Modifier.weight(1f))
@@ -386,7 +387,6 @@ private fun DrawerCategoryCard(
 
   Box(
     modifier = modifier
-      .weight(1f)
       .height(cardHeight)
       .zIndex(if (isExpanded) 10f else 0f)
       .testTag("drawer_category_" + category.title.lowercase())
