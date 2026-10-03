@@ -74,6 +74,26 @@ private val NothingRetroColorScheme = lightColorScheme(
   outlineVariant = NothingRetroUnlitDot
 )
 
+private val NothingGlyphRedColorScheme = darkColorScheme(
+  primary = NothingRed,
+  onPrimary = NothingWhite,
+  primaryContainer = Color(0xFF2A1113),
+  onPrimaryContainer = NothingWhite,
+  secondary = Color(0xFFE8E8E8),
+  onSecondary = NothingBlack,
+  secondaryContainer = Color(0xFF202020),
+  onSecondaryContainer = NothingWhite,
+  tertiary = NothingRedLight,
+  background = Color(0xFF0B0B0C),
+  onBackground = NothingWhite,
+  surface = Color(0xFF151517),
+  onSurface = NothingWhite,
+  surfaceVariant = Color(0xFF202024),
+  onSurfaceVariant = Color(0xFFC7C7C9),
+  outline = Color(0xFF3A3A3E),
+  outlineVariant = Color(0xFF29292D)
+)
+
 data class LauncherThemeColors(
   val isDark: Boolean = true,
   val background: Color = NothingBlack,
@@ -172,26 +192,6 @@ fun MyApplicationTheme(
       )
     }
   }
-
-private val NothingGlyphRedColorScheme = darkColorScheme(
-  primary = NothingRed,
-  onPrimary = NothingWhite,
-  primaryContainer = Color(0xFF2A1113),
-  onPrimaryContainer = NothingWhite,
-  secondary = Color(0xFFE8E8E8),
-  onSecondary = NothingBlack,
-  secondaryContainer = Color(0xFF202020),
-  onSecondaryContainer = NothingWhite,
-  tertiary = NothingRedLight,
-  background = Color(0xFF0B0B0C),
-  onBackground = NothingWhite,
-  surface = Color(0xFF151517),
-  onSurface = NothingWhite,
-  surfaceVariant = Color(0xFF202024),
-  onSurfaceVariant = Color(0xFFC7C7C9),
-  outline = Color(0xFF3A3A3E),
-  outlineVariant = Color(0xFF29292D)
-)
 
   CompositionLocalProvider(LocalLauncherTheme provides themeColors) {
     MaterialTheme(
