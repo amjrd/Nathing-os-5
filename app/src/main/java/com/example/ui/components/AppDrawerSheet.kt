@@ -119,6 +119,7 @@ fun AppDrawerSheet(
   Box(
     modifier = modifier
       .fillMaxSize()
+      .background(backgroundColor)
       .testTag("app_drawer_container")
   ) {
     Column(
