@@ -254,14 +254,15 @@ fun HomeScreen(
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .combinedClickable(
-                    onClick = { onOpenAppInfo(widgetInfoApp) },
-                    onLongClick = {
-                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
-                    },
-                    onLongClickLabel = "Open Home widgets"
-                  )
+                  .pointerInput(Unit) {
+                    detectTapGestures(
+                      onTap = { onOpenAppInfo(widgetInfoApp) },
+                      onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isCustomWidgetPickerOpen = true
+                      }
+                    )
+                  }
               ) {
                 CustomClockWidget(currentTime, currentDate, settings.clockStyle, accentColor, theme.isDark, widgetScale)
               }
@@ -277,14 +278,15 @@ fun HomeScreen(
                   Box(
                     modifier = Modifier
                       .weight(1f)
-                      .combinedClickable(
-                        onClick = { onOpenAppInfo(widgetInfoApp) },
-                        onLongClick = {
-                          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                          isCustomWidgetPickerOpen = true
-                        },
-                        onLongClickLabel = "Open Home widgets"
-                      )
+                      .pointerInput(Unit) {
+                    detectTapGestures(
+                      onTap = { onOpenAppInfo(widgetInfoApp) },
+                      onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isCustomWidgetPickerOpen = true
+                      }
+                    )
+                  }
                   ) {
                     CustomWeatherWidget(weather, toggles, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
                   }
@@ -293,14 +295,15 @@ fun HomeScreen(
                   Box(
                     modifier = Modifier
                       .weight(1f)
-                      .combinedClickable(
-                        onClick = { onOpenAppInfo(widgetInfoApp) },
-                        onLongClick = {
-                          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                          isCustomWidgetPickerOpen = true
-                        },
-                        onLongClickLabel = "Open Home widgets"
-                      )
+                      .pointerInput(Unit) {
+                    detectTapGestures(
+                      onTap = { onOpenAppInfo(widgetInfoApp) },
+                      onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isCustomWidgetPickerOpen = true
+                      }
+                    )
+                  }
                   ) {
                     CustomPedometerWidget(fitness, ramPct, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
                   }
@@ -312,14 +315,15 @@ fun HomeScreen(
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .combinedClickable(
-                    onClick = { onOpenAppInfo(widgetInfoApp) },
-                    onLongClick = {
-                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isCustomWidgetPickerOpen = true
-                    },
-                    onLongClickLabel = "Open Home widgets"
-                  )
+                  .pointerInput(Unit) {
+                    detectTapGestures(
+                      onTap = { onOpenAppInfo(widgetInfoApp) },
+                      onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isCustomWidgetPickerOpen = true
+                      }
+                    )
+                  }
               ) {
                 CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
               }
