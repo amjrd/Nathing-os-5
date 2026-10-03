@@ -194,82 +194,90 @@ fun AppDrawerSheet(
         }
       }
       Spacer(Modifier.height(8.dp))
-      LazyColumn(
+      Box(
         modifier = Modifier
           .weight(1f)
           .fillMaxWidth()
-          .testTag("drawer_category_scroll"),
-        state = drawerListState,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 2.dp, bottom = 96.dp)
       ) {
-        if (drawerMode == "Categories") {
-          items((categories.size + 1) / 2) { rowIndex ->
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-              val left = categories[rowIndex * 2]
-              DrawerCategoryCard(
-                category = left,
-                onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
-                onTogglePin = onTogglePin, onToggleDock = onToggleDock,
-                iconPack = iconPack, accentColor = accentColor,
-                primaryText = primaryText, secondaryText = secondaryText,
-                cardSizeLevel = drawerCardSizeLevel,
-                isExpanded = expandedCategory == left.title,
-                onExpand = { expandedCategory = left.title },
-                modifier = Modifier.weight(1f)
-              )
-
-              val rightIndex = rowIndex * 2 + 1
-              if (rightIndex < categories.size) {
-                val right = categories[rightIndex]
+        LazyColumn(
+          modifier = Modifier
+            .fillMaxSize()
+            .testTag("drawer_category_scroll"),
+          state = drawerListState,
+          verticalArrangement = Arrangement.spacedBy(16.dp),
+          contentPadding = PaddingValues(top = 2.dp, bottom = 96.dp)
+        ) {
+          if (drawerMode == "Categories") {
+            items((categories.size + 1) / 2) { rowIndex ->
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                val left = categories[rowIndex * 2]
                 DrawerCategoryCard(
-                  category = right,
+                  category = left,
                   onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
                   onTogglePin = onTogglePin, onToggleDock = onToggleDock,
                   iconPack = iconPack, accentColor = accentColor,
                   primaryText = primaryText, secondaryText = secondaryText,
                   cardSizeLevel = drawerCardSizeLevel,
-                  isExpanded = expandedCategory == right.title,
-                  onExpand = { expandedCategory = right.title },
+                  isExpanded = expandedCategory == left.title,
+                  onExpand = { expandedCategory = left.title },
                   modifier = Modifier.weight(1f)
                 )
-              } else {
-                Spacer(modifier = Modifier.weight(1f))
+
+                val rightIndex = rowIndex * 2 + 1
+                if (rightIndex < categories.size) {
+                  val right = categories[rightIndex]
+                  DrawerCategoryCard(
+                    category = right,
+                    onAppClick = onAppClick, onOpenAppInfo = onOpenAppInfo,
+                    onTogglePin = onTogglePin, onToggleDock = onToggleDock,
+                    iconPack = iconPack, accentColor = accentColor,
+                    primaryText = primaryText, secondaryText = secondaryText,
+                    cardSizeLevel = drawerCardSizeLevel,
+                    isExpanded = expandedCategory == right.title,
+                    onExpand = { expandedCategory = right.title },
+                    modifier = Modifier.weight(1f)
+                  )
+                } else {
+                  Spacer(modifier = Modifier.weight(1f))
+                }
               }
             }
-          }
-        } else {
-          items((allApps.size + 3) / 4) { rowIndex ->
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceEvenly,
-              verticalAlignment = Alignment.Top
-            ) {
-              val start = rowIndex * 4
-              allApps.drop(start).take(4).forEach { app ->
-                DrawerAppIcon(
-                  app = app,
-                  iconSize = 58.dp,
-                  onClick = { onAppClick(app) },
-                  onOpenAppInfo = onOpenAppInfo,
-                  onTogglePin = onTogglePin,
-                  onToggleDock = onToggleDock,
-                  iconPack = iconPack,
-                  accentColor = accentColor,
-                  primaryText = primaryText,
-                  showLabel = true
-                )
+          } else {
+            items((allApps.size + 3) / 4) { rowIndex ->
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top
+              ) {
+                val start = rowIndex * 4
+                allApps.drop(start).take(4).forEach { app ->
+                  DrawerAppIcon(
+                    app = app,
+                    iconSize = 58.dp,
+                    onClick = { onAppClick(app) },
+                    onOpenAppInfo = onOpenAppInfo,
+                    onTogglePin = onTogglePin,
+                    onToggleDock = onToggleDock,
+                    iconPack = iconPack,
+                    accentColor = accentColor,
+                    primaryText = primaryText,
+                    showLabel = true
+                  )
+                }
               }
             }
           }
         }
-      }
 
-      if (showDrawerScrollbar) {
-        DrawerScrollbarIndicator(state = drawerListState, modifier = Modifier.align(Alignment.CenterEnd))
+        if (showDrawerScrollbar) {
+          DrawerScrollbarIndicator(
+            state = drawerListState,
+            modifier = Modifier.align(Alignment.CenterEnd)
+          )
+        }
       }
     }
 
