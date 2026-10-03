@@ -463,20 +463,11 @@ fun AppIconItem(
         },
         onClick = {
           showContextMenu = false
-          var handled = false
-          try {
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-              data = Uri.parse("package:${app.packageName}")
-              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-            handled = true
-          } catch (_: Exception) {
-            handled = false
-          }
-          if (!handled) {
-            onOpenAppInfo?.invoke(app)
-          }
+          // Keep App Info owned by MainActivity so it can be opened repeatedly.
+          // Do not launch Android Settings directly from the menu: that bypasses
+          // the launcher sheet state and was the cause of the one-shot behavior.
+          onOpenAppInfo?.invoke(app)
+        }
         }
       )
 
