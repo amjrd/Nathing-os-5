@@ -53,7 +53,7 @@ private val NothingLightColorScheme = lightColorScheme(
   outlineVariant = Color(0xFFD0D0D3)
 )
 
-// Theme Retro Pastel (Image 3 & 5: Retro Car & Soft Sage/Mint aesthetic)
+// Theme 3: Atmospheric pastel/teal
 private val NothingRetroColorScheme = lightColorScheme(
   primary = NothingRetroAccent,
   onPrimary = NothingWhite,
@@ -104,6 +104,7 @@ fun MyApplicationTheme(
     LauncherThemeMode.ORIGINAL -> NothingDarkColorScheme
     LauncherThemeMode.MONOCHROME_STUDIO -> NothingLightColorScheme
     LauncherThemeMode.ATMOSPHERE_PASTEL -> NothingRetroColorScheme
+    LauncherThemeMode.GLYPH_RED -> NothingGlyphRedColorScheme
   }
   val themeColors = when (themeMode) {
     LauncherThemeMode.ORIGINAL -> {
@@ -154,7 +155,43 @@ fun MyApplicationTheme(
         searchPillBg = Color(0xFFEEF3EC)
       )
     }
+    LauncherThemeMode.GLYPH_RED -> {
+      LauncherThemeColors(
+        isDark = true,
+        background = Color(0xFF09090A),
+        surface = Color(0xFF151517),
+        elevated = Color(0xFF202024),
+        border = Color(0xFF343438),
+        textPrimary = NothingWhite,
+        textSecondary = Color(0xFF9A9A9E),
+        unlitDot = Color(0xFF26262A),
+        dockBg = Color(0xE8151517),
+        dockButtonBg = Color(0xFF242428),
+        dockIconTint = NothingWhite,
+        searchPillBg = Color(0xFF19191C)
+      )
+    }
   }
+
+private val NothingGlyphRedColorScheme = darkColorScheme(
+  primary = NothingRed,
+  onPrimary = NothingWhite,
+  primaryContainer = Color(0xFF2A1113),
+  onPrimaryContainer = NothingWhite,
+  secondary = Color(0xFFE8E8E8),
+  onSecondary = NothingBlack,
+  secondaryContainer = Color(0xFF202020),
+  onSecondaryContainer = NothingWhite,
+  tertiary = NothingRedLight,
+  background = Color(0xFF0B0B0C),
+  onBackground = NothingWhite,
+  surface = Color(0xFF151517),
+  onSurface = NothingWhite,
+  surfaceVariant = Color(0xFF202024),
+  onSurfaceVariant = Color(0xFFC7C7C9),
+  outline = Color(0xFF3A3A3E),
+  outlineVariant = Color(0xFF29292D)
+)
 
   CompositionLocalProvider(LocalLauncherTheme provides themeColors) {
     MaterialTheme(
