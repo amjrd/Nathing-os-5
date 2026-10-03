@@ -580,12 +580,8 @@ fun NothingLauncherApp(
         activeWidgets = settings.activeWidgets,
         hasSystemWidget = systemWidgetView != null,
         onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
-        onAddSystemWidget = {
-          systemWidgetHostManager.startPicker()
-        },
-        onRemoveSystemWidget = {
-          systemWidgetHostManager.removeWidget()
-        },
+        onAddSystemWidget = onAddSystemWidget,
+        onRemoveSystemWidget = onRemoveSystemWidget,
         onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
       )
