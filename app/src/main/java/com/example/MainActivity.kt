@@ -578,7 +578,14 @@ fun NothingLauncherApp(
     if (isWidgetSheetOpen) {
       NosWidgetPortSheet(
         activeWidgets = settings.activeWidgets,
+        hasSystemWidget = systemWidgetView != null,
         onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
+        onAddSystemWidget = {
+          systemWidgetHostManager.startPicker()
+        },
+        onRemoveSystemWidget = {
+          systemWidgetHostManager.removeWidget()
+        },
         onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
       )
