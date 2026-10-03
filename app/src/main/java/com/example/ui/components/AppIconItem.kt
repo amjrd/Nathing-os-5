@@ -468,7 +468,6 @@ fun AppIconItem(
           // the launcher sheet state and was the cause of the one-shot behavior.
           onOpenAppInfo?.invoke(app)
         }
-        }
       )
 
       // 2. Pin / Unpin
