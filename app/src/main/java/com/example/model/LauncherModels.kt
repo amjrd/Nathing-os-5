@@ -164,10 +164,6 @@ data class LauncherSettings(
   val iconSizeLevel: Int = 1, // 0: Small (44dp), 1: Standard (52dp), 2: Large (60dp), 3: Extra Large (68dp)
   val drawerCardSizeLevel: Int = 1, // 0: Compact, 1: Standard, 2: Large
   val widgetSizeLevel: Int = 1, // 0: Compact (85%), 1: Standard (100%), 2: Expanded (115%)
-  val activeWidgets: List<NosWidgetPortType> = listOf(
-    NosWidgetPortType.CALENDAR_DIGITAL_TIME,
-    NosWidgetPortType.MINI_CLUSTER_2X2,
-    NosWidgetPortType.CLOCK_MAIN,
-    NosWidgetPortType.WEATHER_MAIN
-  )
+  // Custom widgets start empty; the user adds them from Home.
+  val activeWidgets: List<NosWidgetPortType> = emptyList()
 )
