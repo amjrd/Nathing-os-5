@@ -127,52 +127,67 @@ fun AppDrawerSheet(
       Spacer(Modifier.height(10.dp))
 
       Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Row(
-          modifier = Modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(26.dp))
-            .background(Color(0xFF3A3A3E).copy(alpha = 0.92f))
-            .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
-            .padding(4.dp)
-        ) {
-          listOf("All", "Categories").forEach { mode ->
-            Box(
-              modifier = Modifier
-                .width(104.dp)
-                .height(44.dp)
-                .clip(RoundedCornerShape(22.dp))
-                .background(if (drawerMode == mode) Color(0xFFE7E7E9) else Color.Transparent)
-                .clickable {
-                  drawerMode = mode
-                  expandedCategory = null
-                },
-              contentAlignment = Alignment.Center
-            ) {
-              Text(
-                text = mode,
-                color = if (drawerMode == mode) Color(0xFF111113) else primaryText,
-                fontSize = 16.sp,
-                fontWeight = if (drawerMode == mode) FontWeight.Medium else FontWeight.Normal
-              )
-            }
-          }
+        Column(modifier = Modifier.weight(1f)) {
+          Text(
+            text = "ALL APPS",
+            color = primaryText,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.5.sp
+          )
+          Text(
+            text = allApps.size.toString() + " applications",
+            color = secondaryText,
+            fontSize = 11.sp
+          )
         }
-
-        Spacer(Modifier.weight(1f))
-
         IconButton(
           onClick = onOpenSettings,
-          modifier = Modifier
-            .size(48.dp)
-            .testTag("drawer_launcher_settings")
+          modifier = Modifier.size(48.dp).testTag("drawer_launcher_settings")
         ) {
-          Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(28.dp))
+          Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(26.dp))
         }
       }
 
+      Spacer(Modifier.height(10.dp))
+
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(52.dp)
+          .clip(RoundedCornerShape(26.dp))
+          .background(Color(0xFF2C2C2E).copy(alpha = 0.92f))
+          .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
+          .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Icon(Icons.Default.Search, "Search apps", tint = Color.White.copy(alpha = 0.78f), modifier = Modifier.size(24.dp))
+        Spacer(Modifier.width(10.dp))
+        BasicTextField(
+          value = searchQuery,
+          onValueChange = onSearchChange,
+          singleLine = true,
+          textStyle = TextStyle(color = primaryText, fontSize = 16.sp),
+          cursorBrush = SolidColor(accentColor),
+          modifier = Modifier.weight(1f).testTag("app_search_input"),
+          decorationBox = { innerTextField ->
+            Box(contentAlignment = Alignment.CenterStart) {
+              if (searchQuery.isEmpty()) {
+                Text("Search apps", color = Color.White.copy(alpha = 0.62f), fontSize = 16.sp)
+              }
+              innerTextField()
+            }
+          }
+        )
+        if (searchQuery.isNotEmpty()) {
+          IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(38.dp)) {
+            Icon(Icons.Default.Clear, "Clear search", tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(20.dp))
+          }
+        }
+      }
       Spacer(Modifier.height(8.dp))
       LazyColumn(
         modifier = Modifier
@@ -244,43 +259,6 @@ fun AppDrawerSheet(
               }
             }
           }
-        }
-      }
-    }
-
-    Row(
-      modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .fillMaxWidth()
-        .padding(start = 18.dp, top = 0.dp, end = 18.dp, bottom = 14.dp)
-        .height(58.dp)
-        .clip(RoundedCornerShape(29.dp))
-        .background(Color(0xFF5B5B61).copy(alpha = 0.56f))
-        .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(29.dp))
-        .padding(horizontal = 14.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Icon(Icons.Default.Search, "Search apps", tint = Color.White.copy(alpha = 0.78f), modifier = Modifier.size(28.dp))
-      Spacer(Modifier.width(10.dp))
-      BasicTextField(
-        value = searchQuery,
-        onValueChange = onSearchChange,
-        singleLine = true,
-        textStyle = TextStyle(color = primaryText, fontSize = 18.sp),
-        cursorBrush = SolidColor(accentColor),
-        modifier = Modifier.weight(1f).testTag("app_search_input"),
-        decorationBox = { innerTextField ->
-          Box(contentAlignment = Alignment.CenterStart) {
-            if (searchQuery.isEmpty()) {
-              Text("Search", color = Color.White.copy(alpha = 0.68f), fontSize = 18.sp)
-            }
-            innerTextField()
-          }
-        }
-      )
-      if (searchQuery.isNotEmpty()) {
-        IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(40.dp)) {
-          Icon(Icons.Default.Clear, "Clear search", tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(20.dp))
         }
       }
     }
