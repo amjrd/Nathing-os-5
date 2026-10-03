@@ -254,15 +254,14 @@ fun HomeScreen(
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .pointerInput(Unit) {
-                    detectTapGestures(
-                      onTap = { onOpenAppInfo(widgetInfoApp) },
-                      onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isCustomWidgetPickerOpen = true
-                      }
-                    )
-                  }
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
               ) {
                 CustomClockWidget(currentTime, currentDate, settings.clockStyle, accentColor, theme.isDark, widgetScale)
               }
@@ -278,15 +277,14 @@ fun HomeScreen(
                   Box(
                     modifier = Modifier
                       .weight(1f)
-                      .pointerInput(Unit) {
-                    detectTapGestures(
-                      onTap = { onOpenAppInfo(widgetInfoApp) },
-                      onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isCustomWidgetPickerOpen = true
-                      }
-                    )
-                  }
+                      .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
                   ) {
                     CustomWeatherWidget(weather, toggles, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
                   }
@@ -295,15 +293,14 @@ fun HomeScreen(
                   Box(
                     modifier = Modifier
                       .weight(1f)
-                      .pointerInput(Unit) {
-                    detectTapGestures(
-                      onTap = { onOpenAppInfo(widgetInfoApp) },
-                      onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isCustomWidgetPickerOpen = true
-                      }
-                    )
-                  }
+                      .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
                   ) {
                     CustomPedometerWidget(fitness, ramPct, accentColor, theme.isDark, widgetScale, Modifier.fillMaxWidth())
                   }
@@ -315,15 +312,14 @@ fun HomeScreen(
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .pointerInput(Unit) {
-                    detectTapGestures(
-                      onTap = { onOpenAppInfo(widgetInfoApp) },
-                      onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isCustomWidgetPickerOpen = true
-                      }
-                    )
-                  }
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isCustomWidgetPickerOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
               ) {
                 CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
               }
