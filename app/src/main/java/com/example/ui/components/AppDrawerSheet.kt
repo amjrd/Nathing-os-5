@@ -88,7 +88,7 @@ fun AppDrawerSheet(
   val primaryText = Color(0xFFFFFFFF)
   val secondaryText = Color(0xFFA1A1A6)
 
-  val categoryNames = remember { listOf("Social", "Tools", "Photography", "Entertainment", "Shopping", "Games") }
+  val categoryNames = remember { listOf("Social", "Tools", "Photography", "Entertainment", "Shopping", "Games", "Communication") }
 
   var expandedCategory by remember { mutableStateOf<String?>(null) }
   var drawerMode by remember { mutableStateOf("Categories") }
@@ -99,17 +99,6 @@ fun AppDrawerSheet(
       .filter { app -> searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true) }
       .sortedBy { it.label.lowercase() }
   }
-  val recentApps = remember(apps) {
-    apps.distinctBy { it.packageName }
-      .filter { app -> !isSystemSettingsApp(app) }
-      .sortedByDescending { app ->
-        runCatching {
-          context.packageManager.getPackageInfo(app.packageName, 0).firstInstallTime
-        }.getOrDefault(0L)
-      }
-      .take(4)
-  }
-
   val categories = remember(apps, searchQuery) {
     val query = searchQuery.trim()
     categoryNames.mapNotNull { title ->
@@ -185,43 +174,6 @@ fun AppDrawerSheet(
       }
 
       Spacer(Modifier.height(8.dp))
-      if (drawerMode == "Categories" && recentApps.isNotEmpty()) {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(112.dp)
-            .clip(RoundedCornerShape(56.dp))
-            .background(Color(0xFF202023).copy(alpha = 0.72f))
-            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(56.dp))
-            .padding(horizontal = 18.dp),
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          recentApps.forEach { app ->
-            DrawerAppIcon(
-              app = app,
-              iconSize = 64.dp,
-              onClick = { onAppClick(app) },
-              onOpenAppInfo = onOpenAppInfo,
-              onTogglePin = onTogglePin,
-              onToggleDock = onToggleDock,
-              iconPack = iconPack,
-              accentColor = accentColor
-            )
-          }
-        }
-
-        Text(
-          text = "Recently installed",
-          color = primaryText,
-          fontSize = 15.sp,
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 10.dp),
-          textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-      }
-
       LazyColumn(
         modifier = Modifier
           .weight(1f)
@@ -571,6 +523,7 @@ private fun classifyDrawerCategory(app: AppItem): String {
     hasAny("youtube", "spotify", "netflix", "podcast", "music", "video", "vlc", "anime", "tiktok", "twitch", "capcut", "stream", "entertainment") -> "Entertainment"
     hasAny("amazon", "ebay", "shein", "temu", "aliexpress", "shopping", "store", "oppo", "market", "shop") -> "Shopping"
     hasAny("game", "gaming", "steam", "ea sports", "fc mobile", "pubg", "free fire", "minecraft", "roblox", "play games") -> "Games"
+    hasAny("whatsapp", "messages", "messaging", "sms", "phone", "dialer", "contacts", "gmail", "email", "outlook", "telegram", "messenger", "communication", "mail") -> "Communication"
     else -> "Tools"
   }
 }
