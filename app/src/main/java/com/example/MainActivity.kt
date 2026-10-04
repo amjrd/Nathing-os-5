@@ -155,6 +155,12 @@ class MainActivity : ComponentActivity() {
             systemWidgetView = systemWidgetView,
             onAddSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.startPicker() },
             onRemoveSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.removeWidget() },
+            onOpenSystemWidgetAppInfo = {
+              val providerPackage = if (::systemWidgetHost.isInitialized) {
+                systemWidgetHost.getWidgetProviderPackageName()
+              } else null
+              if (!providerPackage.isNullOrBlank()) openSystemAppInfo(providerPackage)
+            },
             modifier = Modifier.fillMaxSize()
           )
         }
@@ -227,6 +233,7 @@ fun NothingLauncherApp(
   systemWidgetView: AppWidgetHostView? = null,
   onAddSystemWidget: () -> Unit = {},
   onRemoveSystemWidget: () -> Unit = {},
+  onOpenSystemWidgetAppInfo: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
@@ -581,6 +588,7 @@ fun NothingLauncherApp(
         hasSystemWidget = systemWidgetView != null,
         onAddSystemWidget = onAddSystemWidget,
         onRemoveSystemWidget = onRemoveSystemWidget,
+        onOpenSystemWidgetAppInfo = onOpenSystemWidgetAppInfo,
         onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
         onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
