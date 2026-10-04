@@ -292,7 +292,7 @@ fun AppIconItem(
             modifier = Modifier
               .fillMaxSize()
               .clip(CircleShape)
-              .background(if (isDark) NothingDarkSurface else Color.White)
+              .background(if (isDark) Color(0xFF202020) else Color.White)
               .border(2.dp, theme.border.copy(alpha = 0.7f), CircleShape)
               .padding(3.dp)
               .border(1.dp, theme.border.copy(alpha = 0.35f), CircleShape),
@@ -663,7 +663,7 @@ private fun drawableToBitmap(drawable: Drawable, applyGrayscale: Boolean, isDark
         postConcat(ColorMatrix(scale))
       } else {
         // Theme Nuit (Dark): Boost contrast for sharp white/grey glyphs
-        val contrast = 1.35f
+        val contrast = 1.55f
         val scale = FloatArray(20) { 0f }.apply {
           this[0] = contrast
           this[6] = contrast

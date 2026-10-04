@@ -91,7 +91,7 @@ fun AppDrawerSheet(
   onOpenSettings: () -> Unit = {},
 ) {
   val context = LocalContext.current
-  val backgroundColor = Color(0xFF0B0B0C)
+  val backgroundColor = Color(0xFF050506)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
   val primaryText = Color(0xFFFFFFFF)
@@ -145,16 +145,16 @@ fun AppDrawerSheet(
         .navigationBarsPadding()
         .padding(horizontal = 16.dp)
     ) {
-      Spacer(Modifier.height(10.dp))
+      Spacer(Modifier.height(4.dp))
 
       Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 0.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
       ) {
         IconButton(
           onClick = onOpenSettings,
-          modifier = Modifier.size(42.dp).testTag("drawer_launcher_settings")
+          modifier = Modifier.size(34.dp).testTag("drawer_launcher_settings")
         ) {
           Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(24.dp))
         }
@@ -170,8 +170,8 @@ fun AppDrawerSheet(
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .height(38.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+          .height(32.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
         listOf("All", "Categories").forEach { mode ->
@@ -180,9 +180,9 @@ fun AppDrawerSheet(
             modifier = Modifier
               .weight(1f)
               .fillMaxSize()
-              .clip(RoundedCornerShape(19.dp))
+              .clip(RoundedCornerShape(16.dp))
               .background(if (selected) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.06f))
-              .border(1.dp, Color.White.copy(alpha = if (selected) 0.16f else 0.06f), RoundedCornerShape(19.dp))
+              .border(1.dp, Color.White.copy(alpha = if (selected) 0.16f else 0.06f), RoundedCornerShape(16.dp))
               .clickable {
                 drawerMode = mode
                 expandedCategory = null
@@ -192,7 +192,7 @@ fun AppDrawerSheet(
             Text(
               text = mode,
               color = if (selected) primaryText else secondaryText,
-              fontSize = 12.sp,
+              fontSize = 11.sp,
               fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
             )
           }
@@ -463,7 +463,7 @@ private fun RecentlyInstalledRow(
     modifier = Modifier
       .fillMaxWidth()
       .clip(RoundedCornerShape(24.dp))
-      .background(Color(0xFF202023).copy(alpha = 0.62f))
+      .background(Color(0xFF111113).copy(alpha = 0.78f))
       .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
       .padding(horizontal = 14.dp, vertical = 12.dp)
   ) {
@@ -536,7 +536,7 @@ private fun DrawerCategoryCard(
       modifier = Modifier
         .fillMaxSize()
         .clip(RoundedCornerShape(24.dp))
-        .background(Color(0xFF202023).copy(alpha = 0.70f))
+        .background(Color(0xFF111113).copy(alpha = 0.86f))
         .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
         .clickable { onExpand() }
         .padding(horizontal = 14.dp, vertical = 12.dp)
