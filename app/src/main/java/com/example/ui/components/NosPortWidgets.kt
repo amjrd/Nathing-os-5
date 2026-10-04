@@ -1582,7 +1582,7 @@ fun NosNothingXEarbudsWidget(
       Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically) {
-          Icon(Icons.Default.Headphones, "Headphones", accentColor, Modifier.size(24.dp))
+          Icon(imageVector = Icons.Default.Headphones, contentDescription = "Headphones", tint = accentColor, modifier = Modifier.size(24.dp))
           Text(deviceName.take(12).uppercase(Locale.US), fontFamily = FontFamily.Monospace,
             fontSize = 9.sp, fontWeight = FontWeight.Bold, color = theme.textSecondary)
         }
@@ -1666,7 +1666,7 @@ fun NosSmartWatchBatteryWidget(
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.Widgets, "Smart watch", accentColor, Modifier.size(24.dp))
+        Icon(imageVector = Icons.Default.Widgets, contentDescription = "Smart watch", tint = accentColor, modifier = Modifier.size(24.dp))
         Text(watchName.take(15).uppercase(Locale.US), fontFamily = FontFamily.Monospace, fontSize = 9.sp,
           fontWeight = FontWeight.Bold, color = theme.textSecondary)
       }
