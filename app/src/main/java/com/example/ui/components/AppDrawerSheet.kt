@@ -318,16 +318,11 @@ fun AppDrawerSheet(
 
     if (expandedCategory != null) {
       categories.firstOrNull { it.title == expandedCategory }?.let { expanded ->
-        AnimatedVisibility(
-          visible = true,
-          enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.96f, animationSpec = tween(180)),
-          exit = fadeOut(tween(100)) + scaleOut(targetScale = 0.96f, animationSpec = tween(120)),
-          modifier = Modifier.fillMaxSize().zIndex(100f)
+        Box(
+          modifier = Modifier
+            .fillMaxSize()
+            .zIndex(100f)
         ) {
-          Box(
-            modifier = Modifier
-              .fillMaxSize()
-          ) {
           Box(
             modifier = Modifier
               .fillMaxSize()
@@ -350,7 +345,6 @@ fun AppDrawerSheet(
       }
     }
   }
-}
 
 @Composable
 private fun GlyphMatrixAccent(modifier: Modifier = Modifier) {
