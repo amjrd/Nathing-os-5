@@ -1124,7 +1124,7 @@ fun NosWidgetPortSheet(
                 .background(theme.elevated)
             ) {
               Icon(
-                imageVector = Icons.Default.Info,
+                imageVector = Icons.Default.Settings,
                 contentDescription = "Open widget provider App Info",
                 tint = theme.textPrimary,
                 modifier = Modifier.size(22.dp)
