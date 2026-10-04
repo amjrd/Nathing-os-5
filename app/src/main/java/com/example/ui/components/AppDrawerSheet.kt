@@ -108,7 +108,7 @@ fun AppDrawerSheet(
     else -> 58.dp
   }
   val showDrawerScrollbar by remember { derivedStateOf { drawerListState.layoutInfo.totalItemsCount > 0 && drawerListState.layoutInfo.visibleItemsInfo.size < drawerListState.layoutInfo.totalItemsCount } }
-
+  // Reopen Categories from the top so the first row of icons is always visible.\n  LaunchedEffect(drawerMode) { drawerListState.scrollToItem(0) }\n
   val allApps = remember(apps, searchQuery) {
     apps.distinctBy { it.packageName }
       .filter { app -> !isSystemSettingsApp(app) }
