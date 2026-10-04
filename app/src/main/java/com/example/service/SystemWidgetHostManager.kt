@@ -34,6 +34,7 @@ class SystemWidgetHostManager(
   private val host = AppWidgetHost(activity, HOST_ID)
   private val prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
   private var pendingWidgetId = INVALID_ID
+  private var previousWidgetId = INVALID_ID
 
   init {
     host.startListening()
@@ -41,10 +42,13 @@ class SystemWidgetHostManager(
   }
 
   fun startPicker() {
+    // Keep the currently displayed widget alive until a replacement is
+    // successfully selected. Cancelling the Android picker must not remove it.
     if (pendingWidgetId != INVALID_ID) {
-      host.deleteAppWidgetId(pendingWidgetId)
+      cleanupWidgetId(pendingWidgetId)
     }
 
+    previousWidgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
     pendingWidgetId = host.allocateAppWidgetId()
 
     val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply {
@@ -71,6 +75,7 @@ class SystemWidgetHostManager(
     if (resultCode != Activity.RESULT_OK) {
       cleanupWidgetId(returnedId)
       pendingWidgetId = INVALID_ID
+      previousWidgetId = INVALID_ID
       return true
     }
 
@@ -136,6 +141,13 @@ class SystemWidgetHostManager(
     if (widgetId == INVALID_ID) return
 
     prefs.edit().putInt(KEY_WIDGET_ID, widgetId).apply()
+
+    // Only release the old widget after the replacement is ready.
+    if (previousWidgetId != INVALID_ID && previousWidgetId != widgetId) {
+      cleanupWidgetId(previousWidgetId)
+    }
+
+    previousWidgetId = INVALID_ID
     pendingWidgetId = INVALID_ID
     displayWidget(widgetId)
   }
