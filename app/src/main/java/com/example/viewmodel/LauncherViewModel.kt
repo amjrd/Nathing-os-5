@@ -124,27 +124,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private val _ramUsedPercent = MutableStateFlow(62)
   val ramUsedPercent: StateFlow<Int> = _ramUsedPercent.asStateFlow()
 
-  // Notifications for Nothing Lockscreen
-  private val _notifications = MutableStateFlow<List<com.example.model.LockNotificationItem>>(
-    listOf(
-      com.example.model.LockNotificationItem(
-        id = "notif_system_1",
-        packageName = "com.nothing.os",
-        appName = "NOTHING OS 5",
-        title = "Glyph & Dot Matrix Engine",
-        text = "Nothing OS 5.0 running in ultra-minimalist mode. 120Hz smooth.",
-        timeFormatted = "NOW"
-      ),
-      com.example.model.LockNotificationItem(
-        id = "notif_system_2",
-        packageName = "com.nothing.battery",
-        appName = "BATTERY",
-        title = "Fast Charging Optimized",
-        text = "Battery level at 84%. Ready for all-day performance.",
-        timeFormatted = "12M AGO"
-      )
-    )
-  )
+  // Notifications are sourced from the real Android NotificationListenerService.
+  private val _notifications = MutableStateFlow<List<com.example.model.LockNotificationItem>>(emptyList())
   val notifications: StateFlow<List<com.example.model.LockNotificationItem>> = _notifications.asStateFlow()
 
   // Settings (persisted across app restarts)
@@ -249,7 +230,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   }
 
   fun dismissNotification(id: String) {
-    _notifications.update { list -> list.filterNot { it.id == id } }
+    val service = com.example.service.NothingNotificationListenerService.getService()
+    if (service != null && service.dismissNotification(id)) {
+      _notifications.update { list -> list.filterNot { it.id == id } }
+    }
   }
 
   fun launchShortcut(shortcut: com.example.model.LockShortcutType) {
