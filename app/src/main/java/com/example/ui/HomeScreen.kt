@@ -495,22 +495,26 @@ fun HomeScreen(
             }
 
             if (systemWidgetView != null) {
+              // Real Android widgets must receive the touch events themselves.
+              // Do not put a Compose clickable/combinedClickable parent around the
+              // AppWidgetHostView: that steals taps from buttons, toggles and links
+              // inside the provider's actual widget UI.
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .combinedClickable(
-                    onClick = { onOpenAppInfo(widgetInfoApp) },
-                    onLongClick = {
-                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                      isHomeCustomizationOpen = true
-                    },
-                    onLongClickLabel = "Open Home widgets"
-                  )
                   .clip(RoundedCornerShape(24.dp))
                   .border(1.dp, theme.border, RoundedCornerShape(24.dp))
               ) {
                 AndroidView(
-                  factory = { systemWidgetView!! },
+                  factory = {
+                    systemWidgetView!!.apply {
+                      setOnLongClickListener {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isHomeCustomizationOpen = true
+                        true
+                      }
+                    }
+                  },
                   update = { view -> view.requestLayout() },
                   modifier = Modifier.fillMaxWidth().scale(systemWidgetScale)
                 )
