@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -73,6 +74,7 @@ fun EnlargedFolderView(
         .clip(RoundedCornerShape(32.dp))
         .background(theme.surface)
         .border(1.dp, theme.border, RoundedCornerShape(32.dp))
+        .animateContentSize()
         .padding(14.dp)
         .testTag("enlarged_folder_${folder.id}")
     ) {
@@ -128,7 +130,7 @@ fun EnlargedFolderView(
               AppIconItem(
                 app = app,
                 onClick = { onAppClick(app) },
-                iconSize = 44.dp,
+                iconSize = 48.dp,
                 showLabel = false,
                 iconPack = iconPack,
                 accentColor = accentColor
