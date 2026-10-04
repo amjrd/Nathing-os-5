@@ -345,6 +345,7 @@ fun AppDrawerSheet(
       }
     }
   }
+}
 
 @Composable
 private fun GlyphMatrixAccent(modifier: Modifier = Modifier) {
