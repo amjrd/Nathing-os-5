@@ -1065,6 +1065,14 @@ fun NosWidgetPortSheet(
         onCheckedChange = { onToggleWidget(NosWidgetPortType.NOTHING_X_EARBUDS) }
       )
 
+      WidgetToggleItem(
+        title = "SMART WATCH BATTERY",
+        subtitle = "Real Bluetooth wearable battery when Android exposes it",
+        checked = activeWidgets.contains(NosWidgetPortType.SMARTWATCH_BATTERY),
+        accentColor = accentColor,
+        onCheckedChange = { onToggleWidget(NosWidgetPortType.SMARTWATCH_BATTERY) }
+      )
+
       Spacer(modifier = Modifier.height(10.dp))
 
       Text(
