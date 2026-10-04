@@ -84,6 +84,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -93,6 +94,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import android.os.SystemClock
+import android.appwidget.AppWidgetHostView
 import com.example.model.AppItem
 import com.example.model.AudioState
 import com.example.model.FitnessStats
@@ -154,6 +156,7 @@ fun HomeScreen(
   onToggleDockApp: (AppItem) -> Unit = {},
   onToggleWidget: (NosWidgetPortType) -> Unit = {},
   onOpenAppInfo: (AppItem) -> Unit = {},
+  systemWidgetView: AppWidgetHostView? = null,
   onUpdateSettings: (LauncherSettings) -> Unit = {},
   modifier: Modifier = Modifier
 ) {
@@ -400,6 +403,20 @@ fun HomeScreen(
                 )
               }
             }
+          }
+        }
+
+        // Real Android system widget selected through the launcher widget picker.
+        // This is the same host/picker concept used by Nothing/Launcher3.
+        if (systemWidgetView != null) {
+          item {
+            AndroidView(
+              factory = { systemWidgetView },
+              modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .border(1.dp, theme.border, RoundedCornerShape(24.dp))
+            )
           }
         }
 
