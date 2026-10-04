@@ -91,7 +91,7 @@ fun AppDrawerSheet(
   onOpenSettings: () -> Unit = {},
 ) {
   val context = LocalContext.current
-  val backgroundColor = Color(0xFF050506)
+  val backgroundColor = Color(0xD9050506)
   val cardColor = Color(0xFF1C1C1E)
   val searchColor = Color(0xFF2C2C2E)
   val primaryText = Color(0xFFFFFFFF)
