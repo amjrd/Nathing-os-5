@@ -98,6 +98,8 @@ class NothingNotificationListenerService : NotificationListenerService() {
 
   companion object {
     private var instance: NothingNotificationListenerService? = null
+
+    fun getService(): NothingNotificationListenerService? = instance
     private val _isListening = MutableStateFlow(false)
     val isListening: StateFlow<Boolean> = _isListening.asStateFlow()
 
