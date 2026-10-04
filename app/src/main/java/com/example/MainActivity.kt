@@ -366,7 +366,7 @@ fun NothingLauncherApp(
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
       modifier = Modifier
         .fillMaxSize()
-        .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 22.dp else 0.dp)
+        .blur(if (currentScreen == LauncherScreen.APP_DRAWER) 34.dp else 0.dp)
     )
 
     // Home gestures: drawer swipe stays confined to the dock zone.
