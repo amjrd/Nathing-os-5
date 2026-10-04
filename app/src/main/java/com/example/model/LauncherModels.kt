@@ -140,7 +140,8 @@ enum class NosWidgetPortType {
   PEDOMETER_GAUGE,       // Pedometer & RAM
   GIANT_CIRCLES_CLUSTER, // Screenshot 3: Giant Camera circle, Dot-Matrix Rain Weather circle & Dot-Matrix Glyph
   STICKER_FOCUS_CLUSTER, // Screenshot 5: Focus concentric lines, Retro Car sticker & Capsule pill
-  NOTHING_X_EARBUDS,     // Screenshot 5: Headphones 90% battery & Noise Cancellation toggle
+  NOTHING_X_EARBUDS,     // Real Bluetooth headset battery / system access
+    SMARTWATCH_BATTERY,    // Real Bluetooth wearable battery when Android exposes it
   MEDIA_FOLDER,          // Home widget: Media apps
   TOOLS_FOLDER           // Home widget: Tools apps
 }
