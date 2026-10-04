@@ -3,6 +3,11 @@ package com.example.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardActions
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +50,8 @@ fun NothingDock(
   onAppClick: (AppItem) -> Unit,
   onOpenDrawer: () -> Unit,
   onOpenSearch: () -> Unit,
+  searchQuery: String = "",
+  onSearchChange: (String) -> Unit = {},
   modifier: Modifier = Modifier,
   iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   accentColor: Color = NothingRed,
@@ -103,6 +110,7 @@ fun NothingDock(
       Spacer(modifier = Modifier.height(10.dp))
 
       // Signature Nothing Search Pill (Matches Image 3 rounded search pill)
+      val keyboard = LocalSoftwareKeyboardController.current
       Row(
         modifier = Modifier
           .fillMaxWidth()
@@ -114,27 +122,49 @@ fun NothingDock(
           .padding(horizontal = 16.dp)
           .testTag("nothing_search_pill"),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
       ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = "Search",
-            tint = theme.textSecondary,
-            modifier = Modifier.size(18.dp)
-          )
-          Text(
-            text = if (!theme.isDark) "Search" else "SEARCH OR TYPE URL...",
+        Icon(
+          imageVector = Icons.Default.Search,
+          contentDescription = "Search",
+          tint = theme.textSecondary,
+          modifier = Modifier.size(18.dp)
+        )
+        BasicTextField(
+          value = searchQuery,
+          onValueChange = onSearchChange,
+          singleLine = true,
+          textStyle = androidx.compose.ui.text.TextStyle(
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
-            color = theme.textSecondary,
+            color = theme.textPrimary,
             letterSpacing = 1.sp
-          )
-        }
-
+          ),
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+          keyboardActions = KeyboardActions(
+            onSearch = {
+              onOpenSearch()
+              keyboard?.hide()
+            }
+          ),
+          modifier = Modifier
+            .weight(1f)
+            .testTag("nothing_search_input"),
+          decorationBox = { innerTextField ->
+            Box {
+              if (searchQuery.isEmpty()) {
+                Text(
+                  text = if (!theme.isDark) "Search" else "SEARCH OR TYPE URL...",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 12.sp,
+                  color = theme.textSecondary,
+                  letterSpacing = 1.sp
+                )
+              }
+              innerTextField()
+            }
+          }
+        )
         Box(
           modifier = Modifier
             .size(6.dp)
