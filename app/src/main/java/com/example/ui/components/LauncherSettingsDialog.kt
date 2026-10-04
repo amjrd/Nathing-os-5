@@ -211,30 +211,13 @@ fun LauncherSettingsDialog(
         verticalAlignment = Alignment.CenterVertically
       ) {
         Column {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            Box(
-              modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(accentColor)
-            )
-            Text(
-              text = "NOTHING OS 5.0",
-              fontFamily = FontFamily.Monospace,
-              fontSize = 20.sp,
-              fontWeight = FontWeight.Bold,
-              color = theme.textPrimary,
-              letterSpacing = 2.sp
-            )
-          }
           Text(
             text = "LAUNCHER PREFERENCES",
             fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = theme.textSecondary
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = theme.textSecondary,
+            letterSpacing = 1.5.sp
           )
         }
         IconButton(onClick = onDismiss) {
