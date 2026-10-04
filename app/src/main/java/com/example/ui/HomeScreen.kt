@@ -521,7 +521,6 @@ fun HomeScreen(
                   color = theme.textSecondary.copy(alpha = 0.65f)
                 )
               }
-            }
           }
         }
 
