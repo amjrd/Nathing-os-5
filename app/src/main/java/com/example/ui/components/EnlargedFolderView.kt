@@ -116,8 +116,9 @@ fun EnlargedFolderView(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // 2x2 Apps Grid directly launchable
+        // 2x2 Apps Grid directly launchable + central add control
         val displayApps = folder.apps.take(4)
+        Box(contentAlignment = Alignment.Center) {
         Column(
           verticalArrangement = Arrangement.spacedBy(8.dp),
           horizontalAlignment = Alignment.CenterHorizontally
@@ -173,6 +174,23 @@ fun EnlargedFolderView(
               )
             }
           }
+        }
+        Box(
+          modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(theme.elevated.copy(alpha = 0.95f))
+            .border(1.dp, accentColor.copy(alpha = 0.8f), CircleShape)
+            .clickable { onOpenFolderSheet() },
+          contentAlignment = Alignment.Center
+        ) {
+          Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add app to folder",
+            tint = accentColor,
+            modifier = Modifier.size(18.dp)
+          )
+        }
         }
       }
     }
