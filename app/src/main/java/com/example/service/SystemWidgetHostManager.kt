@@ -42,6 +42,11 @@ class SystemWidgetHostManager(
   }
 
   fun startPicker() {
+    // Re-arm the host immediately before launching the system picker. Some
+    // Android 16/17 builds stop delivering widget lifecycle callbacks after
+    // returning from another Activity unless the host is listening again.
+    try { host.startListening() } catch (_: Exception) {}
+
     // Keep the currently displayed widget alive until a replacement is
     // successfully selected. Cancelling the Android picker must not remove it.
     if (pendingWidgetId != INVALID_ID) {
