@@ -271,7 +271,7 @@ fun AppIconItem(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = app.label,
                 modifier = Modifier
-                  .size(iconSize * 0.62f)
+                  .size(iconSize * if (app.label.contains("Outlook", ignoreCase = true)) 0.92f else 0.78f)
                   .clip(CircleShape)
               )
             } else {
@@ -306,7 +306,7 @@ fun AppIconItem(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = app.label,
                 modifier = Modifier
-                  .size(iconSize * 0.68f)
+                  .size(iconSize * if (app.label.contains("Outlook", ignoreCase = true)) 0.92f else 0.80f)
                   .clip(CircleShape)
               )
             } else {
@@ -343,7 +343,7 @@ fun AppIconItem(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = app.label,
                 modifier = Modifier
-                  .size(iconSize * 0.70f)
+                  .size(iconSize * if (app.label.contains("Outlook", ignoreCase = true)) 0.92f else 0.82f)
                   .clip(CircleShape)
               )
             } else {
@@ -376,7 +376,7 @@ fun AppIconItem(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = app.label,
                 modifier = Modifier
-                  .size(iconSize * 0.70f)
+                  .size(iconSize * if (app.label.contains("Outlook", ignoreCase = true)) 0.92f else 0.82f)
                   .clip(CircleShape)
               )
             } else {
