@@ -1557,7 +1557,7 @@ fun NosNothingXEarbudsWidget(
         }
         if (preferred != null) {
           deviceName = preferred.name ?: "HEADPHONES"
-          val level = if (android.os.Build.VERSION.SDK_INT >= 33) preferred.batteryLevel else -1
+          val level = if (android.os.Build.VERSION.SDK_INT >= 33) readBluetoothBatteryLevel(preferred) else -1
           if (level >= 0) deviceBattery = level
         }
       } catch (_: SecurityException) {}
@@ -1584,7 +1584,7 @@ fun NosNothingXEarbudsWidget(
           verticalAlignment = Alignment.CenterVertically) {
           Icon(Icons.Default.Headphones, "Headphones", accentColor, Modifier.size(24.dp))
           Text(deviceName.take(12).uppercase(Locale.US), fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = theme.textSecondary)
+            fontSize = 9.sp, fontWeight = fontWeight = FontWeight.Bold, color = theme.textSecondary)
         }
         Row(verticalAlignment = Alignment.Bottom) {
           Text(if (deviceBattery >= 0) "$deviceBattery%" else "--%",
@@ -1606,14 +1606,22 @@ fun NosNothingXEarbudsWidget(
         }.padding(14.dp)
     ) {
       Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-        Text("NOISE CONTROL", FontFamily.Monospace, 9.sp, color = theme.textSecondary)
+        Text("NOISE CONTROL", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = theme.textSecondary)
         Text(when (noiseMode) { 1 -> "ANC: HIGH"; 2 -> "TRANSPARENCY"; else -> "OFF" },
-          FontFamily.Monospace, 13.sp, FontWeight.Bold,
+          fontFamily = FontFamily.Monospace, fontSize = 13.sp, fontWeight = FontWeight.Bold,
           color = if (noiseMode == 1) accentColor else theme.textPrimary)
-        Text("SYSTEM BLUETOOTH", FontFamily.Monospace, 8.sp, color = theme.textSecondary)
+        Text("SYSTEM BLUETOOTH", fontFamily = FontFamily.Monospace, fontSize = 8.sp, color = theme.textSecondary)
       }
     }
   }
+}
+
+
+private fun readBluetoothBatteryLevel(device: BluetoothDevice): Int {
+  return try {
+    val method = device.javaClass.getMethod("getBatteryLevel")
+    (method.invoke(device) as? Int) ?: -1
+  } catch (_: Throwable) { -1 }
 }
 
 /** Real Bluetooth wearable battery card. It reads a battery level only when Android exposes it. */
@@ -1641,7 +1649,7 @@ fun NosSmartWatchBatteryWidget(
         }
         if (watch != null) {
           watchName = watch.name ?: "SMART WATCH"
-          val level = if (android.os.Build.VERSION.SDK_INT >= 33) watch.batteryLevel else -1
+          val level = if (android.os.Build.VERSION.SDK_INT >= 33) readBluetoothBatteryLevel(watch) else -1
           if (level >= 0) battery = level
         }
       } catch (_: SecurityException) {}
@@ -1659,14 +1667,14 @@ fun NosSmartWatchBatteryWidget(
       Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Default.Widgets, "Smart watch", accentColor, Modifier.size(24.dp))
-        Text(watchName.take(15).uppercase(Locale.US), FontFamily.Monospace, 9.sp,
+        Text(watchName.take(15).uppercase(Locale.US), fontFamily = FontFamily.Monospace, fontSize = 9.sp,
           FontWeight.Bold, color = theme.textSecondary)
       }
       Row(verticalAlignment = Alignment.Bottom) {
         Text(if (battery >= 0) "$battery%" else "--%",
-          FontFamily.Monospace, 22.sp, FontWeight.Bold, color = theme.textPrimary)
+          fontFamily = FontFamily.Monospace, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = theme.textPrimary)
         Spacer(Modifier.width(6.dp))
-        Text("WATCH BATTERY", FontFamily.Monospace, 9.sp, color = theme.textSecondary,
+        Text("WATCH BATTERY", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = theme.textSecondary,
           modifier = Modifier.padding(bottom = 3.dp))
       }
     }
