@@ -420,10 +420,12 @@ private fun DrawerCategoryCard(
   onExpand: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  // Keep enough height for two complete rows of 58dp icons.
+  // The old card was clipping the second row, making those icons look tiny.
   val cardHeight = when (cardSizeLevel) {
-    0 -> 168.dp
-    2 -> 190.dp
-    else -> 196.dp
+    0 -> 214.dp
+    2 -> 238.dp
+    else -> 224.dp
   }
   val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
