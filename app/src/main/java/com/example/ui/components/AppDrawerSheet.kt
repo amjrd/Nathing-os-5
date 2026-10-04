@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.clip
+import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
@@ -433,6 +434,7 @@ private fun DrawerCategoryCard(
     modifier = modifier
       .height(cardHeight)
       .zIndex(if (isExpanded) 10f else 0f)
+      .animateContentSize(animationSpec = tween(180))
       .testTag("drawer_category_" + category.title.lowercase())
   ) {
     // Base card stays fixed in place. The expanded panel pops over it instead
