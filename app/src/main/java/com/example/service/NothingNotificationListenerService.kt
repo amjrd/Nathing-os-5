@@ -63,7 +63,7 @@ class NothingNotificationListenerService : NotificationListenerService() {
             }
 
             val baseKey = sbn.key?.takeIf { it.isNotBlank() } ?: "${sbn.packageName}_${sbn.id}_${sbn.postTime}"
-            val uniqueKey = "${baseKey}_${itemList.size}"
+            val uniqueKey = baseKey
             if (itemList.none { it.id == uniqueKey }) {
               itemList.add(
                 LockNotificationItem(
@@ -84,6 +84,15 @@ class NothingNotificationListenerService : NotificationListenerService() {
       _activeNotificationList.value = itemList
     } catch (_: Exception) {
       // Ignored if permission revoked
+    }
+  }
+
+  fun dismissNotification(notificationKey: String): Boolean {
+    return try {
+      cancelNotification(notificationKey)
+      true
+    } catch (_: Exception) {
+      false
     }
   }
 
