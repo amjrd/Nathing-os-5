@@ -301,6 +301,8 @@ fun NothingLauncherApp(
       onNextAudioTrack = { viewModel.nextAudioTrack() },
       onEditNote = { isEditingNote = true },
       onOpenDrawer = { viewModel.setScreen(LauncherScreen.APP_DRAWER) },
+      searchQuery = searchQuery,
+      onSearchChange = { viewModel.setSearchQuery(it) },
       onOpenSettings = { isSettingsOpen = true },
       onSwipeDown = { viewModel.openNotificationsPanel() },
       onDoubleTap = { viewModel.lockScreen() },
