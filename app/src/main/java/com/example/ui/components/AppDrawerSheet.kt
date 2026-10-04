@@ -42,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -256,6 +257,7 @@ fun AppDrawerSheet(
                   iconPack = iconPack, accentColor = accentColor,
                   primaryText = primaryText, secondaryText = secondaryText,
                   cardSizeLevel = drawerCardSizeLevel,
+                  iconSize = drawerIconSize,
                   isExpanded = expandedCategory == left.title,
                   onExpand = { expandedCategory = left.title },
                   modifier = Modifier.weight(1f)
@@ -271,6 +273,7 @@ fun AppDrawerSheet(
                     iconPack = iconPack, accentColor = accentColor,
                     primaryText = primaryText, secondaryText = secondaryText,
                     cardSizeLevel = drawerCardSizeLevel,
+                    iconSize = drawerIconSize,
                     isExpanded = expandedCategory == right.title,
                     onExpand = { expandedCategory = right.title },
                     modifier = Modifier.weight(1f)
@@ -422,6 +425,7 @@ private fun DrawerCategoryCard(
   primaryText: Color,
   secondaryText: Color,
   cardSizeLevel: Int,
+  iconSize: Dp,
   isExpanded: Boolean,
   onExpand: () -> Unit,
   modifier: Modifier = Modifier
@@ -481,7 +485,7 @@ private fun DrawerCategoryCard(
             rowApps.forEach { app ->
               DrawerAppIcon(
                 app = app,
-                iconSize = 58.dp,
+                iconSize = iconSize,
                 onClick = { onAppClick(app) },
                 onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin,
@@ -490,7 +494,7 @@ private fun DrawerCategoryCard(
                 accentColor = accentColor
               )
             }
-            repeat(2 - rowApps.size) { Spacer(Modifier.width(58.dp)) }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(iconSize)) }
           }
         }
       }
