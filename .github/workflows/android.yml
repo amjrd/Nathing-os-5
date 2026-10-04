@@ -138,3 +138,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 # Android build trigger: system widget callback fix
+
+# Trigger build: preserve real system widget touch interaction
