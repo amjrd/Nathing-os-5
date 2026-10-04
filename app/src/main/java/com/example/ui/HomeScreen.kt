@@ -364,22 +364,41 @@ fun HomeScreen(
           }
         }
 
-        // 11. Signature Nothing OS 2x2 Enlarged Folders
+        // Media / Tools are no longer fixed on Home.
+        // They are optional widgets from the Home customization panel.
         item {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-          ) {
-            folders.forEach { folder ->
-              EnlargedFolderView(
-                folder = folder,
-                onAppClick = onAppClick,
-                onOpenFolderSheet = { onOpenFolder(folder) },
-                onToggleEnlarged = { onToggleFolderEnlarged(folder.id) },
-                iconPack = settings.iconPack,
-                accentColor = accentColor,
-                modifier = Modifier.weight(1f)
-              )
+          val mediaFolder = folders.firstOrNull { it.id == "folder_media" }
+          val toolsFolder = folders.firstOrNull { it.id == "folder_tools" }
+          val mediaActive = settings.activeWidgets.contains(NosWidgetPortType.MEDIA_FOLDER)
+          val toolsActive = settings.activeWidgets.contains(NosWidgetPortType.TOOLS_FOLDER)
+
+          if (mediaActive || toolsActive) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+              if (mediaActive && mediaFolder != null) {
+                EnlargedFolderView(
+                  folder = mediaFolder,
+                  onAppClick = onAppClick,
+                  onOpenFolderSheet = { onOpenFolder(mediaFolder) },
+                  onToggleEnlarged = { onToggleFolderEnlarged(mediaFolder.id) },
+                  iconPack = settings.iconPack,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1f)
+                )
+              }
+              if (toolsActive && toolsFolder != null) {
+                EnlargedFolderView(
+                  folder = toolsFolder,
+                  onAppClick = onAppClick,
+                  onOpenFolderSheet = { onOpenFolder(toolsFolder) },
+                  onToggleEnlarged = { onToggleFolderEnlarged(toolsFolder.id) },
+                  iconPack = settings.iconPack,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1f)
+                )
+              }
             }
           }
         }
@@ -726,6 +745,8 @@ private fun HomeCustomizationPanel(
   val weatherActive = settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)
   val activityActive = settings.activeWidgets.contains(NosWidgetPortType.PEDOMETER_GAUGE)
   val cassetteActive = settings.activeWidgets.contains(NosWidgetPortType.CASSETTE_PLAYER)
+  val mediaActive = settings.activeWidgets.contains(NosWidgetPortType.MEDIA_FOLDER)
+  val toolsActive = settings.activeWidgets.contains(NosWidgetPortType.TOOLS_FOLDER)
 
   Box(
     modifier = Modifier
@@ -834,6 +855,13 @@ private fun HomeCustomizationPanel(
       }
       WidgetToggleButton("CASSETTE PLAYER", cassetteActive, accentColor, primary, surface) {
         onToggle(NosWidgetPortType.CASSETTE_PLAYER)
+      }
+
+      WidgetToggleButton("MEDIA", mediaActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.MEDIA_FOLDER)
+      }
+      WidgetToggleButton("TOOLS", toolsActive, accentColor, primary, surface) {
+        onToggle(NosWidgetPortType.TOOLS_FOLDER)
       }
 
       Text(
