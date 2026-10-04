@@ -411,7 +411,7 @@ fun HomeScreen(
         if (systemWidgetView != null) {
           item {
             AndroidView(
-              factory = { systemWidgetView },
+              factory = { systemWidgetView!! },
               modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
