@@ -773,6 +773,9 @@ fun HomeScreen(
           isHomeCustomizationOpen = false
           onOpenSettings()
         },
+        onAddSystemWidget = {
+          onAddSystemWidget()
+        },
         onDismiss = { isHomeCustomizationOpen = false }
       )
     }
