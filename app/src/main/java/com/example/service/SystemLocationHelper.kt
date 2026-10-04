@@ -9,8 +9,12 @@ import android.location.LocationManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.example.model.WeatherInfo
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.math.roundToInt
+import org.json.JSONObject
 
 /**
  * System Location Helper for Nothing Launcher.
@@ -88,9 +92,47 @@ object SystemLocationHelper {
     return "TUNIS"
   }
 
-  /**
-   * Generates realistic seasonal temperature & condition for the detected region.
-   */
+  /** Fetches real current weather from Open-Meteo. No API key is required. */
+  fun getCurrentWeather(context: Context): WeatherInfo? {
+    if (!hasLocationPermission(context)) return null
+    return try {
+      val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
+      val location = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
+        .mapNotNull { provider -> try { locationManager.getLastKnownLocation(provider) } catch (_: Exception) { null } }
+        .maxByOrNull { it.time } ?: return null
+      val city = getAutoDetectedCity(context)
+      val endpoint = "https://api.open-meteo.com/v1/forecast?latitude=" + location.latitude + "&longitude=" + location.longitude + "&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto"
+      val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+        requestMethod = "GET"
+        connectTimeout = 8000
+        readTimeout = 8000
+        useCaches = false
+      }
+      try {
+        if (connection.responseCode !in 200..299) return null
+        val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+        val current = json.optJSONObject("current") ?: return null
+        val daily = json.optJSONObject("daily")
+        val temp = current.optDouble("temperature_2m", Double.NaN)
+        if (temp.isNaN()) return null
+        val code = current.optInt("weather_code", -1)
+        val high = daily?.optJSONArray("temperature_2m_max")?.optDouble(0, temp) ?: temp
+        val low = daily?.optJSONArray("temperature_2m_min")?.optDouble(0, temp) ?: temp
+        WeatherInfo(temp.roundToInt(), weatherConditionFromCode(code), city, high.roundToInt(), low.roundToInt())
+      } finally { connection.disconnect() }
+    } catch (_: Exception) { null }
+  }
+
+  private fun weatherConditionFromCode(code: Int): String = when (code) {
+    0, 1 -> "SUNNY"
+    2, 3, 45, 48 -> "CLOUDY"
+    51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> "RAIN"
+    95, 96, 99 -> "THUNDER"
+    71, 73, 75, 77, 85, 86 -> "SNOW"
+    else -> "CLOUDY"
+  }
+
+  /** Fallback when live weather is unavailable. */
   fun getEstimatedWeatherForLocation(city: String): WeatherInfo {
     val month = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH)
     val isSummer = month in 4..8
