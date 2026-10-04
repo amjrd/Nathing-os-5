@@ -1,6 +1,7 @@
 package com.example
 
 import android.app.KeyguardManager
+import android.appwidget.AppWidgetHostView
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -63,6 +64,8 @@ import com.example.viewmodel.LauncherViewModel
 class MainActivity : ComponentActivity() {
 
   private val viewModel: LauncherViewModel by viewModels()
+  private lateinit var systemWidgetHost: com.example.service.SystemWidgetHostManager
+  private var systemWidgetView by mutableStateOf<AppWidgetHostView?>(null)
   // Screen State receiver to lock the launcher screen when phone goes to sleep or wakes
   private val screenStateReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -119,6 +122,10 @@ class MainActivity : ComponentActivity() {
       registerReceiver(screenStateReceiver, filter)
     }
 
+    systemWidgetHost = com.example.service.SystemWidgetHostManager(this) { view ->
+      systemWidgetView = view
+    }
+
     setContent {
       val settings by viewModel.settings.collectAsStateWithLifecycle()
       MyApplicationTheme(themeMode = settings.themeMode) {
@@ -132,6 +139,7 @@ class MainActivity : ComponentActivity() {
             viewModel = viewModel,
             settings = settings,
             onDismissKeyguard = { dismissSystemKeyguard() },
+            systemWidgetView = systemWidgetView,
             modifier = Modifier.fillMaxSize()
           )
         }
@@ -141,6 +149,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onResume() {
     super.onResume()
+    if (::systemWidgetHost.isInitialized) systemWidgetHost.onResume()
     val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
     val isDeviceLocked = keyguardManager?.isKeyguardLocked == true
     if (isDeviceLocked && viewModel.settings.value.lockScreen.isLockScreenEnabled) {
@@ -159,9 +168,13 @@ class MainActivity : ComponentActivity() {
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
+    if (::systemWidgetHost.isInitialized) {
+      systemWidgetHost.handleActivityResult(requestCode, resultCode, data)
+    }
   }
 
   override fun onPause() {
+    if (::systemWidgetHost.isInitialized) systemWidgetHost.onPause()
     super.onPause()
   }
 
@@ -183,6 +196,7 @@ class MainActivity : ComponentActivity() {
   }
 
   override fun onDestroy() {
+    if (::systemWidgetHost.isInitialized) systemWidgetHost.destroy()
     super.onDestroy()
     try {
       unregisterReceiver(screenStateReceiver)
@@ -195,6 +209,7 @@ fun NothingLauncherApp(
   viewModel: LauncherViewModel,
   settings: LauncherSettings,
   onDismissKeyguard: () -> Unit = {},
+  systemWidgetView: AppWidgetHostView? = null,
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
@@ -342,6 +357,7 @@ fun NothingLauncherApp(
       onRemovePinnedApp = { app -> viewModel.removePinnedApp(app) },
       onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
+      systemWidgetView = systemWidgetView,
       onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
       modifier = Modifier
@@ -531,7 +547,9 @@ fun NothingLauncherApp(
     if (isWidgetSheetOpen) {
       NosWidgetPortSheet(
         activeWidgets = settings.activeWidgets,
-        hasSystemWidget = false,
+        hasSystemWidget = systemWidgetView != null,
+        onAddSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.startPicker() },
+        onRemoveSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.removeWidget() },
         onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
         onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
