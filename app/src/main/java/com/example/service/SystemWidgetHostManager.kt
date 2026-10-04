@@ -196,19 +196,10 @@ class SystemWidgetHostManager(
         ViewGroup.LayoutParams.WRAP_CONTENT
       )
 
-      // Give Android providers a real host size before Compose displays the view.
-      val density = activity.resources.displayMetrics.density
-      val minWidthDp = info.minWidth.coerceAtLeast(180)
+      // Give Android providers a concrete minimum height. Do not call
+      // updateAppWidgetSize here: that API is not available on all Android SDK
+      // levels supported by this launcher.
       val minHeightDp = info.minHeight.coerceAtLeast(96)
-      try {
-        appWidgetManager.updateAppWidgetSize(
-          widgetId,
-          (minWidthDp * density).toInt(),
-          (minHeightDp * density).toInt(),
-          (minWidthDp * density).toInt(),
-          (minHeightDp * density).toInt()
-        )
-      } catch (_: Exception) {}
       val minHeightPx = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         minHeightDp.toFloat(),
