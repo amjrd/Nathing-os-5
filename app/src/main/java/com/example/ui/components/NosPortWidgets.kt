@@ -883,6 +883,7 @@ fun NosWidgetPortSheet(
   onToggleWidget: (NosWidgetPortType) -> Unit,
   onAddSystemWidget: () -> Unit = {},
   onRemoveSystemWidget: () -> Unit = {},
+  onOpenSystemWidgetAppInfo: () -> Unit = {},
   onDismiss: () -> Unit,
   accentColor: Color = NothingRed
 ) {
@@ -1114,6 +1115,23 @@ fun NosWidgetPortSheet(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+          if (hasSystemWidget) {
+            IconButton(
+              onClick = onOpenSystemWidgetAppInfo,
+              modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(theme.elevated)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Open widget provider App Info",
+                tint = theme.textPrimary,
+                modifier = Modifier.size(22.dp)
+              )
+            }
+          }
+
           IconButton(
             onClick = {
               if (hasSystemWidget) onRemoveSystemWidget() else onAddSystemWidget()
