@@ -56,12 +56,25 @@ import com.example.ui.components.EditNoteDialog
 import com.example.ui.components.ExpandedFolderSheet
 import com.example.ui.components.LauncherSettingsDialog
 import com.example.ui.components.NosWidgetPortSheet
-import com.example.ui.components.NothingAppInfoSheet
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.LauncherViewModel
 
 class MainActivity : ComponentActivity() {
+
+  private fun openSystemAppInfo(packageName: String) {
+    val cleanPkg = packageName.trim()
+    if (cleanPkg.isEmpty()) return
+    try {
+      startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = android.net.Uri.parse("package:$cleanPkg")
+      })
+    } catch (_: Exception) {
+      try {
+        startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_SETTINGS))
+      } catch (_: Exception) {}
+    }
+  }
 
   private val viewModel: LauncherViewModel by viewModels()
   private lateinit var systemWidgetHost: com.example.service.SystemWidgetHostManager
@@ -362,7 +375,7 @@ fun NothingLauncherApp(
       onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       systemWidgetView = systemWidgetView,
-      onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
+      onOpenAppInfo = { app -> openSystemAppInfo(app.packageName) },
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
       modifier = Modifier
         .fillMaxSize()
@@ -570,18 +583,5 @@ fun NothingLauncherApp(
       )
     }
 
-    // 6. Signature Nothing OS 5 App Info Sheet (Guaranteed App Info display)
-    val appForInfo by viewModel.selectedAppForInfo.collectAsStateWithLifecycle()
-    if (appForInfo != null) {
-      NothingAppInfoSheet(
-        app = appForInfo!!,
-        onDismiss = { viewModel.setAppInfo(null) },
-        onLaunchApp = {
-          viewModel.launchApp(appForInfo!!)
-          viewModel.setAppInfo(null)
-        },
-        accentColor = accentColor
-      )
-    }
   }
 }
