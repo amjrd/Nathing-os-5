@@ -95,6 +95,12 @@ fun AppDrawerSheet(
   var expandedCategory by remember { mutableStateOf<String?>(null) }
   var drawerMode by remember { mutableStateOf("All") }
   val drawerListState = rememberLazyListState()
+  val drawerIconSize = when (iconSizeLevel.coerceIn(0, 3)) {
+    0 -> 52.dp
+    2 -> 64.dp
+    3 -> 70.dp
+    else -> 58.dp
+  }
   val showDrawerScrollbar by remember { derivedStateOf { drawerListState.layoutInfo.totalItemsCount > 0 && drawerListState.layoutInfo.visibleItemsInfo.size < drawerListState.layoutInfo.totalItemsCount } }
 
   val allApps = remember(apps, searchQuery) {
@@ -195,6 +201,42 @@ fun AppDrawerSheet(
         }
       }
       Spacer(Modifier.height(8.dp))
+
+      // Keep both drawer modes available. The original code had the state,
+      // but no UI control could ever switch it away from "All".
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(38.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        listOf("All", "Categories").forEach { mode ->
+          val selected = drawerMode == mode
+          Box(
+            modifier = Modifier
+              .weight(1f)
+              .fillMaxSize()
+              .clip(RoundedCornerShape(19.dp))
+              .background(if (selected) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.06f))
+              .border(1.dp, Color.White.copy(alpha = if (selected) 0.16f else 0.06f), RoundedCornerShape(19.dp))
+              .clickable {
+                drawerMode = mode
+                expandedCategory = null
+              },
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = mode,
+              color = if (selected) primaryText else secondaryText,
+              fontSize = 12.sp,
+              fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            )
+          }
+        }
+      }
+
+      Spacer(Modifier.height(8.dp))
       Box(
         modifier = Modifier
           .weight(1f)
@@ -257,7 +299,7 @@ fun AppDrawerSheet(
                 allApps.drop(start).take(4).forEach { app ->
                   DrawerAppIcon(
                     app = app,
-                    iconSize = 58.dp,
+                    iconSize = drawerIconSize,
                     onClick = { onAppClick(app) },
                     onOpenAppInfo = onOpenAppInfo,
                     onTogglePin = onTogglePin,
