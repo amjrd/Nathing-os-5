@@ -1584,7 +1584,7 @@ fun NosNothingXEarbudsWidget(
           verticalAlignment = Alignment.CenterVertically) {
           Icon(Icons.Default.Headphones, "Headphones", accentColor, Modifier.size(24.dp))
           Text(deviceName.take(12).uppercase(Locale.US), fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp, fontWeight = fontWeight = FontWeight.Bold, color = theme.textSecondary)
+            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = theme.textSecondary)
         }
         Row(verticalAlignment = Alignment.Bottom) {
           Text(if (deviceBattery >= 0) "$deviceBattery%" else "--%",
@@ -1668,7 +1668,7 @@ fun NosSmartWatchBatteryWidget(
         verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Default.Widgets, "Smart watch", accentColor, Modifier.size(24.dp))
         Text(watchName.take(15).uppercase(Locale.US), fontFamily = FontFamily.Monospace, fontSize = 9.sp,
-          FontWeight.Bold, color = theme.textSecondary)
+          fontWeight = FontWeight.Bold, color = theme.textSecondary)
       }
       Row(verticalAlignment = Alignment.Bottom) {
         Text(if (battery >= 0) "$battery%" else "--%",
