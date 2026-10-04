@@ -494,6 +494,13 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth().scale(widgetScale)
               )
             }
+            
+            if (settings.activeWidgets.contains(NosWidgetPortType.SMARTWATCH_BATTERY)) {
+              NosSmartWatchBatteryWidget(
+                accentColor = accentColor,
+                modifier = Modifier.fillMaxWidth().scale(widgetScale)
+              )
+            }
 
             if (systemWidgetView != null) {
               // Real Android widgets must receive the touch events themselves.
