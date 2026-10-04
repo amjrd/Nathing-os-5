@@ -98,12 +98,34 @@ class SystemWidgetHostManager(
           return true
         }
 
-        if (appWidgetManager.bindAppWidgetIdIfAllowed(pendingWidgetId, info.provider)) {
+        val options = Bundle().apply {
+          putInt(
+            AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,
+            info.minWidth.coerceAtLeast(180)
+          )
+          putInt(
+            AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
+            info.minHeight.coerceAtLeast(96)
+          )
+        }
+
+        if (appWidgetManager.bindAppWidgetIdIfAllowed(pendingWidgetId, info.provider, options)) {
           launchConfigurationIfNeeded(info)
         } else {
+          val options = Bundle().apply {
+            putInt(
+              AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,
+              info.minWidth.coerceAtLeast(180)
+            )
+            putInt(
+              AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,
+              info.minHeight.coerceAtLeast(96)
+            )
+          }
           val bindIntent = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND).apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, pendingWidgetId)
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, info.provider)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_OPTIONS, options)
           }
           activity.startActivityForResult(bindIntent, REQUEST_BIND)
         }
