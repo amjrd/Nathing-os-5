@@ -633,28 +633,26 @@ private fun AppBadges(
 }
 
 private fun drawableToBitmap(drawable: Drawable, applyGrayscale: Boolean, isDark: Boolean): Bitmap {
-  val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
-  val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
-  val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+  // Always render into a fixed square. Some Pixel/Android 17 adaptive icons
+  // report unusable intrinsic bounds; rendering those bounds can produce a
+  // fully transparent result in Compose.
+  val size = 192
+  val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
   val canvas = Canvas(bitmap)
 
+  // Never mutate the PackageManager-owned drawable instance.
+  val source = try {
+    drawable.constantState?.newDrawable()?.mutate() ?: drawable.mutate()
+  } catch (_: Exception) {
+    drawable
+  }
+  source.setBounds(0, 0, size, size)
+
   if (applyGrayscale) {
-    val paint = Paint()
-    val matrix = ColorMatrix().apply {
-      setSaturation(0f)
-      if (!isDark) {
-        // Theme Jour (Light Mode): Keep icons crisp with dark glyph definition
-        val contrast = 1.1f
-        val scale = FloatArray(20) { 0f }.apply {
-          this[0] = contrast
-          this[6] = contrast
-          this[12] = contrast
-          this[18] = 1f
-        }
-        postConcat(ColorMatrix(scale))
-      } else {
-        // Theme Nuit (Dark): Boost contrast for sharp white/grey glyphs
-        val contrast = 1.55f
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+      val matrix = ColorMatrix().apply {
+        setSaturation(0f)
+        val contrast = if (isDark) 1.55f else 1.1f
         val scale = FloatArray(20) { 0f }.apply {
           this[0] = contrast
           this[6] = contrast
@@ -663,15 +661,13 @@ private fun drawableToBitmap(drawable: Drawable, applyGrayscale: Boolean, isDark
         }
         postConcat(ColorMatrix(scale))
       }
+      colorFilter = ColorMatrixColorFilter(matrix)
     }
-    paint.colorFilter = ColorMatrixColorFilter(matrix)
-    val layer = canvas.saveLayer(0f, 0f, width.toFloat(), height.toFloat(), paint)
-    drawable.setBounds(0, 0, width, height)
-    drawable.draw(canvas)
-    canvas.restoreToCount(layer)
+    canvas.saveLayer(0f, 0f, size.toFloat(), size.toFloat(), paint)
+    source.draw(canvas)
+    canvas.restore()
   } else {
-    drawable.setBounds(0, 0, width, height)
-    drawable.draw(canvas)
+    source.draw(canvas)
   }
   return bitmap
 }
