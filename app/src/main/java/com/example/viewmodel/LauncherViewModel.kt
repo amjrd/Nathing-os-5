@@ -622,8 +622,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
       }
     }
 
-    // Always give feedback so user knows the click succeeded immediately
-    android.widget.Toast.makeText(context, "Nothing OS: ${app.label}", android.widget.Toast.LENGTH_SHORT).show()
+    // Keep app launches silent, matching the original launcher behavior.
   }
 
   fun openAppInfo(app: AppItem) {
@@ -664,15 +663,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
           )
         }.sortedBy { it.label.lowercase(Locale.ROOT) }
 
-        // If real device has apps, use them; also ensure essential fallback apps exist
-        val fallbackApps = getFallbackApps()
+        // The drawer reflects the real installed launchable apps.
         val allApps = if (loadedList.isNotEmpty()) {
-          // Merge fallback essentials if missing
-          val existingPkgs = loadedList.map { it.packageName }.toSet()
-          val missingEssentials = fallbackApps.filterNot { it.packageName in existingPkgs }
-          (loadedList + missingEssentials).sortedBy { it.label.lowercase(Locale.ROOT) }
+          loadedList
         } else {
-          fallbackApps
+          getFallbackApps()
         }
 
         _installedApps.value = allApps
