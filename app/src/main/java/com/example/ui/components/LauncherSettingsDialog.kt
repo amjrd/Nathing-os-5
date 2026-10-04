@@ -566,6 +566,13 @@ fun LauncherSettingsDialog(
             letterSpacing = 1.sp
           )
           Spacer(modifier = Modifier.height(8.dp))
+          Text(
+            text = "THEMES CHANGE THE REAL LAUNCHER • SYSTEM WIDGETS STAY REAL",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 9.sp,
+            color = theme.textSecondary
+          )
+          Spacer(modifier = Modifier.height(8.dp))
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -591,11 +598,7 @@ fun LauncherSettingsDialog(
                         accentColorIndex = 0,
                         clockStyle = LauncherClockStyle.DIGITAL,
                         iconPack = IconPackStyle.MONOCHROME,
-                        activeWidgets = listOf(
-                          NosWidgetPortType.CLOCK_MAIN,
-                          NosWidgetPortType.WEATHER_MAIN,
-                          NosWidgetPortType.MINI_CLUSTER_2X2
-                        )
+                        activeWidgets = settings.activeWidgets
                       )
                       LauncherThemeMode.MONOCHROME_STUDIO -> settings.copy(
                         themeMode = mode,
@@ -603,10 +606,7 @@ fun LauncherSettingsDialog(
                         accentColorIndex = 1,
                         clockStyle = LauncherClockStyle.ANALOG,
                         iconPack = IconPackStyle.SYSTEM_DEFAULT,
-                        activeWidgets = listOf(
-                          NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
-                          NosWidgetPortType.CALENDAR_DIGITAL_TIME
-                        )
+                        activeWidgets = settings.activeWidgets
                       )
                       LauncherThemeMode.ATMOSPHERE_PASTEL -> settings.copy(
                         themeMode = mode,
@@ -614,11 +614,7 @@ fun LauncherSettingsDialog(
                         accentColorIndex = 1,
                         clockStyle = LauncherClockStyle.ANALOG,
                         iconPack = IconPackStyle.SYSTEM_DEFAULT,
-                        activeWidgets = listOf(
-                          NosWidgetPortType.MINI_CLUSTER_2X2,
-                          NosWidgetPortType.CLOCK_MAIN,
-                          NosWidgetPortType.WEATHER_MAIN
-                        )
+                        activeWidgets = settings.activeWidgets
                       )
                       LauncherThemeMode.GLYPH_RED -> settings.copy(
                         themeMode = mode,
@@ -626,11 +622,7 @@ fun LauncherSettingsDialog(
                         accentColorIndex = 0,
                         clockStyle = LauncherClockStyle.DIGITAL,
                         iconPack = IconPackStyle.MONOCHROME,
-                        activeWidgets = listOf(
-                          NosWidgetPortType.CALENDAR_DIGITAL_TIME,
-                          NosWidgetPortType.GIANT_CIRCLES_CLUSTER,
-                          NosWidgetPortType.CLOCK_MAIN
-                        )
+                        activeWidgets = settings.activeWidgets
                       )
                     }
                     onUpdateSettings(updatedSettings)
