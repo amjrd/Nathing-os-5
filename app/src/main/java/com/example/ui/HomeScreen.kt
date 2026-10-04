@@ -491,7 +491,22 @@ fun HomeScreen(
               )
             }
 
-            if (settings.activeWidgets.isEmpty()) {
+            if (systemWidgetView != null) {
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(24.dp))
+                  .border(1.dp, theme.border, RoundedCornerShape(24.dp))
+              ) {
+                AndroidView(
+                  factory = { systemWidgetView!! },
+                  update = { view -> view.requestLayout() },
+                  modifier = Modifier.fillMaxWidth().scale(systemWidgetScale)
+                )
+              }
+            }
+
+            if (settings.activeWidgets.isEmpty() && systemWidgetView == null)
               Box(
                 modifier = Modifier.fillMaxWidth().height(110.dp),
                 contentAlignment = Alignment.Center
@@ -544,21 +559,6 @@ fun HomeScreen(
                 )
               }
             }
-          }
-        }
-
-        // Real Android system widget selected through the launcher widget picker.
-        // This is the same host/picker concept used by Nothing/Launcher3.
-        if (systemWidgetView != null) {
-          item {
-            AndroidView(
-              factory = { systemWidgetView!! },
-              modifier = Modifier
-                .fillMaxWidth()
-                .scale(systemWidgetScale)
-                .clip(RoundedCornerShape(24.dp))
-                .border(1.dp, theme.border, RoundedCornerShape(24.dp))
-            )
           }
         }
 

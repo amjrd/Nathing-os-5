@@ -618,17 +618,8 @@ private fun AppBadges(
         .padding(horizontal = if (app.notificationCount > 1) 4.dp else 0.dp),
       contentAlignment = Alignment.Center
     ) {
-      if (app.notificationCount > 1) {
-        Text(
-          text = if (app.notificationCount > 99) "99+" else app.notificationCount.toString(),
-          color = NothingWhite,
-          fontSize = 8.sp,
-          fontFamily = FontFamily.Monospace,
-          fontWeight = FontWeight.Bold
-        )
-      } else {
-        Box(modifier = Modifier.size(7.dp))
-      }
+      // Nothing OS style: notification badges are a dot only.
+      Box(modifier = Modifier.size(7.dp))
     }
   } else if (app.isPinned) {
     Box(
