@@ -907,6 +907,7 @@ private fun HomeCustomizationPanel(
   onToggle: (NosWidgetPortType) -> Unit,
   onUpdateSettings: (LauncherSettings) -> Unit,
   onOpenSettings: () -> Unit,
+  onAddSystemWidget: () -> Unit,
   onDismiss: () -> Unit
 ) {
   val context = LocalContext.current
