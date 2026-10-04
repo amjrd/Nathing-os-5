@@ -85,7 +85,8 @@ data class AppItem(
   val isPinned: Boolean = false,
   val isDock: Boolean = false,
   val category: String = "General",
-  val notificationCount: Int = 0
+  val notificationCount: Int = 0,
+  val installTime: Long = 0L
 )
 
 data class FolderItem(
