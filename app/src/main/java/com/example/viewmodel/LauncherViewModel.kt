@@ -659,6 +659,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
           if (pkg == context.packageName) return@mapNotNull null // Don't list launcher itself
           val label = resolveInfo.loadLabel(pm).toString()
           val icon = resolveInfo.loadIcon(pm)
+          val installTime = try {
+            pm.getPackageInfo(pkg, 0).firstInstallTime
+          } catch (_: Exception) {
+            0L
+          }
           val category = when {
             label.contains("Camera", true) || label.contains("Photo", true) || label.contains("Gallery", true) -> "Media"
             label.contains("Message", true) || label.contains("Mail", true) || label.contains("Phone", true) || label.contains("Call", true) -> "Communication"
@@ -670,7 +675,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             activityName = resolveInfo.activityInfo.name,
             label = label,
             icon = icon,
-            category = category
+            category = category,
+            installTime = installTime
           )
         }.sortedBy { it.label.lowercase(Locale.ROOT) }
 
