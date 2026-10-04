@@ -102,6 +102,7 @@ fun AppDrawerSheet(
   var expandedCategory by remember { mutableStateOf<String?>(null) }
   var drawerMode by remember { mutableStateOf("All") }
   val drawerListState = rememberLazyListState()
+  val drawerGridColumns = if (context.resources.configuration.screenWidthDp >= 600) 5 else 4
   val drawerIconSize = when (iconSizeLevel.coerceIn(0, 3)) {
     0 -> 52.dp
     2 -> 64.dp
@@ -116,6 +117,8 @@ fun AppDrawerSheet(
       .filter { app -> searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true) }
       .sortedBy { it.label.lowercase() }
   }
+  val recentlyInstalledApps = allApps.sortedByDescending { it.installTime }.take(4)
+
   val categories = remember(apps, searchQuery) {
     val query = searchQuery.trim()
     categoryNames.mapNotNull { title ->
@@ -159,40 +162,7 @@ fun AppDrawerSheet(
 
       Spacer(Modifier.height(2.dp))
 
-      Row(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(52.dp)
-          .clip(RoundedCornerShape(26.dp))
-          .background(Color(0xFF2C2C2E).copy(alpha = 0.92f))
-          .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
-          .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Icon(Icons.Default.Search, "Search apps", tint = Color.White.copy(alpha = 0.78f), modifier = Modifier.size(24.dp))
-        Spacer(Modifier.width(10.dp))
-        BasicTextField(
-          value = searchQuery,
-          onValueChange = onSearchChange,
-          singleLine = true,
-          textStyle = TextStyle(color = primaryText, fontSize = 16.sp),
-          cursorBrush = SolidColor(accentColor),
-          modifier = Modifier.weight(1f).testTag("app_search_input"),
-          decorationBox = { innerTextField ->
-            Box(contentAlignment = Alignment.CenterStart) {
-              if (searchQuery.isEmpty()) {
-                Text("Search apps", color = Color.White.copy(alpha = 0.62f), fontSize = 16.sp)
-              }
-              innerTextField()
-            }
-          }
-        )
-        if (searchQuery.isNotEmpty()) {
-          IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(38.dp)) {
-            Icon(Icons.Default.Clear, "Clear search", tint = Color.White.copy(alpha = 0.82f), modifier = Modifier.size(20.dp))
-          }
-        }
-      }
+      // Search is intentionally anchored at the bottom, matching the Nothing Launcher drawer.
       Spacer(Modifier.height(8.dp))
 
       // Keep both drawer modes available. The original code had the state,
@@ -244,6 +214,18 @@ fun AppDrawerSheet(
           contentPadding = PaddingValues(top = 2.dp, bottom = 96.dp)
         ) {
           if (drawerMode == "Categories") {
+            item(key = "recently_installed") {
+              RecentlyInstalledRow(
+                apps = recentlyInstalledApps,
+                onAppClick = onAppClick,
+                onOpenAppInfo = onOpenAppInfo,
+                onTogglePin = onTogglePin,
+                onToggleDock = onToggleDock,
+                iconPack = iconPack,
+                accentColor = accentColor,
+                primaryText = primaryText
+              )
+            }
             items((categories.size + 1) / 2) { rowIndex ->
               Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -284,14 +266,14 @@ fun AppDrawerSheet(
               }
             }
           } else {
-            items((allApps.size + 3) / 4) { rowIndex ->
+            items((allApps.size + drawerGridColumns - 1) / drawerGridColumns) { rowIndex ->
               Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.Top
               ) {
-                val start = rowIndex * 4
-                allApps.drop(start).take(4).forEach { app ->
+                val start = rowIndex * drawerGridColumns
+                allApps.drop(start).take(drawerGridColumns).forEach { app ->
                   DrawerAppIcon(
                     app = app,
                     iconSize = drawerIconSize,
@@ -315,6 +297,57 @@ fun AppDrawerSheet(
             state = drawerListState,
             modifier = Modifier.align(Alignment.CenterEnd)
           )
+        }
+      }
+
+      Spacer(Modifier.height(8.dp))
+
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(52.dp)
+          .clip(RoundedCornerShape(26.dp))
+          .background(Color(0xFF2C2C2E).copy(alpha = 0.92f))
+          .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
+          .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Icon(
+          Icons.Default.Search,
+          "Search apps",
+          tint = Color.White.copy(alpha = 0.78f),
+          modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        BasicTextField(
+          value = searchQuery,
+          onValueChange = onSearchChange,
+          singleLine = true,
+          textStyle = TextStyle(color = primaryText, fontSize = 16.sp),
+          cursorBrush = SolidColor(accentColor),
+          modifier = Modifier.weight(1f).testTag("app_search_input"),
+          decorationBox = { innerTextField ->
+            Box(contentAlignment = Alignment.CenterStart) {
+              if (searchQuery.isEmpty()) {
+                Text(
+                  "Search apps",
+                  color = Color.White.copy(alpha = 0.62f),
+                  fontSize = 16.sp
+                )
+              }
+              innerTextField()
+            }
+          }
+        )
+        if (searchQuery.isNotEmpty()) {
+          IconButton(onClick = { onSearchChange("") }, modifier = Modifier.size(38.dp)) {
+            Icon(
+              Icons.Default.Clear,
+              "Clear search",
+              tint = Color.White.copy(alpha = 0.82f),
+              modifier = Modifier.size(20.dp)
+            )
+          }
         }
       }
     }
@@ -410,6 +443,57 @@ private fun DrawerScrollbarIndicator(
         .clip(RoundedCornerShape(2.dp))
         .background(Color.White.copy(alpha = 0.72f))
     )
+  }
+}
+
+@Composable
+private fun RecentlyInstalledRow(
+  apps: List<AppItem>,
+  onAppClick: (AppItem) -> Unit,
+  onOpenAppInfo: (AppItem) -> Unit,
+  onTogglePin: (AppItem) -> Unit,
+  onToggleDock: (AppItem) -> Unit,
+  iconPack: IconPackStyle,
+  accentColor: Color,
+  primaryText: Color
+) {
+  if (apps.isEmpty()) return
+
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clip(RoundedCornerShape(24.dp))
+      .background(Color(0xFF202023).copy(alpha = 0.62f))
+      .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+      .padding(horizontal = 14.dp, vertical = 12.dp)
+  ) {
+    Text(
+      text = "Recently installed",
+      color = primaryText,
+      fontSize = 15.sp,
+      fontWeight = FontWeight.SemiBold
+    )
+    Spacer(Modifier.height(10.dp))
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.Top
+    ) {
+      apps.forEach { app ->
+        DrawerAppIcon(
+          app = app,
+          iconSize = 58.dp,
+          onClick = { onAppClick(app) },
+          onOpenAppInfo = onOpenAppInfo,
+          onTogglePin = onTogglePin,
+          onToggleDock = onToggleDock,
+          iconPack = iconPack,
+          accentColor = accentColor,
+          primaryText = primaryText,
+          showLabel = true
+        )
+      }
+    }
   }
 }
 
