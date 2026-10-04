@@ -140,6 +140,8 @@ class MainActivity : ComponentActivity() {
             settings = settings,
             onDismissKeyguard = { dismissSystemKeyguard() },
             systemWidgetView = systemWidgetView,
+            onAddSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.startPicker() },
+            onRemoveSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.removeWidget() },
             modifier = Modifier.fillMaxSize()
           )
         }
@@ -210,6 +212,8 @@ fun NothingLauncherApp(
   settings: LauncherSettings,
   onDismissKeyguard: () -> Unit = {},
   systemWidgetView: AppWidgetHostView? = null,
+  onAddSystemWidget: () -> Unit = {},
+  onRemoveSystemWidget: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
@@ -548,8 +552,8 @@ fun NothingLauncherApp(
       NosWidgetPortSheet(
         activeWidgets = settings.activeWidgets,
         hasSystemWidget = systemWidgetView != null,
-        onAddSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.startPicker() },
-        onRemoveSystemWidget = { if (::systemWidgetHost.isInitialized) systemWidgetHost.removeWidget() },
+        onAddSystemWidget = onAddSystemWidget,
+        onRemoveSystemWidget = onRemoveSystemWidget,
         onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
         onDismiss = { isWidgetSheetOpen = false },
         accentColor = accentColor
