@@ -264,6 +264,17 @@ class SystemWidgetHostManager(
     }
   }
 
+  /** Returns the package that owns the currently hosted system widget provider. */
+  fun getWidgetProviderPackageName(): String? {
+    val widgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
+    if (widgetId == INVALID_ID) return null
+    return try {
+      appWidgetManager.getAppWidgetInfo(widgetId)?.provider?.packageName
+    } catch (_: Exception) {
+      null
+    }
+  }
+
   fun removeWidget() {
     val widgetId = prefs.getInt(KEY_WIDGET_ID, INVALID_ID)
     cleanupWidgetId(widgetId)
