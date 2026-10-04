@@ -1,6 +1,11 @@
 package com.example.ui.components
 
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.content.pm.PackageManager
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -63,6 +68,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -79,6 +85,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -1522,107 +1529,138 @@ fun NosNothingXEarbudsWidget(
   modifier: Modifier = Modifier
 ) {
   val theme = LocalLauncherTheme.current
-  var noiseMode by remember { mutableIntStateOf(1) } // 0: Off, 1: ANC, 2: Transparency
+  val context = LocalContext.current
+  var noiseMode by remember { mutableIntStateOf(1) }
+  var deviceBattery by remember { mutableIntStateOf(-1) }
+  var deviceName by remember { mutableStateOf("HEADPHONES") }
+
+  LaunchedEffect(Unit) {
+    if (android.os.Build.VERSION.SDK_INT >= 31 &&
+      ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) ==
+      PackageManager.PERMISSION_GRANTED
+    ) {
+      try {
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        val devices = adapter?.bondedDevices.orEmpty()
+        val preferred = devices.firstOrNull { d ->
+          val name = d.name.orEmpty().lowercase(Locale.US)
+          name.contains("nothing") || name.contains("ear") || name.contains("buds") ||
+            name.contains("headphone") || name.contains("headset")
+        }
+        if (preferred != null) {
+          deviceName = preferred.name ?: "HEADPHONES"
+          val level = if (android.os.Build.VERSION.SDK_INT >= 33) preferred.batteryLevel else -1
+          if (level >= 0) deviceBattery = level
+        }
+      } catch (_: SecurityException) {}
+    }
+  }
 
   Row(
-    modifier = modifier
-      .fillMaxWidth()
-      .padding(vertical = 4.dp),
+    modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
     horizontalArrangement = Arrangement.spacedBy(10.dp)
   ) {
-    // Earbuds Battery Card
     Box(
-      modifier = Modifier
-        .weight(1f)
-        .height(100.dp)
-        .clip(RoundedCornerShape(20.dp))
-        .background(theme.surface)
-        .border(1.dp, theme.border, RoundedCornerShape(20.dp))
-        .padding(14.dp)
+      modifier = Modifier.weight(1f).height(100.dp).clip(RoundedCornerShape(20.dp))
+        .background(theme.surface).border(1.dp, theme.border, RoundedCornerShape(20.dp))
+        .clickable {
+          try {
+            context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+              data = android.net.Uri.parse("package:" + context.packageName)
+            })
+          } catch (_: Exception) {}
+        }.padding(14.dp)
     ) {
-      Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
-      ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          Icon(
-            imageVector = Icons.Default.Headphones,
-            contentDescription = "Nothing Ear",
-            tint = accentColor,
-            modifier = Modifier.size(24.dp)
-          )
-          Text(
-            text = "EAR (2)",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp,
-            fontWeight = FontWeight.Bold,
-            color = theme.textSecondary
-          )
+      Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically) {
+          Icon(Icons.Default.Headphones, "Headphones", accentColor, Modifier.size(24.dp))
+          Text(deviceName.take(12).uppercase(Locale.US), fontFamily = FontFamily.Monospace,
+            fontSize = 9.sp, fontWeight = FontWeight.Bold, color = theme.textSecondary)
         }
         Row(verticalAlignment = Alignment.Bottom) {
-          Text(
-            text = "90%",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = theme.textPrimary
-          )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = "BATTERY",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 9.sp,
-            color = theme.textSecondary,
-            modifier = Modifier.padding(bottom = 3.dp)
-          )
+          Text(if (deviceBattery >= 0) "$deviceBattery%" else "--%",
+            fontFamily = FontFamily.Monospace, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+            color = theme.textPrimary)
+          Spacer(Modifier.width(6.dp))
+          Text("BATTERY", fontFamily = FontFamily.Monospace, fontSize = 9.sp,
+            color = theme.textSecondary, modifier = Modifier.padding(bottom = 3.dp))
         }
       }
     }
 
-    // ANC / Transparency Mode Card
     Box(
-      modifier = Modifier
-        .weight(1f)
-        .height(100.dp)
-        .clip(RoundedCornerShape(20.dp))
-        .background(theme.surface)
-        .border(1.dp, theme.border, RoundedCornerShape(20.dp))
-        .clickable { noiseMode = (noiseMode + 1) % 3 }
-        .padding(14.dp)
+      modifier = Modifier.weight(1f).height(100.dp).clip(RoundedCornerShape(20.dp))
+        .background(theme.surface).border(1.dp, theme.border, RoundedCornerShape(20.dp))
+        .clickable {
+          noiseMode = (noiseMode + 1) % 3
+          try { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } catch (_: Exception) {}
+        }.padding(14.dp)
     ) {
-      Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween
-      ) {
-        Text(
-          text = "NOISE CONTROL",
-          fontFamily = FontFamily.Monospace,
-          fontSize = 9.sp,
-          color = theme.textSecondary
-        )
-        Text(
-          text = when (noiseMode) {
-            1 -> "ANC: HIGH"
-            2 -> "TRANSPARENCY"
-            else -> "OFF"
-          },
-          fontFamily = FontFamily.Monospace,
-          fontSize = 13.sp,
-          fontWeight = FontWeight.Bold,
-          color = if (noiseMode == 1) accentColor else theme.textPrimary
-        )
-        Text(
-          text = "TAP TO SWITCH",
-          fontFamily = FontFamily.Monospace,
-          fontSize = 8.sp,
-          color = theme.textSecondary
-        )
+      Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+        Text("NOISE CONTROL", FontFamily.Monospace, 9.sp, color = theme.textSecondary)
+        Text(when (noiseMode) { 1 -> "ANC: HIGH"; 2 -> "TRANSPARENCY"; else -> "OFF" },
+          FontFamily.Monospace, 13.sp, FontWeight.Bold,
+          color = if (noiseMode == 1) accentColor else theme.textPrimary)
+        Text("SYSTEM BLUETOOTH", FontFamily.Monospace, 8.sp, color = theme.textSecondary)
       }
     }
   }
 }
 
+/** Real Bluetooth wearable battery card. It reads a battery level only when Android exposes it. */
+@Composable
+fun NosSmartWatchBatteryWidget(
+  accentColor: Color,
+  modifier: Modifier = Modifier
+) {
+  val theme = LocalLauncherTheme.current
+  val context = LocalContext.current
+  var battery by remember { mutableIntStateOf(-1) }
+  var watchName by remember { mutableStateOf("SMART WATCH") }
+
+  LaunchedEffect(Unit) {
+    if (android.os.Build.VERSION.SDK_INT >= 31 &&
+      ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) ==
+      PackageManager.PERMISSION_GRANTED
+    ) {
+      try {
+        val devices = BluetoothAdapter.getDefaultAdapter()?.bondedDevices.orEmpty()
+        val watch = devices.firstOrNull { d ->
+          val name = d.name.orEmpty().lowercase(Locale.US)
+          name.contains("watch") || name.contains("wear") || name.contains("band") ||
+            name.contains("fit") || name.contains("cmf")
+        }
+        if (watch != null) {
+          watchName = watch.name ?: "SMART WATCH"
+          val level = if (android.os.Build.VERSION.SDK_INT >= 33) watch.batteryLevel else -1
+          if (level >= 0) battery = level
+        }
+      } catch (_: SecurityException) {}
+    }
+  }
+
+  Box(
+    modifier = modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(20.dp))
+      .background(theme.surface).border(1.dp, theme.border, RoundedCornerShape(20.dp))
+      .clickable {
+        try { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } catch (_: Exception) {}
+      }.padding(14.dp)
+  ) {
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Default.Widgets, "Smart watch", accentColor, Modifier.size(24.dp))
+        Text(watchName.take(15).uppercase(Locale.US), FontFamily.Monospace, 9.sp,
+          FontWeight.Bold, color = theme.textSecondary)
+      }
+      Row(verticalAlignment = Alignment.Bottom) {
+        Text(if (battery >= 0) "$battery%" else "--%",
+          FontFamily.Monospace, 22.sp, FontWeight.Bold, color = theme.textPrimary)
+        Spacer(Modifier.width(6.dp))
+        Text("WATCH BATTERY", FontFamily.Monospace, 9.sp, color = theme.textSecondary,
+          modifier = Modifier.padding(bottom = 3.dp))
+      }
+    }
+  }
+}
