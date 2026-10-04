@@ -1,6 +1,9 @@
 package com.example.ui.components
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -1293,6 +1296,101 @@ fun LauncherSettingsDialog(
           )
 
           Spacer(modifier = Modifier.height(18.dp))
+
+          // Widget hosting is a system-granted capability, not a normal runtime permission.
+          // The Android system must authorize each host binding through ACTION_APPWIDGET_BIND.
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(theme.surface)
+              .border(1.dp, theme.border, RoundedCornerShape(12.dp))
+              .clickable { onOpenWidgetCustomizer() }
+              .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Widgets,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(20.dp)
+              )
+              Column {
+                Text(
+                  text = "SYSTEM WIDGET HOST",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = theme.textPrimary
+                )
+                Text(
+                  text = "Open the real Android widget picker and grant host access",
+                  fontFamily = FontFamily.Monospace,
+                  fontSize = 9.sp,
+                  color = theme.textSecondary
+                )
+              }
+            }
+            Text(
+              text = "MANAGE",
+              fontFamily = FontFamily.Monospace,
+              fontSize = 9.sp,
+              fontWeight = FontWeight.Bold,
+              color = accentColor
+            )
+          }
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(theme.surface)
+              .border(1.dp, theme.border, RoundedCornerShape(12.dp))
+              .clickable {
+                try {
+                  context.startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                      data = Uri.parse("package:" + context.packageName)
+                    }
+                  )
+                } catch (_: Exception) {}
+              }
+              .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+          ) {
+            Column {
+              Text(
+                text = "LAUNCHER APP INFO & PERMISSIONS",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = theme.textPrimary
+              )
+              Text(
+                text = "Open Android App Info for the launcher package",
+                fontFamily = FontFamily.Monospace,
+                fontSize = 9.sp,
+                color = theme.textSecondary
+              )
+            }
+            Text(
+              text = "OPEN",
+              fontFamily = FontFamily.Monospace,
+              fontSize = 9.sp,
+              fontWeight = FontWeight.Bold,
+              color = accentColor
+            )
+          }
+
+          Spacer(modifier = Modifier.height(14.dp))
 
           Text(
             text = "DEEP SYSTEM PERMISSIONS",
