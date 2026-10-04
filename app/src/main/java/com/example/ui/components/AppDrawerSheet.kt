@@ -423,7 +423,7 @@ private fun DrawerCategoryCard(
   val cardHeight = when (cardSizeLevel) {
     0 -> 168.dp
     2 -> 190.dp
-    else -> 180.dp
+    else -> 196.dp
   }
   val categoryApps = category.apps.sortedWith(compareByDescending<AppItem> { it.isDock }.thenByDescending { it.isPinned }.thenBy { it.label.lowercase() })
 
@@ -463,7 +463,7 @@ private fun DrawerCategoryCard(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        categoryApps.take(8).chunked(2).forEachIndexed { rowIndex, rowApps ->
+        categoryApps.take(4).chunked(2).forEachIndexed { rowIndex, rowApps ->
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -481,7 +481,7 @@ private fun DrawerCategoryCard(
                 accentColor = accentColor
               )
             }
-            repeat(2 - rowApps.size) { Spacer(Modifier.width(if (rowIndex == 0) 58.dp else 44.dp)) }
+            repeat(2 - rowApps.size) { Spacer(Modifier.width(58.dp)) }
           }
         }
       }
