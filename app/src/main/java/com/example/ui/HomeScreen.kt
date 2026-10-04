@@ -119,6 +119,7 @@ import com.example.ui.components.NosGiantCirclesClusterWidget
 import com.example.ui.components.NosGlanceTextWidget
 import com.example.ui.components.NosMiniClusterWidget
 import com.example.ui.components.NosNothingXEarbudsWidget
+import com.example.ui.components.NosSmartWatchBatteryWidget
 import com.example.ui.components.NosQuickListWidget
 import com.example.ui.components.NosStickerFocusClusterWidget
 import com.example.ui.theme.LocalLauncherTheme
