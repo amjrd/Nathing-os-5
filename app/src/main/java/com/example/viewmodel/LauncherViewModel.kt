@@ -473,14 +473,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   fun refreshLocationWeather() {
     viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
       val city = SystemLocationHelper.getAutoDetectedCity(context)
-      val updated = SystemLocationHelper.getEstimatedWeatherForLocation(city)
-      _weather.update {
-        it.copy(
-          city = city,
-          tempC = updated.tempC,
-          highC = updated.highC,
-          lowC = updated.lowC
-        )
+      val updated = SystemLocationHelper.getCurrentWeather(context)
+      if (updated != null) _weather.value = updated else {
+        val fallback = SystemLocationHelper.getEstimatedWeatherForLocation(city)
+        _weather.value = fallback
       }
     }
   }
@@ -738,16 +734,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
       while (true) {
         try {
-          val city = SystemLocationHelper.getAutoDetectedCity(context)
-          val updated = SystemLocationHelper.getEstimatedWeatherForLocation(city)
-          _weather.update {
-            it.copy(
-              city = city,
-              tempC = updated.tempC,
-              condition = updated.condition,
-              highC = updated.highC,
-              lowC = updated.lowC
-            )
+          val live = SystemLocationHelper.getCurrentWeather(context)
+          if (live != null) {
+            _weather.value = live
+          } else {
+            val city = SystemLocationHelper.getAutoDetectedCity(context)
+            val fallback = SystemLocationHelper.getEstimatedWeatherForLocation(city)
+            _weather.value = fallback
           }
         } catch (_: Exception) {}
         delay(30 * 60 * 1000L)
