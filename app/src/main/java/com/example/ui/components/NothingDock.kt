@@ -4,9 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardActions
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -139,13 +136,6 @@ fun NothingDock(
             fontSize = 12.sp,
             color = theme.textPrimary,
             letterSpacing = 1.sp
-          ),
-          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-          keyboardActions = KeyboardActions(
-            onSearch = {
-              onOpenSearch()
-              keyboard?.hide()
-            }
           ),
           modifier = Modifier
             .weight(1f)
