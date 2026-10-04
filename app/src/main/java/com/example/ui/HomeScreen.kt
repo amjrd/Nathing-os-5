@@ -74,6 +74,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -186,6 +187,12 @@ fun HomeScreen(
   }
   val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
   val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+  // System widgets follow the same size control as the Nothing widgets.
+  val systemWidgetScale = when (settings.widgetSizeLevel) {
+    0 -> 0.88f
+    2 -> 1.12f
+    else -> 1f
+  }
 
   Box(
     modifier = modifier
@@ -414,6 +421,7 @@ fun HomeScreen(
               factory = { systemWidgetView!! },
               modifier = Modifier
                 .fillMaxWidth()
+                .scale(systemWidgetScale)
                 .clip(RoundedCornerShape(24.dp))
                 .border(1.dp, theme.border, RoundedCornerShape(24.dp))
             )
