@@ -2,7 +2,7 @@ name: Android CI/CD - Build, Test & Deploy APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "nothing-os5-home-system-widgets" ]
     tags: [ "v*.*.*" ]
   pull_request:
     branches: [ "main", "master" ]
