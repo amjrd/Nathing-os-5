@@ -167,6 +167,7 @@ fun HomeScreen(
   onToggleDockApp: (AppItem) -> Unit = {},
   onToggleWidget: (NosWidgetPortType) -> Unit = {},
   onOpenAppInfo: (AppItem) -> Unit = {},
+  onAddSystemWidget: () -> Unit = {},
   systemWidgetView: AppWidgetHostView? = null,
   onUpdateSettings: (LauncherSettings) -> Unit = {},
   modifier: Modifier = Modifier
@@ -497,6 +498,14 @@ fun HomeScreen(
               Box(
                 modifier = Modifier
                   .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isHomeCustomizationOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
                   .clip(RoundedCornerShape(24.dp))
                   .border(1.dp, theme.border, RoundedCornerShape(24.dp))
               ) {
@@ -994,6 +1003,18 @@ private fun HomeCustomizationPanel(
         ) {
           Text("MORE")
         }
+      }
+
+      Button(
+        onClick = {
+          com.example.util.VibrationHelper.vibrateTouch(context)
+          onAddSystemWidget()
+          onDismiss()
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = accentColor, contentColor = Color.Black)
+      ) {
+        Text("ADD  •  SYSTEM WIDGET")
       }
 
       Text(
