@@ -139,32 +139,18 @@ fun AppDrawerSheet(
 
       Row(
         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        Column(modifier = Modifier.weight(1f)) {
-          GlyphMatrixAccent(modifier = Modifier.padding(bottom = 6.dp))
-          Text(
-            text = "ALL APPS",
-            color = primaryText,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.5.sp
-          )
-          Text(
-            text = allApps.size.toString() + " applications",
-            color = secondaryText,
-            fontSize = 11.sp
-          )
-        }
         IconButton(
           onClick = onOpenSettings,
-          modifier = Modifier.size(48.dp).testTag("drawer_launcher_settings")
+          modifier = Modifier.size(42.dp).testTag("drawer_launcher_settings")
         ) {
-          Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(26.dp))
+          Icon(Icons.Default.MoreVert, "Drawer options", tint = primaryText, modifier = Modifier.size(24.dp))
         }
       }
 
-      Spacer(Modifier.height(10.dp))
+      Spacer(Modifier.height(2.dp))
 
       Row(
         modifier = Modifier
@@ -486,7 +472,7 @@ private fun DrawerCategoryCard(
             rowApps.forEach { app ->
               DrawerAppIcon(
                 app = app,
-                iconSize = if (rowIndex == 0) 58.dp else 44.dp,
+                iconSize = 58.dp,
                 onClick = { onAppClick(app) },
                 onOpenAppInfo = onOpenAppInfo,
                 onTogglePin = onTogglePin,
