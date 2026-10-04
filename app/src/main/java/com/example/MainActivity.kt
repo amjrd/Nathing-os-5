@@ -375,7 +375,13 @@ fun NothingLauncherApp(
       onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
       onToggleWidget = { widgetType -> viewModel.toggleWidgetActive(widgetType) },
       systemWidgetView = systemWidgetView,
-      onOpenAppInfo = { app -> openSystemAppInfo(app.packageName) },
+      onOpenAppInfo = { app ->
+        try {
+          context.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.parse("package:${app.packageName.trim()}")
+          })
+        } catch (_: Exception) {}
+      },
       onUpdateSettings = { newSettings -> viewModel.updateSettings(newSettings) },
       modifier = Modifier
         .fillMaxSize()
@@ -454,7 +460,13 @@ fun NothingLauncherApp(
         onAppClick = { app -> viewModel.launchApp(app) },
         onTogglePin = { app -> viewModel.togglePinApp(app) },
         onToggleDock = { app -> viewModel.toggleDockApp(app) },
-        onOpenAppInfo = { app -> viewModel.openAppInfo(app) },
+        onOpenAppInfo = { app ->
+          try {
+            context.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+              data = android.net.Uri.parse("package:${app.packageName.trim()}")
+            })
+          } catch (_: Exception) {}
+        },
         onClose = {
           viewModel.setSearchQuery("")
           viewModel.setScreen(LauncherScreen.HOME)
