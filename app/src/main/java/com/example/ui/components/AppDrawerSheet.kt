@@ -2,6 +2,11 @@ package com.example.ui.components
 
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -313,11 +318,16 @@ fun AppDrawerSheet(
 
     if (expandedCategory != null) {
       categories.firstOrNull { it.title == expandedCategory }?.let { expanded ->
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .zIndex(100f)
+        AnimatedVisibility(
+          visible = true,
+          enter = fadeIn(tween(140)) + scaleIn(initialScale = 0.96f, animationSpec = tween(180)),
+          exit = fadeOut(tween(100)) + scaleOut(targetScale = 0.96f, animationSpec = tween(120)),
+          modifier = Modifier.fillMaxSize().zIndex(100f)
         ) {
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+          ) {
           Box(
             modifier = Modifier
               .fillMaxSize()
