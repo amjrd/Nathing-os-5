@@ -7,6 +7,8 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
+import java.util.ArrayList
 import android.view.ViewGroup
 import android.util.TypedValue
 
@@ -58,6 +60,8 @@ class SystemWidgetHostManager(
 
     val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK).apply {
       putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, pendingWidgetId)
+      putParcelableArrayListExtra(AppWidgetManager.EXTRA_CUSTOM_INFO, ArrayList())
+      putParcelableArrayListExtra(AppWidgetManager.EXTRA_CUSTOM_EXTRAS, ArrayList<Bundle>())
     }
 
     activity.startActivityForResult(intent, REQUEST_PICK)
