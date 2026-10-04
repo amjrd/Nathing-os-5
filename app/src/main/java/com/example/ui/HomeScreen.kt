@@ -112,6 +112,16 @@ import com.example.ui.components.AppIconItem
 import com.example.ui.components.EnlargedFolderView
 import com.example.ui.components.NothingDock
 import com.example.ui.components.NothingWallpaperBackground
+import com.example.ui.components.NosCalendarDigitalTimeWidget
+import com.example.ui.components.NosCircularGaugesWidget
+import com.example.ui.components.NosContactPillWidget
+import com.example.ui.components.NosDecibelWidget
+import com.example.ui.components.NosGiantCirclesClusterWidget
+import com.example.ui.components.NosGlanceTextWidget
+import com.example.ui.components.NosMiniClusterWidget
+import com.example.ui.components.NosNothingXEarbudsWidget
+import com.example.ui.components.NosQuickListWidget
+import com.example.ui.components.NosStickerFocusClusterWidget
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.ui.theme.NothingBlack
 import com.example.ui.theme.NothingBorder
@@ -355,6 +365,130 @@ fun HomeScreen(
               ) {
                 CustomCassetteWidget(audio, accentColor, theme.isDark, widgetScale)
               }
+            }
+
+            // Next-stage Nothing OS widget gallery: these ports were already implemented
+            // in NosPortWidgets.kt but were not rendered by HomeScreen. The reference images
+            // show them as modular cards/circles, so they now become real selectable Home widgets.
+            if (settings.activeWidgets.contains(NosWidgetPortType.CALENDAR_DIGITAL_TIME)) {
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { SystemPortHelper.launchPixelCalendar(context) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isHomeCustomizationOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
+              ) {
+                NosCalendarDigitalTimeWidget(
+                  currentTime = currentTime,
+                  accentColor = accentColor,
+                  onCalendarClick = { SystemPortHelper.launchPixelCalendar(context) },
+                  onClockClick = { SystemPortHelper.launchPixelClock(context) },
+                  modifier = Modifier.fillMaxWidth().scale(widgetScale)
+                )
+              }
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.MINI_CLUSTER_2X2)) {
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isHomeCustomizationOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
+              ) {
+                NosMiniClusterWidget(
+                  weather = weather,
+                  accentColor = accentColor,
+                  onWeatherClick = { SystemPortHelper.launchPixelWeather(context) },
+                  onHealthClick = { SystemPortHelper.launchHealthConnect(context) },
+                  modifier = Modifier.fillMaxWidth().scale(widgetScale)
+                )
+              }
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.GLANCE_TEXT_SUMMARY)) {
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .combinedClickable(
+                    onClick = { onOpenAppInfo(widgetInfoApp) },
+                    onLongClick = {
+                      haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                      isHomeCustomizationOpen = true
+                    },
+                    onLongClickLabel = "Open Home widgets"
+                  )
+              ) {
+                NosGlanceTextWidget(
+                  currentTime = currentTime,
+                  weather = weather,
+                  batteryPct = toggles.batteryLevel,
+                  isCharging = toggles.isCharging,
+                  modifier = Modifier.fillMaxWidth().scale(widgetScale)
+                )
+              }
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.CIRCULAR_GAUGES)) {
+              NosCircularGaugesWidget(
+                modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                accentColor = accentColor
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.DECIBEL_SOUND_METER)) {
+              NosDecibelWidget(
+                modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                accentColor = accentColor
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.QUICK_CHECKLIST)) {
+              NosQuickListWidget(
+                modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                accentColor = accentColor
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.CONTACT_PILL)) {
+              NosContactPillWidget(
+                modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                accentColor = accentColor
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.GIANT_CIRCLES_CLUSTER)) {
+              NosGiantCirclesClusterWidget(
+                weather = weather,
+                currentTime = currentTime,
+                accentColor = accentColor,
+                modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                onLaunchWeather = { SystemPortHelper.launchPixelWeather(context) }
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.STICKER_FOCUS_CLUSTER)) {
+              NosStickerFocusClusterWidget(
+                accentColor = accentColor,
+                modifier = Modifier.fillMaxWidth().scale(widgetScale)
+              )
+            }
+
+            if (settings.activeWidgets.contains(NosWidgetPortType.NOTHING_X_EARBUDS)) {
+              NosNothingXEarbudsWidget(
+                accentColor = accentColor,
+                modifier = Modifier.fillMaxWidth().scale(widgetScale)
+              )
             }
 
             if (settings.activeWidgets.isEmpty()) {
