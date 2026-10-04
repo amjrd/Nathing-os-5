@@ -411,6 +411,7 @@ fun HomeScreen(
                   accentColor = accentColor,
                   onWeatherClick = { SystemPortHelper.launchPixelWeather(context) },
                   onHealthClick = { SystemPortHelper.launchHealthConnect(context) },
+                  onRecorderClick = { SystemPortHelper.launchRecorder(context) },
                   modifier = Modifier.fillMaxWidth().scale(widgetScale)
                 )
               }
@@ -473,6 +474,7 @@ fun HomeScreen(
                 currentTime = currentTime,
                 accentColor = accentColor,
                 modifier = Modifier.fillMaxWidth().scale(widgetScale),
+                onLaunchCamera = { SystemPortHelper.launchCamera(context) },
                 onLaunchWeather = { SystemPortHelper.launchPixelWeather(context) }
               )
             }

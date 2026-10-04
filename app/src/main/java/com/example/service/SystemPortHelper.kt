@@ -165,6 +165,37 @@ object SystemPortHelper {
     }
   }
 
+  // Reference widget actions: make the camera and recorder glyphs real launcher actions.
+  fun launchCamera(context: Context): Boolean {
+    return try {
+      val intent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+        true
+      } else false
+    } catch (_: Exception) { false }
+  }
+
+  fun launchRecorder(context: Context): Boolean {
+    return try {
+      val intent = Intent("android.provider.MediaStore.RECORD_SOUND").apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+        true
+      } else {
+        Toast.makeText(context, "No recorder app found", Toast.LENGTH_SHORT).show()
+        false
+      }
+    } catch (_: Exception) {
+      Toast.makeText(context, "No recorder app found", Toast.LENGTH_SHORT).show()
+      false
+    }
+  }
+
   // 5. Google Discover / Google App feed (Pixel-style left page)
   fun launchGoogleFeed(context: Context): Boolean {
     val pm = context.packageManager
