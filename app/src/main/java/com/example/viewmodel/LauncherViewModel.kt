@@ -6,744 +6,120 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
-import android.media.AudioManager
 import android.os.BatteryManager
-import android.os.Build
-import android.os.Environment
-import android.os.StatFs
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.model.AppItem
 import com.example.model.AudioState
 import com.example.model.FitnessStats
 import com.example.model.FolderItem
-import com.example.model.IconPackStyle
 import com.example.model.LauncherScreen
 import com.example.model.LauncherSettings
 import com.example.model.NosWidgetPortType
-import com.example.model.QuickToggleState
-import com.example.model.WeatherInfo
-import com.example.service.SystemLocationHelper
-import com.example.service.SystemPortHelper
+import com.example.model.WeatherData
+import com.example.service.NothingNotificationListenerService
 import com.example.util.LauncherPreferencesManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
   private val context: Context get() = getApplication<Application>().applicationContext
 
-  // Pre-load saved user customizations from disk
-  private val _initialSettings = LauncherPreferencesManager.loadSettings(application.applicationContext)
+  private val _settings = MutableStateFlow(LauncherPreferencesManager.loadSettings(context))
+  val settings = _settings.asStateFlow()
 
-  // Screen navigation - Default to Home Screen; Lock Screen activates on screen off / lock
   private val _currentScreen = MutableStateFlow(LauncherScreen.HOME)
-  val currentScreen: StateFlow<LauncherScreen> = _currentScreen.asStateFlow()
+  val currentScreen = _currentScreen.asStateFlow()
 
-  // App lists
-  private val _installedApps = MutableStateFlow<List<AppItem>>(emptyList())
-  val installedApps: StateFlow<List<AppItem>> = _installedApps.asStateFlow()
+  private val _currentTime = MutableStateFlow("12:00")
+  val currentTime = _currentTime.asStateFlow()
 
-  private val _searchQuery = MutableStateFlow("")
-  val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+  private val _currentDate = MutableStateFlow("Tuesday, Oct 05")
+  val currentDate = _currentDate.asStateFlow()
 
-  // Home Screen items
-  private val _pinnedApps = MutableStateFlow<List<AppItem>>(emptyList())
-  val pinnedApps: StateFlow<List<AppItem>> = _pinnedApps.asStateFlow()
+  private val _allApps = MutableStateFlow<List<AppItem>>(emptyList())
+  val allApps = _allApps.asStateFlow()
 
   private val _dockApps = MutableStateFlow<List<AppItem>>(emptyList())
-  val dockApps: StateFlow<List<AppItem>> = _dockApps.asStateFlow()
+  val dockApps = _dockApps.asStateFlow()
+
+  private val _pinnedApps = MutableStateFlow<List<AppItem>>(emptyList())
+  val pinnedApps = _pinnedApps.asStateFlow()
 
   private val _folders = MutableStateFlow<List<FolderItem>>(emptyList())
-  val folders: StateFlow<List<FolderItem>> = _folders.asStateFlow()
+  val folders = _folders.asStateFlow()
 
-  // Time & Date
-  private val _currentTime = MutableStateFlow(
-    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
-  )
-  val currentTime: StateFlow<String> = _currentTime.asStateFlow()
+  private val _audioState = MutableStateFlow(AudioState())
+  val audioState = _audioState.asStateFlow()
 
-  private val _currentSeconds = MutableStateFlow(
-    SimpleDateFormat("ss", Locale.getDefault()).format(Calendar.getInstance().time)
-  )
-  val currentSeconds: StateFlow<String> = _currentSeconds.asStateFlow()
+  private val _fitnessStats = MutableStateFlow(FitnessStats())
+  val fitnessStats = _fitnessStats.asStateFlow()
 
-  private val _currentDate = MutableStateFlow(
-    SimpleDateFormat("EEE, d MMM", Locale.US).format(Calendar.getInstance().time).uppercase(Locale.US)
-  )
-  val currentDate: StateFlow<String> = _currentDate.asStateFlow()
+  private val _weather = MutableStateFlow(WeatherData())
+  val weather = _weather.asStateFlow()
 
-  // Weather - Auto-detected from Android Location / System Region
-  private val _weather = MutableStateFlow(
-    SystemLocationHelper.getEstimatedWeatherForLocation(
-      SystemLocationHelper.getAutoDetectedCity(application)
-    )
-  )
-  val weather: StateFlow<WeatherInfo> = _weather.asStateFlow()
-
-  // Quick Toggles
-  private val _toggles = MutableStateFlow(QuickToggleState())
-  val toggles: StateFlow<QuickToggleState> = _toggles.asStateFlow()
-
-  // Fitness & Audio
-  private val _fitness = MutableStateFlow(FitnessStats())
-  val fitness: StateFlow<FitnessStats> = _fitness.asStateFlow()
-
-  private val _audio = MutableStateFlow(AudioState())
-  val audio: StateFlow<AudioState> = _audio.asStateFlow()
-
-  // Quick Note (persisted across app restarts)
-  private val _quickNote = MutableStateFlow(
-    LauncherPreferencesManager.loadQuickNote(application.applicationContext)
-  )
-  val quickNote: StateFlow<String> = _quickNote.asStateFlow()
-
-  // System storage
-  private val _storageUsedPercent = MutableStateFlow(48)
-  val storageUsedPercent: StateFlow<Int> = _storageUsedPercent.asStateFlow()
-
-  private val _ramUsedPercent = MutableStateFlow(62)
-  val ramUsedPercent: StateFlow<Int> = _ramUsedPercent.asStateFlow()
-
-  // Notifications are sourced from the real Android NotificationListenerService.
-  private val _notifications = MutableStateFlow<List<com.example.model.LockNotificationItem>>(emptyList())
-  val notifications: StateFlow<List<com.example.model.LockNotificationItem>> = _notifications.asStateFlow()
-
-  // Settings (persisted across app restarts)
-  private val _settings = MutableStateFlow(_initialSettings)
-  val settings: StateFlow<LauncherSettings> = _settings.asStateFlow()
-
-  // Active folder dialog
-  private val _activeOpenFolder = MutableStateFlow<FolderItem?>(null)
-  val activeOpenFolder: StateFlow<FolderItem?> = _activeOpenFolder.asStateFlow()
-
-  // Selected app for Nothing App Info Sheet
-  private val _selectedAppForInfo = MutableStateFlow<AppItem?>(null)
-  val selectedAppForInfo: StateFlow<AppItem?> = _selectedAppForInfo.asStateFlow()
-
-  fun setAppInfo(app: AppItem?) {
-    _selectedAppForInfo.value = app
-  }
-
-  // Battery receiver
-  private val packageReceiver = object : BroadcastReceiver() {
+  private val batteryReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-      when (intent?.action) {
-        Intent.ACTION_PACKAGE_ADDED,
-        Intent.ACTION_PACKAGE_REMOVED,
-        Intent.ACTION_PACKAGE_CHANGED -> loadInstalledApps()
+      if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
+        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        if (level >= 0 && scale > 0) {
+          val pct = (level * 100) / scale
+          _fitnessStats.value = _fitnessStats.value.copy(watchBattery = pct)
+        }
       }
     }
   }
 
-  private val batteryReceiver = object : BroadcastReceiver() {
+  private val packageReceiver = object : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-      intent?.let { updateBatteryFromIntent(it) }
+      loadInstalledApps()
     }
   }
 
   init {
-    registerPackageReceiver()
-    loadInstalledApps()
     startClockUpdates()
-    startWeatherUpdates()
-    registerBatteryReceiver()
-    checkSystemStorage()
-    observeNotificationCounts()
+    loadInstalledApps()
+    observeNotifications()
+    registerReceivers()
+    setupDefaultFolders()
   }
 
-  private fun registerPackageReceiver() {
+  private fun registerReceivers() {
+    try {
+      context.registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    } catch (_: Exception) {}
+
     try {
       val filter = IntentFilter().apply {
         addAction(Intent.ACTION_PACKAGE_ADDED)
         addAction(Intent.ACTION_PACKAGE_REMOVED)
-        addAction(Intent.ACTION_PACKAGE_CHANGED)
+        addAction(Intent.ACTION_PACKAGE_REPLACED)
         addDataScheme("package")
       }
-      androidx.core.content.ContextCompat.registerReceiver(
-        context,
-        packageReceiver,
-        filter,
-        androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
-      )
+      context.registerReceiver(packageReceiver, filter)
     } catch (_: Exception) {}
   }
 
-  private fun observeNotificationCounts() {
+  private fun observeNotifications() {
     viewModelScope.launch {
-      com.example.service.NothingNotificationListenerService.packageNotificationCounts.collect { counts ->
-        _installedApps.update { list ->
-          list.map { it.copy(notificationCount = counts[it.packageName] ?: 0) }
+      NothingNotificationListenerService.packageNotificationCounts.collect { counts ->
+        val updated = _allApps.value.map { app ->
+          val count = counts[app.packageName] ?: 0
+          if (app.notificationCount != count) app.copy(notificationCount = count) else app
         }
-        _pinnedApps.update { list ->
-          list.map { it.copy(notificationCount = counts[it.packageName] ?: 0) }
+        _allApps.value = updated
+        _dockApps.value = _dockApps.value.map { app ->
+          val count = counts[app.packageName] ?: 0
+          if (app.notificationCount != count) app.copy(notificationCount = count) else app
         }
-        _dockApps.update { list ->
-          list.map { it.copy(notificationCount = counts[it.packageName] ?: 0) }
-        }
-        _folders.update { folderList ->
-          folderList.map { folder ->
-            folder.copy(apps = folder.apps.map { it.copy(notificationCount = counts[it.packageName] ?: 0) })
-          }
-        }
-      }
-    }
-    viewModelScope.launch {
-      com.example.service.NothingNotificationListenerService.activeNotificationList.collect { list ->
-        _notifications.value = list
-      }
-    }
-  }
-
-  fun lockLauncherScreen(turnOffDisplay: Boolean = false) {
-    if (_settings.value.lockScreen.isLockScreenEnabled) {
-      _currentScreen.value = LauncherScreen.LOCK_SCREEN
-    }
-    if (turnOffDisplay) {
-      com.example.service.SystemIntegrationHelper.lockScreen(context)
-    }
-  }
-
-  fun unlockLauncherScreen() {
-    _currentScreen.value = LauncherScreen.HOME
-  }
-
-  fun dismissNotification(id: String) {
-    val service = com.example.service.NothingNotificationListenerService.getService()
-    if (service != null && service.dismissNotification(id)) {
-      _notifications.update { list -> list.filterNot { it.id == id } }
-    }
-  }
-
-  fun launchShortcut(shortcut: com.example.model.LockShortcutType) {
-    when (shortcut) {
-      com.example.model.LockShortcutType.TORCH -> toggleTorch()
-      com.example.model.LockShortcutType.CAMERA -> {
-        try {
-          val intent = Intent(android.provider.MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          }
-          context.startActivity(intent)
-        } catch (_: Exception) {
-          android.widget.Toast.makeText(context, "Camera launched", android.widget.Toast.LENGTH_SHORT).show()
-        }
-      }
-      com.example.model.LockShortcutType.CALCULATOR -> {
-        try {
-          val intent = Intent().apply {
-            action = Intent.ACTION_MAIN
-            addCategory(Intent.CATEGORY_APP_CALCULATOR)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          }
-          context.startActivity(intent)
-        } catch (_: Exception) {
-          android.widget.Toast.makeText(context, "Calculator opened", android.widget.Toast.LENGTH_SHORT).show()
-        }
-      }
-      com.example.model.LockShortcutType.VOICE_RECORDER -> {
-        try {
-          val intent = Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-          }
-          context.startActivity(intent)
-        } catch (_: Exception) {
-          android.widget.Toast.makeText(context, "Voice recorder opened", android.widget.Toast.LENGTH_SHORT).show()
-        }
-      }
-      com.example.model.LockShortcutType.NONE -> {}
-    }
-  }
-
-  fun lockScreen() {
-    lockLauncherScreen()
-  }
-
-  fun openNotificationsPanel() {
-    com.example.service.SystemIntegrationHelper.openNotificationShade(context)
-  }
-
-  fun uninstallApp(packageName: String) {
-    com.example.service.SystemIntegrationHelper.requestUninstallPackage(context, packageName)
-  }
-
-  fun setScreen(screen: LauncherScreen) {
-    _currentScreen.value = screen
-  }
-
-  fun setSearchQuery(query: String) {
-    _searchQuery.value = query
-  }
-
-  fun openFolder(folder: FolderItem?) {
-    _activeOpenFolder.value = folder
-  }
-
-  fun toggleFolderEnlarged(folderId: String) {
-    _folders.update { list ->
-      list.map {
-        if (it.id == folderId) {
-          val next = !it.isEnlarged
-          LauncherPreferencesManager.saveFolderEnlarged(context, folderId, next)
-          it.copy(isEnlarged = next)
-        } else it
-      }
-    }
-  }
-
-  fun updateQuickNote(note: String) {
-    _quickNote.value = note
-    LauncherPreferencesManager.saveQuickNote(context, note)
-  }
-
-  fun updateSettings(newSettings: LauncherSettings) {
-    _settings.value = newSettings
-    LauncherPreferencesManager.saveSettings(context, newSettings)
-  }
-
-  fun toggleWidgetActive(widgetType: NosWidgetPortType) {
-    _settings.update { current ->
-      val currentList = current.activeWidgets.toMutableList()
-      if (currentList.contains(widgetType)) {
-        currentList.remove(widgetType)
-      } else {
-        currentList.add(widgetType)
-      }
-      val updated = current.copy(activeWidgets = currentList)
-      LauncherPreferencesManager.saveSettings(context, updated)
-      updated
-    }
-  }
-
-  fun setCustomWallpaper(uri: android.net.Uri, target: com.example.model.WallpaperTarget) {
-    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-      try {
-        val fileName = "custom_wp_${target.name.lowercase()}_${System.currentTimeMillis()}.jpg"
-        val destFile = java.io.File(context.filesDir, fileName)
-        context.contentResolver.openInputStream(uri)?.use { input ->
-          destFile.outputStream().use { output ->
-            input.copyTo(output)
-          }
-        }
-        val path = destFile.absolutePath
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-          when (target) {
-            com.example.model.WallpaperTarget.HOME -> {
-              _settings.update {
-                it.copy(wallpaperIndex = 7, customWallpaperUri = path)
-              }
-            }
-            com.example.model.WallpaperTarget.LOCK -> {
-              _settings.update {
-                it.copy(lockScreenWallpaperIndex = 7, customLockScreenWallpaperUri = path)
-              }
-            }
-            com.example.model.WallpaperTarget.BOTH -> {
-              _settings.update {
-                it.copy(
-                  wallpaperIndex = 7,
-                  customWallpaperUri = path,
-                  lockScreenWallpaperIndex = 7,
-                  customLockScreenWallpaperUri = path
-                )
-              }
-            }
-          }
-          LauncherPreferencesManager.saveSettings(context, _settings.value)
-          android.widget.Toast.makeText(context, "Nothing OS: Wallpaper set successfully", android.widget.Toast.LENGTH_SHORT).show()
-        }
-      } catch (e: Exception) {
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-          android.widget.Toast.makeText(context, "Error saving wallpaper: ${e.localizedMessage ?: ""}", android.widget.Toast.LENGTH_SHORT).show()
-        }
-      }
-    }
-  }
-
-  fun clearCustomWallpaper(target: com.example.model.WallpaperTarget) {
-    _settings.update { current ->
-      when (target) {
-        com.example.model.WallpaperTarget.HOME -> current.copy(
-          wallpaperIndex = 0,
-          customWallpaperUri = null
-        )
-        com.example.model.WallpaperTarget.LOCK -> current.copy(
-          lockScreenWallpaperIndex = 0,
-          customLockScreenWallpaperUri = null
-        )
-        com.example.model.WallpaperTarget.BOTH -> current.copy(
-          wallpaperIndex = 0,
-          customWallpaperUri = null,
-          lockScreenWallpaperIndex = -1,
-          customLockScreenWallpaperUri = null
-        )
-      }
-    }
-    LauncherPreferencesManager.saveSettings(context, _settings.value)
-    android.widget.Toast.makeText(context, "Photo removed. Default Nothing OS wallpaper restored.", android.widget.Toast.LENGTH_SHORT).show()
-  }
-
-  fun toggleAudioPlayback() {
-    _audio.update { it.copy(isPlaying = !it.isPlaying) }
-  }
-
-  fun nextAudioTrack() {
-    val tracks = listOf(
-      "Nothing (R)" to "Tape Reel 01",
-      "Glyph Pulse" to "Teenage Sound",
-      "Monochrome Beats" to "Carl's Mix",
-      "Swedish Engineering" to "Synthesizer Lab"
-    )
-    val currentIdx = tracks.indexOfFirst { it.first == _audio.value.title }
-    val nextIdx = (currentIdx + 1) % tracks.size
-    _audio.update {
-      it.copy(
-        title = tracks[nextIdx].first,
-        artist = tracks[nextIdx].second,
-        progress = 0f,
-        isPlaying = true
-      )
-    }
-  }
-
-  fun toggleTorch() {
-    val newState = !_toggles.value.isTorchOn
-    try {
-      val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as? CameraManager
-      val cameraId = cameraManager?.cameraIdList?.firstOrNull { id ->
-        val chars = cameraManager.getCameraCharacteristics(id)
-        chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
-      }
-      if (cameraId != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        cameraManager.setTorchMode(cameraId, newState)
-      }
-    } catch (_: Exception) {
-      // Graceful fallback if camera torch is unavailable or in emulator
-    }
-    _toggles.update { it.copy(isTorchOn = newState) }
-  }
-
-  fun cycleSoundMode() {
-    try {
-      val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-      val currentMode = _toggles.value.soundMode
-      val nextMode = (currentMode + 1) % 3 // 0: Silent, 1: Vibrate, 2: Normal
-      audioManager?.let {
-        when (nextMode) {
-          0 -> it.ringerMode = AudioManager.RINGER_MODE_SILENT
-          1 -> it.ringerMode = AudioManager.RINGER_MODE_VIBRATE
-          2 -> it.ringerMode = AudioManager.RINGER_MODE_NORMAL
-        }
-      }
-      _toggles.update { it.copy(soundMode = nextMode) }
-    } catch (_: Exception) {
-      _toggles.update { it.copy(soundMode = (it.soundMode + 1) % 3) }
-    }
-  }
-
-  fun toggleWeatherCondition() {
-    val conditions = listOf("SUNNY", "CLOUDY", "RAIN", "THUNDER")
-    val currentIdx = conditions.indexOf(_weather.value.condition)
-    val nextIdx = (currentIdx + 1) % conditions.size
-    val nextTemp = when (nextIdx) {
-      0 -> 24
-      1 -> 19
-      2 -> 14
-      else -> 17
-    }
-    _weather.update {
-      it.copy(
-        condition = conditions[nextIdx],
-        tempC = nextTemp,
-        highC = nextTemp + 3,
-        lowC = nextTemp - 5
-      )
-    }
-  }
-
-  fun refreshLocationWeather() {
-    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-      val city = SystemLocationHelper.getAutoDetectedCity(context)
-      val updated = SystemLocationHelper.getCurrentWeather(context)
-      if (updated != null) _weather.value = updated else {
-        val fallback = SystemLocationHelper.getEstimatedWeatherForLocation(city)
-        _weather.value = fallback
-      }
-    }
-  }
-
-  fun addSteps(amount: Int = 250) {
-    _fitness.update {
-      val newSteps = (it.steps + amount)
-      it.copy(
-        steps = newSteps,
-        calories = (newSteps * 0.045f).toInt(),
-        distanceKm = String.format(Locale.US, "%.1f", newSteps * 0.00075f).toFloat()
-      )
-    }
-  }
-
-  fun togglePinApp(app: AppItem) {
-    _pinnedApps.update { current ->
-      if (current.any { it.packageName == app.packageName }) {
-        current.filterNot { it.packageName == app.packageName }
-      } else {
-        current + app.copy(isPinned = true)
-      }
-    }
-  }
-
-  fun toggleDockApp(app: AppItem) {
-    _dockApps.update { current ->
-      val updated = if (current.any { it.packageName == app.packageName }) {
-        current.filterNot { it.packageName == app.packageName }
-      } else if (current.size < 5) {
-        current + app.copy(isDock = true)
-      } else {
-        current
-      }
-      LauncherPreferencesManager.saveDockAppPackages(context, updated.map { it.packageName })
-      updated
-    }
-  }
-
-  fun movePinnedApp(fromIndex: Int, toIndex: Int) {
-    _pinnedApps.update { list ->
-      if (fromIndex in list.indices && toIndex in list.indices && fromIndex != toIndex) {
-        val mutable = list.toMutableList()
-        val item = mutable.removeAt(fromIndex)
-        mutable.add(toIndex, item)
-        mutable
-      } else {
-        list
-      }
-    }
-  }
-
-  fun removePinnedApp(app: AppItem) {
-    _pinnedApps.update { list ->
-      list.filterNot { it.packageName == app.packageName }
-    }
-  }
-
-  fun launchApp(app: AppItem) {
-    var launched = false
-    try {
-      val pm = context.packageManager
-      val intent = pm.getLaunchIntentForPackage(app.packageName)
-      if (intent != null) {
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-        launched = true
-      }
-    } catch (_: Exception) {
-      // Intent launch failed, try fallback actions
-    }
-
-    if (!launched) {
-      try {
-        val pkg = app.packageName.lowercase(Locale.ROOT)
-        val label = app.label.lowercase(Locale.ROOT)
-        val fallbackIntent = when {
-          pkg.contains("dialer") || pkg.contains("phone") || label.contains("phone") ->
-            Intent(Intent.ACTION_DIAL).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-          pkg.contains("chrome") || pkg.contains("browser") || label.contains("chrome") || label.contains("browser") ->
-            Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://google.com")).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-          pkg.contains("messaging") || pkg.contains("mms") || label.contains("message") ->
-            Intent(Intent.ACTION_MAIN).apply {
-              addCategory(Intent.CATEGORY_APP_MESSAGING)
-              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-          pkg.contains("camera") || label.contains("camera") ->
-            Intent(android.provider.MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-          pkg.contains("settings") || label.contains("setting") ->
-            Intent(android.provider.Settings.ACTION_SETTINGS).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-          pkg.contains("calculator") || label.contains("calc") ->
-            Intent().apply {
-              action = Intent.ACTION_MAIN
-              addCategory(Intent.CATEGORY_APP_CALCULATOR)
-              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-          pkg.contains("calendar") || label.contains("calendar") ->
-            Intent(Intent.ACTION_MAIN).apply {
-              addCategory(Intent.CATEGORY_APP_CALENDAR)
-              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-          pkg.contains("weather") || label.contains("weather") -> {
-            SystemPortHelper.launchPixelWeather(context)
-            null
-          }
-          pkg.contains("hearse") || label.contains("nothing x") -> {
-            android.widget.Toast.makeText(context, "Nothing X: Active Noise Cancellation 100% • Low Latency Mode", android.widget.Toast.LENGTH_SHORT).show()
-            null
-          }
-          pkg.contains("composer") || label.contains("composer") -> {
-            android.widget.Toast.makeText(context, "Nothing Composer: Glyph Sound Synthesizer Active", android.widget.Toast.LENGTH_SHORT).show()
-            null
-          }
-          pkg.contains("soundrecorder") || label.contains("recorder") -> {
-            android.widget.Toast.makeText(context, "Nothing Tape Recorder: Audio Reel Ready", android.widget.Toast.LENGTH_SHORT).show()
-            null
-          }
-          pkg.contains("clock") || label.contains("clock") ->
-            Intent(android.provider.AlarmClock.ACTION_SHOW_ALARMS).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-          else -> null
-        }
-        if (fallbackIntent != null) {
-          context.startActivity(fallbackIntent)
-          launched = true
-        }
-      } catch (_: Exception) {
-        // Fallback intent not handled
-      }
-    }
-
-    // Keep app launches silent, matching the original launcher behavior.
-  }
-
-  fun openAppInfo(app: AppItem) {
-    _selectedAppForInfo.value = app
-  }
-
-  private fun loadInstalledApps() {
-    viewModelScope.launch {
-      try {
-        val pm = context.packageManager
-        val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
-          addCategory(Intent.CATEGORY_LAUNCHER)
-        }
-        val resolveInfos = pm.queryIntentActivities(mainIntent, 0)
-        val loadedList = resolveInfos.mapNotNull { resolveInfo ->
-          val pkg = resolveInfo.activityInfo.packageName
-          if (pkg == context.packageName) return@mapNotNull null // Don't list launcher itself
-          val label = resolveInfo.loadLabel(pm).toString()
-          val icon = resolveInfo.loadIcon(pm)
-          val installTime = try {
-            pm.getPackageInfo(pkg, 0).firstInstallTime
-          } catch (_: Exception) {
-            0L
-          }
-          val category = when {
-            label.contains("Camera", true) || label.contains("Photo", true) || label.contains("Gallery", true) -> "Media"
-            label.contains("Message", true) || label.contains("Mail", true) || label.contains("Phone", true) || label.contains("Call", true) -> "Communication"
-            label.contains("Setting", true) || label.contains("File", true) || label.contains("Clock", true) || label.contains("Calc", true) -> "Tools"
-            else -> "General"
-          }
-          AppItem(
-            packageName = pkg,
-            activityName = resolveInfo.activityInfo.name,
-            label = label,
-            icon = icon,
-            category = category,
-            installTime = installTime
-          )
-        }.sortedBy { it.label.lowercase(Locale.ROOT) }
-
-        // The drawer reflects the real installed launchable apps.
-        val allApps = if (loadedList.isNotEmpty()) {
-          loadedList
-        } else {
-          getFallbackApps()
-        }
-
-        _installedApps.value = allApps
-
-        // Restore or Set default Dock Apps (5 Apps in Transparent Dock)
-        val savedDockPkgs = LauncherPreferencesManager.loadDockAppPackages(context)
-        val dockList = if (savedDockPkgs != null) {
-          val dockFromSaved = savedDockPkgs.mapNotNull { pkg -> allApps.firstOrNull { it.packageName == pkg } }
-          if (dockFromSaved.isNotEmpty()) dockFromSaved else {
-            allApps.filter { app ->
-              app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
-            }.take(5).ifEmpty { allApps.take(5) }
-          }
-        } else {
-          val defaultDock = allApps.filter { app ->
-            app.label in listOf("Phone", "Messages", "Camera", "Chrome", "Browser")
-          }.take(5).ifEmpty {
-            allApps.take(5)
-          }
-          LauncherPreferencesManager.saveDockAppPackages(context, defaultDock.map { it.packageName })
-          defaultDock
-        }
-        _dockApps.value = dockList
-
-        // Preserve existing pinned apps when the installed-app list refreshes.
-        val previousPinnedPkgs = _pinnedApps.value.map { it.packageName }.toSet()
-        val pinned = if (previousPinnedPkgs.isNotEmpty()) {
-          allApps.filter { it.packageName in previousPinnedPkgs && it.packageName !in dockList.map { a -> a.packageName } }
-        } else {
-          allApps.filterNot { it in dockList }.take(6)
-        }
-        _pinnedApps.value = pinned
-
-        // Create default Nothing OS signature folders with saved enlarged state
-        val mediaApps = allApps.filter { it.category == "Media" || it.label in listOf("Camera", "Photos", "Gallery", "Music", "YouTube") }.take(4)
-        val toolApps = allApps.filter { it.category == "Tools" || it.label in listOf("Settings", "Clock", "Calculator", "Files", "Notes") }.take(4)
-
-        val isMediaEnlarged = LauncherPreferencesManager.isFolderEnlarged(context, "folder_media", true)
-        val isToolsEnlarged = LauncherPreferencesManager.isFolderEnlarged(context, "folder_tools", true)
-
-        _folders.value = listOf(
-          FolderItem(id = "folder_media", name = "MEDIA", isEnlarged = isMediaEnlarged, apps = mediaApps.ifEmpty { allApps.take(4) }),
-          FolderItem(id = "folder_tools", name = "TOOLS", isEnlarged = isToolsEnlarged, apps = toolApps.ifEmpty { allApps.drop(4).take(4) })
-        )
-      } catch (e: Exception) {
-        _installedApps.value = getFallbackApps()
-      }
-    }
-  }
-
-  private fun getFallbackApps(): List<AppItem> = listOf(
-    AppItem("com.google.android.dialer", "", "Phone", null, category = "Communication"),
-    AppItem("com.google.android.apps.messaging", "", "Messages", null, category = "Communication"),
-    AppItem("com.android.chrome", "", "Chrome", null, category = "Tools"),
-    AppItem("com.google.android.GoogleCamera", "", "Camera", null, category = "Media"),
-    AppItem("com.google.android.apps.photos", "", "Photos", null, category = "Media"),
-    AppItem("com.android.settings", "", "Settings", null, category = "Tools"),
-    AppItem("com.google.android.deskclock", "", "Clock", null, category = "Tools"),
-    AppItem("com.google.android.calculator", "", "Calculator", null, category = "Tools"),
-    AppItem("com.google.android.calendar", "", "Calendar", null, category = "Tools"),
-    AppItem("com.google.android.contacts", "", "Contacts", null, category = "Communication"),
-    AppItem("com.google.android.apps.nbu.files", "", "Files", null, category = "Tools"),
-    AppItem("com.google.android.keep", "", "Keep notes", null, category = "Tools"),
-    AppItem("com.google.android.youtube", "", "YouTube", null, category = "Media"),
-    AppItem("com.google.android.apps.youtube.music", "", "YT Music", null, category = "Media"),
-    AppItem("com.google.android.apps.maps", "", "Maps", null, category = "General"),
-    AppItem("com.google.android.gm", "", "Gmail", null, category = "Communication"),
-    AppItem("com.google.android.apps.docs", "", "Drive", null, category = "Tools"),
-    AppItem("com.android.vending", "", "Play Store", null, category = "Tools"),
-    AppItem("com.google.android.apps.safetyhub", "", "Safety", null, category = "Tools"),
-    AppItem("com.google.android.videos", "", "Google TV", null, category = "Media"),
-    AppItem("com.google.android.apps.tachyon", "", "Meet", null, category = "Communication"),
-    AppItem("org.thunderdog.challegram", "", "Telegram X", null, category = "Communication"),
-    AppItem("com.openai.chatgpt", "", "ChatGPT", null, category = "Tools"),
-    AppItem("com.discord", "", "Discord", null, category = "Communication")
-  )
-
-  private fun startWeatherUpdates() {
-    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-      while (true) {
-        try {
-          val live = SystemLocationHelper.getCurrentWeather(context)
-          if (live != null) {
-            _weather.value = live
-          } else {
-            val city = SystemLocationHelper.getAutoDetectedCity(context)
-            val fallback = SystemLocationHelper.getEstimatedWeatherForLocation(city)
-            _weather.value = fallback
-          }
-        } catch (_: Exception) {}
-        delay(30 * 60 * 1000L)
       }
     }
   }
@@ -751,63 +127,127 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
   private fun startClockUpdates() {
     viewModelScope.launch {
       val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-      val secFormat = SimpleDateFormat("ss", Locale.getDefault())
-      val dateFormat = SimpleDateFormat("EEE d MMM", Locale.US)
-
+      val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
       while (true) {
-        val now = Calendar.getInstance().time
+        val now = Date()
         _currentTime.value = timeFormat.format(now)
-        _currentSeconds.value = secFormat.format(now)
-        _currentDate.value = dateFormat.format(now).uppercase(Locale.US)
-        delay(1000)
+        _currentDate.value = dateFormat.format(now)
+        delay(1000L)
       }
     }
   }
 
-  private fun registerBatteryReceiver() {
-    try {
-      val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-      val batteryStatus: Intent? = context.registerReceiver(batteryReceiver, filter)
-      batteryStatus?.let { updateBatteryFromIntent(it) }
-    } catch (_: Exception) {
-      // Fallback
+  fun loadInstalledApps() {
+    viewModelScope.launch {
+      try {
+        val pm = context.packageManager
+        val intent = Intent(Intent.ACTION_MAIN, null).apply {
+          addCategory(Intent.CATEGORY_LAUNCHER)
+        }
+        val resolveInfos = pm.queryIntentActivities(intent, 0)
+        val appList = mutableListOf<AppItem>()
+
+        for (resolveInfo in resolveInfos) {
+          val pkg = resolveInfo.activityInfo.packageName
+          if (pkg == context.packageName) continue // Don't list launcher itself inside drawer
+
+          val label = resolveInfo.loadLabel(pm).toString()
+          val icon = resolveInfo.loadIcon(pm)
+          val category = categorizeApp(label, pkg)
+
+          appList.add(
+            AppItem(
+              packageName = pkg,
+              activityName = resolveInfo.activityInfo.name,
+              label = label,
+              iconDrawable = icon,
+              category = category
+            )
+          )
+        }
+
+        appList.sortBy { it.label.lowercase(Locale.ROOT) }
+        _allApps.value = appList
+
+        // Populate Dock
+        val dockList = appList.take(5)
+        _dockApps.value = dockList
+
+        // Populate Pinned
+        val pinned = appList.drop(5).take(4)
+        _pinnedApps.value = pinned
+      } catch (_: Exception) {}
     }
   }
 
-  private fun updateBatteryFromIntent(intent: Intent) {
-    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-    val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-    val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-      status == BatteryManager.BATTERY_STATUS_FULL
-
-    if (level >= 0 && scale > 0) {
-      val batteryPct = (level * 100) / scale
-      _toggles.update { it.copy(batteryLevel = batteryPct, isCharging = isCharging) }
+  private fun categorizeApp(label: String, pkg: String): String {
+    val low = (label + " " + pkg).lowercase(Locale.ROOT)
+    return when {
+      low.contains("game") || low.contains("play") -> "Games"
+      low.contains("chat") || low.contains("message") || low.contains("whatsapp") || low.contains("telegram") -> "Social"
+      low.contains("mail") || low.contains("gmail") || low.contains("phone") || low.contains("call") -> "Communication"
+      low.contains("camera") || low.contains("photo") || low.contains("gallery") || low.contains("video") || low.contains("youtube") || low.contains("music") -> "Media"
+      else -> "Tools"
     }
   }
 
-  private fun checkSystemStorage() {
-    try {
-      val statFs = StatFs(Environment.getDataDirectory().path)
-      val total = statFs.totalBytes
-      val available = statFs.availableBytes
-      if (total > 0) {
-        val used = ((total - available) * 100 / total).toInt()
-        _storageUsedPercent.value = used.coerceIn(10, 95)
+  private fun setupDefaultFolders() {
+    _folders.value = listOf(
+      FolderItem(
+        id = "f_media",
+        name = "MEDIA",
+        appPackages = listOf("com.google.android.youtube", "com.google.android.apps.photos")
+      )
+    )
+  }
+
+  fun updateSettings(newSettings: LauncherSettings) {
+    _settings.value = newSettings
+    LauncherPreferencesManager.saveSettings(context, newSettings)
+  }
+
+  fun toggleDockApp(app: AppItem) {
+    val current = _dockApps.value.toMutableList()
+    if (current.any { it.packageName == app.packageName }) {
+      current.removeAll { it.packageName == app.packageName }
+    } else {
+      if (current.size < 5) {
+        current.add(app)
+      } else {
+        current[4] = app
       }
-    } catch (_: Exception) {
-      _storageUsedPercent.value = 42
     }
+    _dockApps.value = current
+  }
+
+  fun toggleWidgetActive(type: NosWidgetPortType) {
+    val current = _settings.value.activeWidgets.toMutableList()
+    if (current.contains(type)) {
+      current.remove(type)
+    } else {
+      current.add(type)
+    }
+    updateSettings(_settings.value.copy(activeWidgets = current))
+  }
+
+  fun navigateTo(screen: LauncherScreen) {
+    _currentScreen.value = screen
+  }
+
+  fun launchApp(app: AppItem) {
+    try {
+      val pm = context.packageManager
+      val launchIntent = pm.getLaunchIntentForPackage(app.packageName)
+      if (launchIntent != null) {
+        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        context.startActivity(launchIntent)
+      }
+    } catch (_: Exception) {}
   }
 
   override fun onCleared() {
     super.onCleared()
-    try {
-      context.unregisterReceiver(packageReceiver)
-    } catch (_: Exception) {}
-    try {
-      context.unregisterReceiver(batteryReceiver)
-    } catch (_: Exception) {}
+    try { context.unregisterReceiver(batteryReceiver) } catch (_: Exception) {}
+    try { context.unregisterReceiver(packageReceiver) } catch (_: Exception) {}
   }
 }

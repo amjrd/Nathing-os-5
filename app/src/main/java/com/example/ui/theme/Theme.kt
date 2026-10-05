@@ -1,6 +1,5 @@
 package com.example.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -10,7 +9,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.example.model.LauncherThemeMode
 
-// Theme Nuit (Dark - Image 2)
 private val NothingDarkColorScheme = darkColorScheme(
   primary = NothingRed,
   onPrimary = NothingWhite,
@@ -18,59 +16,47 @@ private val NothingDarkColorScheme = darkColorScheme(
   onPrimaryContainer = NothingWhite,
   secondary = NothingWhite,
   onSecondary = NothingBlack,
-  secondaryContainer = NothingDarkSurface,
-  onSecondaryContainer = NothingWhite,
-  tertiary = NothingRedLight,
   background = NothingBlack,
   onBackground = NothingWhite,
-  surface = NothingMatteBlack,
+  surface = NothingDarkSurface,
   onSurface = NothingWhite,
-  surfaceVariant = NothingDarkSurface,
-  onSurfaceVariant = NothingDimWhite,
+  surfaceVariant = NothingElevated,
+  onSurfaceVariant = NothingGrey,
   outline = NothingBorder,
-  outlineVariant = NothingUnlitDot
+  outlineVariant = NothingDotMatrix
 )
 
-// Theme Jour (Light - Image 3)
 private val NothingLightColorScheme = lightColorScheme(
-  primary = Color(0xFF000000),
-  onPrimary = Color(0xFFFFFFFF),
-  primaryContainer = Color(0xFFE9E9E9),
-  onPrimaryContainer = Color(0xFF000000),
-  secondary = Color(0xFF333333),
-  onSecondary = Color(0xFFFFFFFF),
-  secondaryContainer = Color(0xFFE2E2E2),
-  onSecondaryContainer = Color(0xFF000000),
-  tertiary = NothingRed,
-  onTertiary = Color(0xFFFFFFFF),
-  background = Color(0xFFF4F5F8),
-  onBackground = Color(0xFF000000),
-  surface = Color(0xFFFFFFFF),
-  onSurface = Color(0xFF000000),
-  surfaceVariant = Color(0xFFE8E8EA),
-  onSurfaceVariant = Color(0xFF333333),
-  outline = Color(0xFFB8B8BC),
+  primary = NothingRed,
+  onPrimary = NothingWhite,
+  primaryContainer = NothingLightElevated,
+  onPrimaryContainer = NothingLightTextPrimary,
+  secondary = NothingLightTextPrimary,
+  onSecondary = NothingWhite,
+  background = NothingLightBackground,
+  onBackground = NothingLightTextPrimary,
+  surface = NothingLightSurface,
+  onSurface = NothingLightTextPrimary,
+  surfaceVariant = NothingLightElevated,
+  onSurfaceVariant = NothingLightTextSecondary,
+  outline = NothingLightBorder,
   outlineVariant = Color(0xFFD0D0D3)
 )
 
-// Theme 3: Atmospheric pastel/teal
 private val NothingRetroColorScheme = lightColorScheme(
   primary = NothingRetroAccent,
   onPrimary = NothingWhite,
-  primaryContainer = NothingRetroElevated,
-  onPrimaryContainer = NothingRetroTextPrimary,
-  secondary = NothingRetroTextPrimary,
-  onSecondary = NothingRetroSurface,
-  secondaryContainer = NothingRetroElevated,
-  onSecondaryContainer = NothingRetroTextPrimary,
-  tertiary = NothingGreenAccent,
-  background = NothingRetroBackground,
-  onBackground = NothingRetroTextPrimary,
-  surface = NothingRetroSurface,
-  onSurface = NothingRetroTextPrimary,
-  surfaceVariant = NothingRetroElevated,
-  onSurfaceVariant = NothingRetroTextSecondary,
-  outline = NothingRetroBorder,
+  primaryContainer = Color(0xFFE4EDE7),
+  onPrimaryContainer = Color(0xFF1E3A33),
+  secondary = Color(0xFF23443C),
+  onSecondary = NothingWhite,
+  background = Color(0xFFF3F7F4),
+  onBackground = Color(0xFF132822),
+  surface = Color(0xFFFFFFFF),
+  onSurface = Color(0xFF132822),
+  surfaceVariant = Color(0xFFE7EFEA),
+  onSurfaceVariant = Color(0xFF5D7A71),
+  outline = Color(0xFFD3E0D8),
   outlineVariant = NothingRetroUnlitDot
 )
 
@@ -80,11 +66,8 @@ private val NothingGlyphRedColorScheme = darkColorScheme(
   primaryContainer = Color(0xFF2A1113),
   onPrimaryContainer = NothingWhite,
   secondary = Color(0xFFE8E8E8),
-  onSecondary = NothingBlack,
-  secondaryContainer = Color(0xFF202020),
-  onSecondaryContainer = NothingWhite,
-  tertiary = NothingRedLight,
-  background = Color(0xFF0B0B0C),
+  onSecondary = Color(0xFF09090A),
+  background = Color(0xFF09090A),
   onBackground = NothingWhite,
   surface = Color(0xFF151517),
   onSurface = NothingWhite,
@@ -102,22 +85,18 @@ data class LauncherThemeColors(
   val border: Color = NothingBorder,
   val textPrimary: Color = NothingWhite,
   val textSecondary: Color = NothingGrey,
-  val unlitDot: Color = NothingUnlitDot,
-  val dockBg: Color = NothingDarkSurface,
-  val dockButtonBg: Color = NothingElevated,
+  val unlitDot: Color = NothingDotMatrix,
+  val dockBg: Color = Color(0xCC141416),
+  val dockButtonBg: Color = Color(0xFF222226),
   val dockIconTint: Color = NothingWhite,
-  val searchPillBg: Color = NothingDarkSurface
+  val searchPillBg: Color = Color(0xFF18181A)
 )
 
-val LocalLauncherTheme = staticCompositionLocalOf {
-  LauncherThemeColors()
-}
+val LocalLauncherTheme = staticCompositionLocalOf { LauncherThemeColors() }
 
 @Composable
-fun MyApplicationTheme(
+fun NothingOSLauncherTheme(
   themeMode: LauncherThemeMode = LauncherThemeMode.ORIGINAL,
-  darkTheme: Boolean = isSystemInDarkTheme(),
-  dynamicColor: Boolean = false,
   content: @Composable () -> Unit
 ) {
   val colorScheme = when (themeMode) {
@@ -126,6 +105,7 @@ fun MyApplicationTheme(
     LauncherThemeMode.ATMOSPHERE_PASTEL -> NothingRetroColorScheme
     LauncherThemeMode.GLYPH_RED -> NothingGlyphRedColorScheme
   }
+
   val themeColors = when (themeMode) {
     LauncherThemeMode.ORIGINAL -> {
       LauncherThemeColors(
@@ -136,22 +116,22 @@ fun MyApplicationTheme(
         border = NothingBorder,
         textPrimary = NothingWhite,
         textSecondary = NothingGrey,
-        unlitDot = NothingUnlitDot,
-        dockBg = NothingDarkSurface.copy(alpha = 0.88f),
-        dockButtonBg = NothingElevated,
+        unlitDot = NothingDotMatrix,
+        dockBg = Color(0xD8141416),
+        dockButtonBg = Color(0xFF222226),
         dockIconTint = NothingWhite,
-        searchPillBg = NothingDarkSurface
+        searchPillBg = Color(0xFF18181B)
       )
     }
     LauncherThemeMode.MONOCHROME_STUDIO -> {
       LauncherThemeColors(
         isDark = false,
         background = Color(0xFFF4F5F8),
-        surface = Color.White,
-        elevated = Color(0xFFEAEAEA),
-        border = Color(0xFFB8B8BC),
-        textPrimary = Color(0xFF000000),
-        textSecondary = Color(0xFF4A4A4F),
+        surface = Color(0xFFFFFFFF),
+        elevated = Color(0xFFF8F9FA),
+        border = Color(0xFFE2E4E8),
+        textPrimary = Color(0xFF111115),
+        textSecondary = Color(0xFF707076),
         unlitDot = Color(0xFFD0D0D4),
         dockBg = Color(0xF5FFFFFF),
         dockButtonBg = Color(0xFFEAEAEA),
@@ -162,16 +142,16 @@ fun MyApplicationTheme(
     LauncherThemeMode.ATMOSPHERE_PASTEL -> {
       LauncherThemeColors(
         isDark = false,
-        background = Color(0xFFE2E9DE),
-        surface = Color(0xFFEEF3EC),
-        elevated = Color(0xFFF7FAF5),
-        border = Color(0xFFCDD6C8),
-        textPrimary = Color(0xFF1E281D),
-        textSecondary = Color(0xFF5D6B5A),
+        background = Color(0xFFF1F5F2),
+        surface = Color(0xFFFFFFFF),
+        elevated = Color(0xFFE7ECE8),
+        border = Color(0xFFD4DED7),
+        textPrimary = Color(0xFF1B2F29),
+        textSecondary = Color(0xFF678278),
         unlitDot = NothingRetroUnlitDot,
-        dockBg = Color(0xDDE4ECE1),
-        dockButtonBg = Color.White,
-        dockIconTint = Color(0xFF1E281D),
+        dockBg = Color(0xE8FFFFFF),
+        dockButtonBg = Color(0xFFE2ECE5),
+        dockIconTint = Color(0xFF203830),
         searchPillBg = Color(0xFFEEF3EC)
       )
     }
@@ -181,9 +161,9 @@ fun MyApplicationTheme(
         background = Color(0xFF09090A),
         surface = Color(0xFF151517),
         elevated = Color(0xFF202024),
-        border = Color(0xFF343438),
+        border = Color(0xFF333338),
         textPrimary = NothingWhite,
-        textSecondary = Color(0xFF9A9A9E),
+        textSecondary = Color(0xFFA0A0A5),
         unlitDot = Color(0xFF26262A),
         dockBg = Color(0xE8151517),
         dockButtonBg = Color(0xFF242428),

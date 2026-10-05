@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/nothing_launcher_icon_1790329339567"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer ring of Nothing OS glyph -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M 54,26 A 28,28 0 1 0 82,54" />
+    <path
+        android:strokeColor="#808080"
+        android:strokeWidth="2"
+        android:pathData="M 28,54 A 26,26 0 0 1 54,28" />
+    <!-- Center Nothing Dot Matrix Core -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,51h6v6h-6z M39,51h6v6h-6z M63,51h6v6h-6z M51,39h6v6h-6z M51,63h6v6h-6z" />
+    <!-- Signature Nothing OS Red Dot -->
+    <path
+        android:fillColor="#D71920"
+        android:pathData="M 72,36 A 5,5 0 1 1 72,35.9 Z" />
+</vector>

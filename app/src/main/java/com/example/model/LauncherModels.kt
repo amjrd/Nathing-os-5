@@ -2,172 +2,124 @@ package com.example.model
 
 import android.graphics.drawable.Drawable
 
-enum class IconPackStyle {
-  MONOCHROME,      // Signature Nothing black/white circles with high contrast glyphs ("Nothing")
-  COLOUR,          // Nothing OS 3.0/5.0 scalloped 12-point flower badge with vibrant pastel background ("Colour")
-  MINIMAL_DARK,    // Dark matte background with sleek white outlines
-  SYSTEM_DEFAULT   // Original system app icons ("Default")
-}
-
-enum class LauncherScreen {
-  LOCK_SCREEN,
-  HOME,
-  APP_DRAWER,
-  SETTINGS
-}
-
-enum class LockClockStyle {
-  DOT_MATRIX_BIG,     // Large NDOT font style
-  VERTICAL_STACK,     // Hour on top, minute on bottom in bold typography
-  MINIMAL_ANALOG,     // Minimalist Nothing watch face with dots & ticking second
-  CLASSIC_DIGITAL     // Crisp clean digital line with glyph date
-}
-
-enum class LockSecurityType {
-  SWIPE,              // Swipe up to unlock
-  PIN                 // 4-digit Nothing PIN lock
-}
-
-enum class LockShortcutType {
-  TORCH,
-  CAMERA,
-  CALCULATOR,
-  VOICE_RECORDER,
-  NONE
-}
-
-enum class WallpaperTarget {
-  HOME,
-  LOCK,
-  BOTH
-}
-
-enum class LauncherThemeMode {
-  ORIGINAL,          // Signature: Nothing OS 2 black/white dot-matrix home
-  MONOCHROME_STUDIO, // Monochrome photographic studio
-  ATMOSPHERE_PASTEL, // Teal/blue atmospheric glass
-  GLYPH_RED          // Dark graphite with Nothing red glyph accents
-}
-
-enum class LauncherClockStyle {
-  ANALOG,  // Round disc analog clock with hour/minute hands & accent dot (as in Image 3)
-  DIGITAL  // Segmented dot matrix clock (as in Image 2)
-}
-
-data class LockNotificationItem(
-  val id: String,
-  val packageName: String,
-  val appName: String,
-  val title: String,
-  val text: String,
-  val timeFormatted: String = "NOW"
-)
-
-data class LockScreenSettings(
-  val isLockScreenEnabled: Boolean = true,
-  val preventSystemLockOverlap: Boolean = true, // Prevents launcher widgets from showing behind Android system lockscreen
-  val securityType: LockSecurityType = LockSecurityType.SWIPE,
-  val pinCode: String = "1234",
-  val clockStyle: LockClockStyle = LockClockStyle.DOT_MATRIX_BIG,
-  val showWidgets: Boolean = true,
-  val showNotifications: Boolean = true,
-  val showBatteryGlyph: Boolean = true,
-  val leftShortcut: LockShortcutType = LockShortcutType.TORCH,
-  val rightShortcut: LockShortcutType = LockShortcutType.CAMERA,
-  val customOwnerInfo: String = "NOTHING PHONE (2) • NOTHING OS 5"
-)
-
 data class AppItem(
   val packageName: String,
   val activityName: String = "",
   val label: String,
-  val icon: Drawable? = null,
-  val isPinned: Boolean = false,
-  val isDock: Boolean = false,
-  val category: String = "General",
+  val iconDrawable: Drawable? = null,
+  val category: String = "Tools",
   val notificationCount: Int = 0,
-  val installTime: Long = 0L
+  val isPinned: Boolean = false
+)
+
+enum class IconPackStyle {
+  MONOCHROME,
+  COLORFUL,
+  NOTHING_ORIGINAL
+}
+
+enum class LauncherThemeMode {
+  ORIGINAL,          // Nothing OS 2 Signature Black/White Dot-matrix
+  MONOCHROME_STUDIO, // High contrast black & white studio
+  ATMOSPHERE_PASTEL, // Soft teal/mint atmosphere
+  GLYPH_RED          // Dark graphite with Nothing Red glyph accents
+}
+
+enum class LauncherClockStyle {
+  DOT_MATRIX_DIGITAL,
+  ANALOG_CLASSIC,
+  NOTHING_BOLD,
+  MINIMAL_VERTICAL
+}
+
+enum class NosWidgetPortType {
+  CALENDAR_DIGITAL_TIME,
+  MINI_CLUSTER_2X2,
+  CLOCK_MAIN,
+  WEATHER_MAIN,
+  QUICK_LOOK,
+  EAR_BATTERY,
+  WATCH_STATS,
+  SYSTEM_RESOURCES,
+  GIANT_CIRCLES_CLUSTER
+}
+
+enum class LockSecurityType {
+  SWIPE,
+  PIN,
+  PASSWORD
+}
+
+data class LockScreenSettings(
+  val securityType: LockSecurityType = LockSecurityType.SWIPE,
+  val pinCode: String = "1234",
+  val customOwnerInfo: String = "NOTHING (R) OS 5",
+  val showClock: Boolean = true,
+  val clockStyle: LauncherClockStyle = LauncherClockStyle.DOT_MATRIX_DIGITAL,
+  val showWidgets: Boolean = true,
+  val showNotifications: Boolean = true
+)
+
+data class LauncherSettings(
+  val themeMode: LauncherThemeMode = LauncherThemeMode.ORIGINAL,
+  val iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
+  val accentColorIndex: Int = 0,
+  val showLabels: Boolean = true,
+  val drawerColumnCount: Int = 4,
+  val drawerColoredIcons: Boolean = false,
+  val drawerCardSizeLevel: Int = 1,
+  val iconSizeLevel: Int = 1, // 0: 44dp, 1: 52dp, 2: 60dp, 3: 68dp
+  val showSearchBarOnDock: Boolean = true,
+  val swipeDownNotifications: Boolean = true,
+  val wallpaperIndex: Int = 0,
+  val wallpaperDimPct: Int = 20,
+  val customWallpaperUri: String? = null,
+  val lockScreen: LockScreenSettings = LockScreenSettings(),
+  val activeWidgets: List<NosWidgetPortType> = listOf(
+    NosWidgetPortType.CALENDAR_DIGITAL_TIME,
+    NosWidgetPortType.CLOCK_MAIN,
+    NosWidgetPortType.WEATHER_MAIN,
+    NosWidgetPortType.EAR_BATTERY,
+    NosWidgetPortType.WATCH_STATS
+  )
+)
+
+data class AudioState(
+  val connected: Boolean = true,
+  val deviceName: String = "Ear (open)",
+  val batteryLeft: Int = 85,
+  val batteryRight: Int = 90,
+  val batteryCase: Int = 75,
+  val ancMode: String = "TRANSPARENCY"
+)
+
+data class FitnessStats(
+  val steps: Int = 6842,
+  val heartRate: Int = 72,
+  val calories: Int = 340,
+  val distanceKm: Float = 4.8f,
+  val watchBattery: Int = 88
+)
+
+data class WeatherData(
+  val temperatureC: Int = 22,
+  val condition: String = "Clear",
+  val city: String = "London",
+  val highC: Int = 24,
+  val lowC: Int = 16
 )
 
 data class FolderItem(
   val id: String,
   val name: String,
-  val isEnlarged: Boolean = true, // Signature Nothing 2x2 enlarged folder
-  val apps: List<AppItem> = emptyList()
+  val appPackages: List<String>,
+  val isEnlarged: Boolean = false
 )
 
-data class WeatherInfo(
-  val tempC: Int = 22,
-  val condition: String = "SUNNY", // SUNNY, CLOUDY, RAIN, THUNDER, SNOW
-  val city: String = "LONDON",
-  val highC: Int = 25,
-  val lowC: Int = 16
-)
-
-data class AudioState(
-  val isPlaying: Boolean = false,
-  val title: String = "Nothing (R)",
-  val artist: String = "Tape Reel 01",
-  val progress: Float = 0.42f
-)
-
-data class FitnessStats(
-  val steps: Int = 7420,
-  val goal: Int = 10000,
-  val calories: Int = 345,
-  val distanceKm: Float = 5.2f
-)
-
-data class QuickToggleState(
-  val isTorchOn: Boolean = false,
-  val soundMode: Int = 2, // 0 = Silent, 1 = Vibrate, 2 = Normal
-  val batteryLevel: Int = 84,
-  val isCharging: Boolean = false,
-  val wifiEnabled: Boolean = true
-)
-
-enum class NosWidgetPortType {
-  CALENDAR_DIGITAL_TIME, // Screenshot 2: JUL TUESDAY 07H 10M
-  MINI_CLUSTER_2X2,      // Screenshot 2: 14° + Cloud glyph + ECG pulse + Red recorder
-  GLANCE_TEXT_SUMMARY,   // Screenshot 2: "TODAY IS TUESDAY AND TIME IS..."
-  CIRCULAR_GAUGES,       // Screenshot 1: 73% Music + 57°C Flame + 98% Bell
-  DECIBEL_SOUND_METER,   // Screenshot 1: 103 dB with vertical dot LED meter
-  QUICK_CHECKLIST,       // Screenshot 1: "Get groceries. Read a book..."
-  CONTACT_PILL,          // Screenshot 1: Contact card with call & chat
-  CLOCK_MAIN,            // Main Nothing Clock
-  WEATHER_MAIN,          // Main Weather & Quick Toggles
-  CASSETTE_PLAYER,       // Teenage Cassette Player
-  PEDOMETER_GAUGE,       // Pedometer & RAM
-  GIANT_CIRCLES_CLUSTER, // Screenshot 3: Giant Camera circle, Dot-Matrix Rain Weather circle & Dot-Matrix Glyph
-  STICKER_FOCUS_CLUSTER, // Screenshot 5: Focus concentric lines, Retro Car sticker & Capsule pill
-  NOTHING_X_EARBUDS,     // Real Bluetooth headset battery / system access
-    SMARTWATCH_BATTERY,    // Real Bluetooth wearable battery when Android exposes it
-  MEDIA_FOLDER,          // Home widget: Media apps
-  TOOLS_FOLDER           // Home widget: Tools apps
+enum class LauncherScreen {
+  HOME,
+  LOCK,
+  APP_DRAWER,
+  SETTINGS,
+  SEARCH
 }
-
-data class LauncherSettings(
-  val iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
-  val themeMode: LauncherThemeMode = LauncherThemeMode.ORIGINAL,
-  val clockStyle: LauncherClockStyle = LauncherClockStyle.ANALOG, // ANALOG (Image 3) or DIGITAL (Image 2)
-  val accentColorIndex: Int = 0, // 0: Red, 1: White, 2: Orange, 3: Yellow
-  val gridColumns: Int = 4,
-  val showLabels: Boolean = true,
-  val is12HourFormat: Boolean = false,
-  val tempUnitCelsius: Boolean = true,
-  val doubleTapToSleep: Boolean = true,
-  val swipeDownNotifications: Boolean = true,
-  val showSearchBarOnDock: Boolean = true,
-  val hapticFeedbackEnabled: Boolean = true,
-  val wallpaperIndex: Int = 0, // 0: Dot Matrix, 1: Carbon Matte, 2: Circuit Glow, 3: Light Dots, 4: Glyph Neon, 5: Retro Grid, 6: Red Abstract, 7: Custom Photo
-  val customWallpaperUri: String? = null,
-  val lockScreenWallpaperIndex: Int = -1, // -1 means same as launcher wallpaper
-  val customLockScreenWallpaperUri: String? = null,
-  val wallpaperDimPct: Int = 30, // 0% to 70% dim overlay for icon clarity
-  val lockScreen: LockScreenSettings = LockScreenSettings(),
-  val iconSizeLevel: Int = 1, // 0: Small (44dp), 1: Standard (52dp), 2: Large (60dp), 3: Extra Large (68dp)
-  val drawerCardSizeLevel: Int = 1, // 0: Compact, 1: Standard, 2: Large
-  val widgetSizeLevel: Int = 1, // 0: Compact (85%), 1: Standard (100%), 2: Expanded (115%)
-  // Custom widgets start empty; the user adds them from Home.
-  val activeWidgets: List<NosWidgetPortType> = emptyList()
-)
