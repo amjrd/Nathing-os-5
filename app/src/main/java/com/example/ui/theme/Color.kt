@@ -4,12 +4,15 @@ import androidx.compose.ui.graphics.Color
 
 val NothingRed = Color(0xFFD71920)
 val NothingBlack = Color(0xFF080808)
+val NothingMatteBlack = Color(0xFF080808)
 val NothingWhite = Color(0xFFF5F5F5)
 val NothingGrey = Color(0xFF7B7B80)
 val NothingDarkSurface = Color(0xFF141416)
 val NothingElevated = Color(0xFF1D1D20)
 val NothingBorder = Color(0xFF2C2C30)
 val NothingDotMatrix = Color(0xFF202022)
+val NothingUnlitDot = Color(0xFF28282C)
+val NothingGreenAccent = Color(0xFF00E676)
 
 val NothingLightBackground = Color(0xFFF4F5F8)
 val NothingLightSurface = Color(0xFFFFFFFF)

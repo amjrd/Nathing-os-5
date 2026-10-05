@@ -116,7 +116,7 @@ fun NothingOSLauncherTheme(
         border = NothingBorder,
         textPrimary = NothingWhite,
         textSecondary = NothingGrey,
-        unlitDot = NothingDotMatrix,
+        unlitDot = NothingUnlitDot,
         dockBg = Color(0xD8141416),
         dockButtonBg = Color(0xFF222226),
         dockIconTint = NothingWhite,
@@ -180,4 +180,10 @@ fun NothingOSLauncherTheme(
       content = content
     )
   }
+}
+
+// Compatibility wrapper for tests
+@Composable
+fun MyApplicationTheme(content: @Composable () -> Unit) {
+  NothingOSLauncherTheme(LauncherThemeMode.ORIGINAL, content)
 }

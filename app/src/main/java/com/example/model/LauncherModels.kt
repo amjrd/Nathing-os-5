@@ -65,6 +65,7 @@ data class LauncherSettings(
   val iconPack: IconPackStyle = IconPackStyle.MONOCHROME,
   val accentColorIndex: Int = 0,
   val showLabels: Boolean = true,
+  val gridColumns: Int = 4,
   val drawerColumnCount: Int = 4,
   val drawerColoredIcons: Boolean = false,
   val drawerCardSizeLevel: Int = 1,
@@ -90,11 +91,15 @@ data class AudioState(
   val batteryLeft: Int = 85,
   val batteryRight: Int = 90,
   val batteryCase: Int = 75,
-  val ancMode: String = "TRANSPARENCY"
+  val ancMode: String = "TRANSPARENCY",
+  val isPlaying: Boolean = false,
+  val title: String = "Nothing Track",
+  val artist: String = "Teenage Engineering"
 )
 
 data class FitnessStats(
   val steps: Int = 6842,
+  val goal: Int = 10000,
   val heartRate: Int = 72,
   val calories: Int = 340,
   val distanceKm: Float = 4.8f,
@@ -107,6 +112,21 @@ data class WeatherData(
   val city: String = "London",
   val highC: Int = 24,
   val lowC: Int = 16
+)
+
+data class WeatherInfo(
+  val tempC: Int = 22,
+  val condition: String = "SUNNY",
+  val city: String = "TUNIS",
+  val highC: Int = 25,
+  val lowC: Int = 18
+)
+
+data class QuickToggleState(
+  val isTorchOn: Boolean = false,
+  val soundMode: Int = 2, // 0: Silent, 1: Vibrate, 2: Normal
+  val batteryLevel: Int = 85,
+  val isCharging: Boolean = false
 )
 
 data class FolderItem(

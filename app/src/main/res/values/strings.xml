@@ -1,9 +1,10 @@
 <resources>
-    <string name="app_name">Nothing OS Launcher</string>
+    <string name="app_name">Nothing OS 5</string>
     <string name="search_hint">SEARCH OR TYPE URL...</string>
     <string name="apps_drawer">All Applications</string>
     <string name="widgets">Widgets</string>
     <string name="customisation">Customisation</string>
     <string name="wallpaper">Wallpaper &amp; Style</string>
     <string name="lock_screen">Lock Screen</string>
+    <string name="accessibility_service_desc">Nothing OS Launcher accessibility service for navigation gestures and screen lock.</string>
 </resources>
