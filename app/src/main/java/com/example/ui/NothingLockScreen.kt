@@ -266,13 +266,10 @@ fun NothingLockScreen(
               .fillMaxWidth()
               .clickable { SystemPortHelper.launchPixelClock(context) }
           ) {
-            Text(
-              text = currentTime,
-              fontFamily = FontFamily.Monospace,
-              fontSize = 72.sp,
-              fontWeight = FontWeight.Black,
-              color = theme.textPrimary,
-              letterSpacing = 4.sp
+            NothingDotMatrixClock(
+              time = currentTime,
+              color = if (theme.isDark) Color.White else Color(0xFF111111),
+              modifier = Modifier.fillMaxWidth().height(88.dp)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -901,5 +898,49 @@ private fun LockNotificationCard(
         .size(16.dp)
         .clickable { onDismiss() }
     )
+  }
+}
+
+@Composable
+private fun NothingDotMatrixClock(
+  time: String,
+  color: Color,
+  modifier: Modifier = Modifier
+) {
+  val density = LocalDensity.current
+  val patterns = mapOf(
+    '0' to listOf("11111","10001","10001","10001","10001","10001","11111"),
+    '1' to listOf("00100","01100","00100","00100","00100","00100","01110"),
+    '2' to listOf("11111","00001","00001","11111","10000","10000","11111"),
+    '3' to listOf("11111","00001","00001","01111","00001","00001","11111"),
+    '4' to listOf("10001","10001","10001","11111","00001","00001","00001"),
+    '5' to listOf("11111","10000","10000","11111","00001","00001","11111"),
+    '6' to listOf("11111","10000","10000","11111","10001","10001","11111"),
+    '7' to listOf("11111","00001","00010","00100","01000","01000","01000"),
+    '8' to listOf("11111","10001","10001","11111","10001","10001","11111"),
+    '9' to listOf("11111","10001","10001","11111","00001","00001","11111"),
+    ':' to listOf("00000","00100","00100","00000","00100","00100","00000")
+  )
+  androidx.compose.foundation.Canvas(modifier = modifier) {
+    val radius = with(density) { 2.1.dp.toPx() }
+    val step = with(density) { 7.dp.toPx() }
+    val gap = with(density) { 7.dp.toPx() }
+    val chars = time.filter { patterns.containsKey(it) }
+    val totalWidth = chars.sumOf { if (it == ':') 3 else 5 } * step + (chars.size - 1) * gap
+    var x = (size.width - totalWidth) / 2f
+    chars.forEach { ch ->
+      val p = patterns[ch] ?: return@forEach
+      val cols = if (ch == ':') 3 else 5
+      for (row in 0..6) for (col in 0 until cols) {
+        if (p[row][col] == '1') {
+          drawCircle(
+            color = color,
+            radius = radius,
+            center = Offset(x + col * step + step / 2f, row * step + radius * 1.3f)
+          )
+        }
+      }
+      x += cols * step + gap
+    }
   }
 }
