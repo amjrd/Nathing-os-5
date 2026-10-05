@@ -2,7 +2,6 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -32,7 +31,13 @@ class MainActivity : ComponentActivity() {
       val settings by viewModel.settings.collectAsState()
       val currentScreen by viewModel.currentScreen.collectAsState()
       val currentTime by viewModel.currentTime.collectAsState()
+      val currentHours by viewModel.currentHours.collectAsState()
+      val currentMinutes by viewModel.currentMinutes.collectAsState()
       val currentDate by viewModel.currentDate.collectAsState()
+      val isAnalogClock by viewModel.isAnalogClock.collectAsState()
+      val weatherInfo by viewModel.weatherInfo.collectAsState()
+      val quickToggles by viewModel.quickToggles.collectAsState()
+      val quickNote by viewModel.quickNote.collectAsState()
       val allApps by viewModel.allApps.collectAsState()
       val dockApps by viewModel.dockApps.collectAsState()
       val pinnedApps by viewModel.pinnedApps.collectAsState()
@@ -49,8 +54,13 @@ class MainActivity : ComponentActivity() {
             LauncherScreen.HOME -> {
               HomeScreen(
                 currentTime = currentTime,
+                currentHours = currentHours,
+                currentMinutes = currentMinutes,
                 currentDate = currentDate,
-                weather = weather,
+                isAnalogClock = isAnalogClock,
+                weatherInfo = weatherInfo,
+                quickToggles = quickToggles,
+                quickNote = quickNote,
                 audioState = audioState,
                 fitnessStats = fitnessStats,
                 dockApps = dockApps,
@@ -62,7 +72,15 @@ class MainActivity : ComponentActivity() {
                 onOpenAppDrawer = { viewModel.navigateTo(LauncherScreen.APP_DRAWER) },
                 onOpenSettings = {},
                 onUpdateSettings = { updated -> viewModel.updateSettings(updated) },
-                onToggleDockApp = { app -> viewModel.toggleDockApp(app) }
+                onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
+                onToggleClockStyle = { viewModel.toggleClockStyle() },
+                onToggleTorch = { viewModel.toggleTorch() },
+                onCycleSound = { viewModel.cycleSoundMode() },
+                onToggleWeatherCondition = { viewModel.toggleWeatherCondition() },
+                onAddStep = { viewModel.addStep() },
+                onToggleAudioPlay = { viewModel.toggleAudioPlay() },
+                onNextAudioTrack = { viewModel.nextAudioTrack() },
+                onSaveNote = { viewModel.updateNote(it) }
               )
             }
 
@@ -107,8 +125,13 @@ class MainActivity : ComponentActivity() {
             else -> {
               HomeScreen(
                 currentTime = currentTime,
+                currentHours = currentHours,
+                currentMinutes = currentMinutes,
                 currentDate = currentDate,
-                weather = weather,
+                isAnalogClock = isAnalogClock,
+                weatherInfo = weatherInfo,
+                quickToggles = quickToggles,
+                quickNote = quickNote,
                 audioState = audioState,
                 fitnessStats = fitnessStats,
                 dockApps = dockApps,
@@ -120,7 +143,15 @@ class MainActivity : ComponentActivity() {
                 onOpenAppDrawer = { viewModel.navigateTo(LauncherScreen.APP_DRAWER) },
                 onOpenSettings = {},
                 onUpdateSettings = { updated -> viewModel.updateSettings(updated) },
-                onToggleDockApp = { app -> viewModel.toggleDockApp(app) }
+                onToggleDockApp = { app -> viewModel.toggleDockApp(app) },
+                onToggleClockStyle = { viewModel.toggleClockStyle() },
+                onToggleTorch = { viewModel.toggleTorch() },
+                onCycleSound = { viewModel.cycleSoundMode() },
+                onToggleWeatherCondition = { viewModel.toggleWeatherCondition() },
+                onAddStep = { viewModel.addStep() },
+                onToggleAudioPlay = { viewModel.toggleAudioPlay() },
+                onNextAudioTrack = { viewModel.nextAudioTrack() },
+                onSaveNote = { viewModel.updateNote(it) }
               )
             }
           }

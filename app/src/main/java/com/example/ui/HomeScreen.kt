@@ -22,21 +22,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -51,21 +49,29 @@ import com.example.model.FitnessStats
 import com.example.model.FolderItem
 import com.example.model.LauncherSettings
 import com.example.model.NosWidgetPortType
-import com.example.model.WeatherData
+import com.example.model.QuickToggleState
+import com.example.model.WeatherInfo
 import com.example.service.SystemPortHelper
 import com.example.ui.components.ACCENT_COLORS
 import com.example.ui.components.AppIconItem
+import com.example.ui.components.EditNoteDialog
 import com.example.ui.components.EnlargedFolderView
 import com.example.ui.components.LauncherSettingsDialog
-import com.example.ui.components.NosCalendarDigitalTimeWidget
-import com.example.ui.components.NosClockWidget
 import com.example.ui.components.NosEarBatteryWidget
 import com.example.ui.components.NosWatchStatsWidget
-import com.example.ui.components.NosWeatherWidget
 import com.example.ui.components.NosWidgetPortSheet
+import com.example.ui.components.NothingAnalogClockWidget
 import com.example.ui.components.NothingAppInfoSheet
+import com.example.ui.components.NothingCassetteWidget
+import com.example.ui.components.NothingClockWidget
 import com.example.ui.components.NothingDock
+import com.example.ui.components.NothingQuickNoteWidget
+import com.example.ui.components.NothingQuickTogglesWidget
+import com.example.ui.components.NothingResourceWidget
+import com.example.ui.components.NothingStepWidget
 import com.example.ui.components.NothingWallpaperBackground
+import com.example.ui.components.NothingWeatherWidget
+import com.example.ui.components.WidgetResizeFrame
 import com.example.ui.theme.LocalLauncherTheme
 import com.example.util.VibrationHelper
 
@@ -73,8 +79,13 @@ import com.example.util.VibrationHelper
 @Composable
 fun HomeScreen(
   currentTime: String,
+  currentHours: String,
+  currentMinutes: String,
   currentDate: String,
-  weather: WeatherData,
+  isAnalogClock: Boolean,
+  weatherInfo: WeatherInfo,
+  quickToggles: QuickToggleState,
+  quickNote: String,
   audioState: AudioState,
   fitnessStats: FitnessStats,
   dockApps: List<AppItem>,
@@ -87,6 +98,14 @@ fun HomeScreen(
   onOpenSettings: () -> Unit,
   onUpdateSettings: (LauncherSettings) -> Unit,
   onToggleDockApp: (AppItem) -> Unit,
+  onToggleClockStyle: () -> Unit,
+  onToggleTorch: () -> Unit,
+  onCycleSound: () -> Unit,
+  onToggleWeatherCondition: () -> Unit,
+  onAddStep: () -> Unit,
+  onToggleAudioPlay: () -> Unit,
+  onNextAudioTrack: () -> Unit,
+  onSaveNote: (String) -> Unit,
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
@@ -96,8 +115,15 @@ fun HomeScreen(
 
   var isWidgetSheetOpen by remember { mutableStateOf(false) }
   var isSettingsDialogOpen by remember { mutableStateOf(false) }
+  var isEditNoteDialogOpen by remember { mutableStateOf(false) }
   var selectedAppForInfo by remember { mutableStateOf<AppItem?>(null) }
   var searchQuery by remember { mutableStateOf("") }
+
+  // Widget Resize / Edit States (Screenshot 5)
+  var selectedWidgetId by remember { mutableStateOf<String?>(null) }
+  var clockSizeMode by remember { mutableIntStateOf(1) }
+  var weatherRowSizeMode by remember { mutableIntStateOf(1) }
+  var cassetteSizeMode by remember { mutableIntStateOf(1) }
 
   val currentIconSize = when (settings.iconSizeLevel) {
     0 -> 44.dp
@@ -217,39 +243,133 @@ fun HomeScreen(
         contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
       ) {
-        // Active Nothing OS Widgets
-        if (settings.activeWidgets.contains(NosWidgetPortType.CALENDAR_DIGITAL_TIME)) {
+        // 1. Signature Clock Widget (Dot Matrix Digital OR Analog Dial with tap-to-switch!)
+        if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN) ||
+          settings.activeWidgets.contains(NosWidgetPortType.CALENDAR_DIGITAL_TIME)
+        ) {
           item {
-            NosCalendarDigitalTimeWidget(
-              currentTime = currentTime,
-              currentDate = currentDate,
-              accentColor = accentColor,
-              onClick = { SystemPortHelper.launchClock(context) }
-            )
+            WidgetResizeFrame(
+              isSelected = selectedWidgetId == "clock",
+              sizeMode = clockSizeMode,
+              onSelect = { selectedWidgetId = "clock" },
+              onCycleSize = { clockSizeMode = (clockSizeMode + 1) % 3 },
+              onRemove = {
+                val list = settings.activeWidgets.toMutableList()
+                list.remove(NosWidgetPortType.CLOCK_MAIN)
+                list.remove(NosWidgetPortType.CALENDAR_DIGITAL_TIME)
+                onUpdateSettings(settings.copy(activeWidgets = list))
+                selectedWidgetId = null
+              },
+              onDismiss = { selectedWidgetId = null },
+              accentColor = accentColor
+            ) {
+              if (isAnalogClock) {
+                NothingAnalogClockWidget(
+                  hours = currentHours,
+                  minutes = currentMinutes,
+                  date = currentDate,
+                  accentColor = accentColor,
+                  onToggleStyle = onToggleClockStyle,
+                  onOpenClockPort = { SystemPortHelper.launchClock(context) }
+                )
+              } else {
+                NothingClockWidget(
+                  hours = currentHours,
+                  minutes = currentMinutes,
+                  date = currentDate,
+                  accentColor = accentColor,
+                  onToggleStyle = onToggleClockStyle,
+                  onOpenClockPort = { SystemPortHelper.launchClock(context) }
+                )
+              }
+            }
           }
         }
 
-        if (settings.activeWidgets.contains(NosWidgetPortType.CLOCK_MAIN)) {
-          item {
-            NosClockWidget(
-              currentTime = currentTime,
-              accentColor = accentColor,
-              onClick = { SystemPortHelper.launchClock(context) }
-            )
-          }
-        }
-
+        // 2. Dual Cluster: Weather Widget + Quick Toggles Widget
         if (settings.activeWidgets.contains(NosWidgetPortType.WEATHER_MAIN)) {
           item {
-            NosWeatherWidget(
-              weather = weather,
+            WidgetResizeFrame(
+              isSelected = selectedWidgetId == "weather_toggles",
+              sizeMode = weatherRowSizeMode,
+              onSelect = { selectedWidgetId = "weather_toggles" },
+              onCycleSize = { weatherRowSizeMode = (weatherRowSizeMode + 1) % 3 },
+              onRemove = {
+                val list = settings.activeWidgets.toMutableList()
+                list.remove(NosWidgetPortType.WEATHER_MAIN)
+                onUpdateSettings(settings.copy(activeWidgets = list))
+                selectedWidgetId = null
+              },
+              onDismiss = { selectedWidgetId = null },
+              accentColor = accentColor
+            ) {
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                NothingWeatherWidget(
+                  weather = weatherInfo,
+                  onToggleCondition = onToggleWeatherCondition,
+                  accentColor = accentColor,
+                  onOpenWeatherPort = { SystemPortHelper.launchWeather(context, weatherInfo.city) },
+                  modifier = Modifier.weight(1f)
+                )
+
+                NothingQuickTogglesWidget(
+                  toggles = quickToggles,
+                  onToggleTorch = onToggleTorch,
+                  onCycleSound = onCycleSound,
+                  accentColor = accentColor,
+                  modifier = Modifier.weight(1f)
+                )
+              }
+            }
+          }
+        }
+
+        // 3. Dual Cluster: Pedometer / Step Widget + Storage & RAM Meters
+        item {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            NothingStepWidget(
+              fitness = fitnessStats,
+              onAddStep = onAddStep,
               accentColor = accentColor,
-              onClick = { SystemPortHelper.launchWeather(context, weather.city) }
+              modifier = Modifier.weight(1f)
+            )
+
+            NothingResourceWidget(
+              storagePct = 42,
+              ramPct = 68,
+              accentColor = accentColor,
+              modifier = Modifier.weight(1f)
             )
           }
         }
 
-        // Ear / Casque widget
+        // 4. Teenage Engineering Cassette Media Player Widget
+        item {
+          WidgetResizeFrame(
+            isSelected = selectedWidgetId == "cassette",
+            sizeMode = cassetteSizeMode,
+            onSelect = { selectedWidgetId = "cassette" },
+            onCycleSize = { cassetteSizeMode = (cassetteSizeMode + 1) % 3 },
+            onRemove = { selectedWidgetId = null },
+            onDismiss = { selectedWidgetId = null },
+            accentColor = accentColor
+          ) {
+            NothingCassetteWidget(
+              audio = audioState,
+              onTogglePlay = onToggleAudioPlay,
+              onNextTrack = onNextAudioTrack,
+              accentColor = accentColor
+            )
+          }
+        }
+
+        // 5. Ear / Casque companion widget
         if (settings.activeWidgets.contains(NosWidgetPortType.EAR_BATTERY)) {
           item {
             NosEarBatteryWidget(
@@ -260,7 +380,7 @@ fun HomeScreen(
           }
         }
 
-        // Smartwatch widget
+        // 6. Smartwatch / CMF Watch Stats widget
         if (settings.activeWidgets.contains(NosWidgetPortType.WATCH_STATS)) {
           item {
             NosWatchStatsWidget(
@@ -271,7 +391,16 @@ fun HomeScreen(
           }
         }
 
-        // Pinned Folders
+        // 7. Quick Memo / Note Widget
+        item {
+          NothingQuickNoteWidget(
+            note = quickNote,
+            onEditNote = { isEditNoteDialogOpen = true },
+            accentColor = accentColor
+          )
+        }
+
+        // 8. Pinned Folders
         if (folders.isNotEmpty()) {
           item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -290,7 +419,7 @@ fun HomeScreen(
           }
         }
 
-        // Pinned Favorite Apps Row
+        // 9. Pinned Favorite Apps Row
         if (pinnedApps.isNotEmpty()) {
           item {
             Row(
@@ -348,7 +477,7 @@ fun HomeScreen(
         }
       }
 
-      // Bottom Dock & Search Bar (Fixes Home Search and opens Drawer/Apps)
+      // Bottom Dock & Search Bar (NothingDock updated by user!)
       NothingDock(
         dockApps = dockApps,
         onAppClick = onAppClick,
@@ -392,6 +521,19 @@ fun HomeScreen(
         settings = settings,
         onUpdateSettings = onUpdateSettings,
         onDismiss = { isSettingsDialogOpen = false }
+      )
+    }
+
+    // Edit Note Dialog
+    if (isEditNoteDialogOpen) {
+      EditNoteDialog(
+        initialNote = quickNote,
+        onSave = {
+          onSaveNote(it)
+          isEditNoteDialogOpen = false
+        },
+        onDismiss = { isEditNoteDialogOpen = false },
+        accentColor = accentColor
       )
     }
 
