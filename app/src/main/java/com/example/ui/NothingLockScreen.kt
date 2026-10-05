@@ -926,7 +926,7 @@ private fun NothingDotMatrixClock(
     val step = with(density) { 7.dp.toPx() }
     val gap = with(density) { 7.dp.toPx() }
     val chars = time.filter { patterns.containsKey(it) }
-    val totalWidth = chars.sumOf { if (it == ':') 3 else 5 } * step + (chars.size - 1) * gap
+    val totalWidth = chars.sumOf { if (it == ':') 3 else 5 } * step + (chars.length - 1) * gap
     var x = with(density) { 8.dp.toPx() }
     chars.forEach { ch ->
       val p = patterns[ch] ?: return@forEach
