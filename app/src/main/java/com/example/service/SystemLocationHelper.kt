@@ -1,6 +1,7 @@
 package com.example.service
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -42,6 +43,7 @@ object SystemLocationHelper {
    * 2. System TimeZone ID (e.g. Africa/Tunis -> TUNIS, Europe/Paris -> PARIS)
    * 3. System Locale country
    */
+  @SuppressLint("MissingPermission")
   fun getAutoDetectedCity(context: Context): String {
     if (hasLocationPermission(context)) {
       try {
@@ -93,6 +95,7 @@ object SystemLocationHelper {
   }
 
   /** Fetches real current weather from Open-Meteo. No API key is required. */
+  @SuppressLint("MissingPermission")
   fun getCurrentWeather(context: Context): WeatherInfo? {
     if (!hasLocationPermission(context)) return null
     return try {
