@@ -1,0 +1,88 @@
+name: Android CI/CD - Build, Test & Deploy APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_and_build:
+    name: Test & Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java Development Kit
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Prepare Gradle Wrapper
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            gradle wrapper
+          fi
+          chmod +x ./gradlew
+
+      - name: Run Unit Tests
+        id: unit_tests
+        continue-on-error: true
+        run: |
+          ./gradlew :app:testDebugUnitTest \
+            --no-daemon \
+            --stacktrace
+
+      - name: Build Debug APK
+        run: |
+          ./gradlew :app:assembleDebug \
+            --no-daemon \
+            --stacktrace
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nathing-OS-1.0.2-Debug-APK
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Unit Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nathing-OS-Unit-Test-Reports
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Report Test Status
+        if: always()
+        run: |
+          if [ "${{ steps.unit_tests.outcome }}" = "success" ]; then
+            echo "Unit tests passed."
+          else
+            echo "Unit tests failed. Check the uploaded test reports."
+            echo "APK build was allowed to continue."
+          fi
